@@ -1,3 +1,5 @@
+# Asset ignore
+Content/Asset/*
 # Created by https://www.toptal.com/developers/gitignore/api/rider,visualstudio,unrealengine
 # Edit at https://www.toptal.com/developers/gitignore?templates=rider,visualstudio,unrealengine
 
