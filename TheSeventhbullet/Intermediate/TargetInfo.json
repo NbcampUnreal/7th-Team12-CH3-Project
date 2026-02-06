@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "TheSeventhbullet",
+			"Path": "..\\Source\\TheSeventhbullet.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "TheSeventhbulletEditor",
+			"Path": "..\\Source\\TheSeventhbulletEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}
