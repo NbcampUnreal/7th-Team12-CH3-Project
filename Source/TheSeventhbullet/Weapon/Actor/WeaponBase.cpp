@@ -2,7 +2,7 @@
 
 AWeaponBase::AWeaponBase()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void AWeaponBase::BeginPlay()
@@ -15,10 +15,3 @@ void AWeaponBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AWeaponBase::Fire()
-{
-}
-
-void AWeaponBase::Reload()
-{
-}
