@@ -21,7 +21,16 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	/*virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		class AController* EventInstigator,
+		AActor* DamageCauser
+		) override;*/
 public:	
+	
+#pragma region Status
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	int32 MaxHP;	// 최대 체력
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character")
@@ -30,25 +39,54 @@ public:
 	int32 MaxStamina;	// 최대 스테미나
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character")
 	int32 CurrentStamina;	// 현재 스테미나
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character")
+	int32 DodgeCost;	// 회피 소모 스테미나
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character")
+	float DodgeDistance;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	float MaxSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	float SprintMultifier;
+	
+#pragma endregion
+	
+#pragma region State
+	
+	bool bIsDodge = false;		// 회피 동작 상태
+	bool bIsInvicible = false;	// 무적 상태
+	
+#pragma endregion
+	
+#pragma region Component
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	USpringArmComponent* SpringArm;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	UCameraComponent* Camera;
 	
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
+#pragma endregion
+
+#pragma region Actions
 	void PlayerMove(const FInputActionValue& value);
 	void PlayerLook(const FInputActionValue& value);
 	void PlayerStartSprint(const FInputActionValue& value);
 	void PlayerStopSprint(const FInputActionValue& value);
 	void PlayerDodge(const FInputActionValue& value);
+	void PlayerDodgeFinished(const FInputActionValue& value);
 	void PlayerAim(const FInputActionValue& value);
+	void PlayerAimFinished(const FInputActionValue& value);
 	void PlayerFire(const FInputActionValue& value);
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
+#pragma endregion
+	
+#pragma region Utilities
+	
+	bool IsDodge();
+	bool IsInvicible();
+	
+#pragma endregion
+	
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
 };

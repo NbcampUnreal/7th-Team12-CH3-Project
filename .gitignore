@@ -1,7 +1,7 @@
 # Asset ignore
 Content/Asset/*
 #JetBrains Rider / ItelliJ
-.idea/
+
 Content/TheSeventhBullet/Maps/TestMaps/*
 # Created by https://www.toptal.com/developers/gitignore/api/rider,visualstudio,unrealengine
 # Edit at https://www.toptal.com/developers/gitignore?templates=rider,visualstudio,unrealengine

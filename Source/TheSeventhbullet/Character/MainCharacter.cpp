@@ -14,6 +14,8 @@ AMainCharacter::AMainCharacter()
 	CurrentHP = MaxHP;
 	MaxStamina = 100;	
 	CurrentStamina = MaxStamina;
+	DodgeCost = 20;
+	DodgeDistance = 3000.0f;
 	MaxSpeed = 600.0f;
 	SprintMultifier = 1.5f;
 	
@@ -33,25 +35,13 @@ void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (AController* CurrentController = GetController())
-	{
-		// 현재 실제 컨트롤러의 클래스 이름을 출력합니다.
-		UE_LOG(LogTemp, Error, TEXT("Actual Controller Class: %s"), *CurrentController->GetClass()->GetName());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("No Controller possessed yet!"));
-	}
-	UE_LOG(LogTemp, Warning, TEXT("Enter"));
 	if (AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AMainPlayerController is generated"));
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(PC->InputMappingContext, 0);
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("AMainPlayerController is not generated"));
 }
 
 
@@ -102,6 +92,14 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 				&AMainCharacter::PlayerDodge
 			);
 			
+			// Dodge 바인딩
+			InputComponents->BindAction(
+				PC->DodgeAction,
+				ETriggerEvent::Completed,
+				this,
+				&AMainCharacter::PlayerDodgeFinished
+			);
+			
 			// Aim 바인딩
 			InputComponents->BindAction(
 				PC->AimAction,
@@ -148,7 +146,7 @@ void AMainCharacter::PlayerMove(const FInputActionValue& value)
 		AddMovementInput(GetActorForwardVector(), MoveInput.X);
 	}
 	
-	if (FMath::IsNearlyZero(MoveInput.Y))
+	if (!FMath::IsNearlyZero(MoveInput.Y))
 	{
 		AddMovementInput(GetActorRightVector(), MoveInput.Y);
 	}
@@ -180,9 +178,40 @@ void AMainCharacter::PlayerStopSprint(const FInputActionValue& value)
 
 void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 {
+	if (bIsDodge || CurrentStamina < DodgeCost)
+	{
+		return;
+	}
+	
+	//CurrentStamina -= DodgeCost;	// 소모 스테미나
+	bIsDodge = true;
+	
+	// 캐릭터 방향 가져오기
+	FVector DodgeDirection = GetActorForwardVector();
+	
+	// 입력 방향 벡터 가져오기
+	FVector InputDirection = GetLastMovementInputVector();
+	
+	if (!InputDirection.IsNearlyZero())
+	{
+		DodgeDirection = InputDirection.GetSafeNormal();
+	}
+	
+	LaunchCharacter(DodgeDirection*DodgeDistance, true, false);
+}
+
+void AMainCharacter::PlayerDodgeFinished(const FInputActionValue& value)
+{
+	bIsDodge = false;
 }
 
 void AMainCharacter::PlayerAim(const FInputActionValue& value)
+{
+	// 카메라의 시야변경 (Spring arm 위치 변경)
+	// 
+}
+
+void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 {
 }
 
