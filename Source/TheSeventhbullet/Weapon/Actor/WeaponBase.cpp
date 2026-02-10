@@ -1,9 +1,10 @@
 #include "WeaponBase.h"
-
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "TheSeventhbullet/Weapon/Data/WeaponDataAsset.h"
+#include "Particles/ParticleSystemComponent.h"
 
 AWeaponBase::AWeaponBase()
 {
@@ -42,8 +43,6 @@ void AWeaponBase::Initialize(TObjectPtr<UWeaponDataAsset> WeaponData)
 	
 	AmountOfPellets = WeaponDataAsset->PelletsCount;
 	PelletSpreadRadius = WeaponDataAsset->SpreadRadius;
-	FlashEffect = WeaponDataAsset->MuzzleFlashEffect;
-	HitEffect = WeaponDataAsset->ImpactEffect;
 }
 
 void AWeaponBase::StartFire()
@@ -68,10 +67,27 @@ void AWeaponBase::StopFire()
 
 void AWeaponBase::Reload()
 {
-	CurrentAmmo = MaxAmmo;
+	if (bisReloading)
+	{
+		return;
+	}
+
+	bisReloading = true;
 	
-	UE_LOG(LogTemp, Warning, TEXT("Reload"));
-	UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, MaxAmmo);
+	UE_LOG(LogTemp, Warning, TEXT("Start Reload"));
+	
+	GetWorld()->GetTimerManager().SetTimer(
+		ReloadTimerHandle,
+		FTimerDelegate::CreateLambda([this]()
+		{
+			CurrentAmmo = MaxAmmo;
+			bisReloading = false;
+			UE_LOG(LogTemp, Warning, TEXT("Reload"));
+			UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, MaxAmmo);
+		}),
+		ReloadTime,
+		false
+	);
 }
 
 void AWeaponBase::Fire()
@@ -81,6 +97,12 @@ void AWeaponBase::Fire()
 		Reload();
 		return;
 	}
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastFireTime < FireInterval)
+	{
+		return;
+	}
+	LastFireTime = Now;
 	
 	ConsumeAmmo();
 	
@@ -122,7 +144,12 @@ void AWeaponBase::Fire()
 
 		if (bHit)
 		{
-			Hit.
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				WeaponDataAsset->ImpactEffect.LoadSynchronous(),
+				Hit.ImpactPoint,
+				Hit.ImpactNormal.Rotation()
+			);
 			// 명중한 대상에 데미지처리.
 		}
 	}
@@ -140,15 +167,15 @@ FVector AWeaponBase::TraceRandShot(const FVector& TraceStart, const FVector& Max
 	
 	// 사거리 끝 지점에 구체의 중심점을 찍음.
 	FVector SphereCenter = TraceStart + ToTargetNormalized * Range;
-	DrawDebugSphere(GetWorld(), SphereCenter, PelletSpreadRadius, 15.f, FColor::Red, true);
+	DrawDebugSphere(GetWorld(), SphereCenter, PelletSpreadRadius, 15.f, FColor::Red, false,FireDebugDuration);
 	
 	// 구체 중심을 기준으로 지정된 탄퍼짐 범위(PelletSpreadRadius)만큼의 범위 안에서 타겟 지점을 랜덤으로 정함.
 	FVector RandomTarget = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, PelletSpreadRadius);
 	// 실제 목표 지점.
 	FVector EndLocation = SphereCenter + RandomTarget;
 	
-	DrawDebugSphere(GetWorld(), EndLocation, 3.f, 15.f, FColor::Emerald, true);
-	DrawDebugLine(GetWorld(), TraceStart, EndLocation, FColor::Magenta, true);
+	DrawDebugSphere(GetWorld(), EndLocation, 3.f, 15.f, FColor::Emerald, false,FireDebugDuration);
+	DrawDebugLine(GetWorld(), TraceStart, EndLocation, FColor::Magenta, false,FireDebugDuration);
 	
 	return EndLocation;
 }
