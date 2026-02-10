@@ -92,11 +92,15 @@ void AWeaponBase::Reload()
 
 void AWeaponBase::Fire()
 {
+	// 총알이 0발 이하로 남았다면 재장전을 자동으로 수행 + 발사하지 않음
 	if (CurrentAmmo <= 0)
 	{
 		Reload();
 		return;
 	}
+	
+	// 현재시간 - 마지막 발사시간 < 발사간격인 경우 발사가 불가능
+	// 무기마다 발사간격(발사속도)을 구현하기 위한 로직.
 	const float Now = GetWorld()->GetTimeSeconds();
 	if (Now - LastFireTime < FireInterval)
 	{
@@ -104,6 +108,7 @@ void AWeaponBase::Fire()
 	}
 	LastFireTime = Now;
 	
+	// 총알 감소
 	ConsumeAmmo();
 	
 	FVector CameraLocation;
@@ -127,6 +132,7 @@ void AWeaponBase::Fire()
 		// 트레이스 종료지점을 랜덤으로 계산하여 탄 퍼짐을 구현.
 		FVector End = TraceRandShot(Start, MaxTargetLocation);
 		
+		// Start 지점에서 End 지점까지 Linetrace를 수행하고 Hit 여부를 return
 		const bool bHit = UKismetSystemLibrary::LineTraceSingle(
 			GetWorld(),
 			Start,
@@ -144,13 +150,14 @@ void AWeaponBase::Fire()
 
 		if (bHit)
 		{
+			// 명중한 곳에 파티클 구현, 추후에 태그를 검사해서 태그에 따른 서로 다른 파티클을 구현할 예정.
 			UGameplayStatics::SpawnEmitterAtLocation(
 				GetWorld(),
 				WeaponDataAsset->ImpactEffect.LoadSynchronous(),
 				Hit.ImpactPoint,
 				Hit.ImpactNormal.Rotation()
 			);
-			// 명중한 대상에 데미지처리.
+			// 명중한 대상에 데미지처리 로직을 추가할 예정
 		}
 	}
 }
@@ -167,15 +174,15 @@ FVector AWeaponBase::TraceRandShot(const FVector& TraceStart, const FVector& Max
 	
 	// 사거리 끝 지점에 구체의 중심점을 찍음.
 	FVector SphereCenter = TraceStart + ToTargetNormalized * Range;
-	DrawDebugSphere(GetWorld(), SphereCenter, PelletSpreadRadius, 15.f, FColor::Red, false,FireDebugDuration);
+	DrawDebugSphere(GetWorld(), SphereCenter, PelletSpreadRadius, 15.f, FColor::Red, bDrawDebugInfinite,FireDebugDuration);
 	
 	// 구체 중심을 기준으로 지정된 탄퍼짐 범위(PelletSpreadRadius)만큼의 범위 안에서 타겟 지점을 랜덤으로 정함.
 	FVector RandomTarget = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, PelletSpreadRadius);
 	// 실제 목표 지점.
 	FVector EndLocation = SphereCenter + RandomTarget;
 	
-	DrawDebugSphere(GetWorld(), EndLocation, 3.f, 15.f, FColor::Emerald, false,FireDebugDuration);
-	DrawDebugLine(GetWorld(), TraceStart, EndLocation, FColor::Magenta, false,FireDebugDuration);
+	DrawDebugSphere(GetWorld(), EndLocation, 3.f, 15.f, FColor::Emerald, bDrawDebugInfinite,FireDebugDuration);
+	DrawDebugLine(GetWorld(), TraceStart, EndLocation, FColor::Magenta, bDrawDebugInfinite,FireDebugDuration);
 	
 	return EndLocation;
 }
