@@ -28,6 +28,7 @@ public:
 	void StopFire();
 	void Reload();
 	void Fire();
+	
 	void ConsumeAmmo();
 	FVector TraceRandShot(const FVector& TraceStart, const FVector& MaxTargetLocation);
 	
@@ -42,11 +43,14 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<AActor> WeaponOwner;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	TObjectPtr<UWeaponDataAsset> WeaponDataAsset;
 	
 	FTimerHandle FireTimerHandle;
+	FTimerHandle ReloadTimerHandle;
+	float LastFireTime = -1.f;
+	bool bisReloading = false;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TObjectPtr<UWeaponDataAsset> WeaponDataAsset;
 	float Damage = 10.f;
 	float FireInterval = 0.5f;
 	float Range = 850.f;
@@ -55,8 +59,4 @@ protected:
 	float ReloadTime = 1.0f;
 	int32 AmountOfPellets = 1;
 	float PelletSpreadRadius = 3.f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
-	TSoftObjectPtr<UParticleSystem> FlashEffect;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
-	TSoftObjectPtr<UParticleSystem> HitEffect;
 };

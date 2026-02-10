@@ -5,9 +5,11 @@
 #include "WeaponDataAsset.generated.h"
 
 UENUM(BlueprintType)
-enum class EWeaponFireType : uint8
+enum class EWeaponTypes : uint8
 {
-	HitsScan,
+	None,
+	Revolver,
+	Rifle,
 	Shotgun
 };
 
@@ -18,7 +20,7 @@ class THESEVENTHBULLET_API UWeaponDataAsset : public UPrimaryDataAsset
 	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	EWeaponFireType FireType;
+	EWeaponTypes WeaponType;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float BaseDamage;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
