@@ -14,4 +14,7 @@ class THESEVENTHBULLET_API IFireable
 {
 	GENERATED_BODY()
 public:
+	virtual void StartFire() = 0;
+	virtual void StopFire() = 0;
+	virtual void Reload() = 0;
 };
