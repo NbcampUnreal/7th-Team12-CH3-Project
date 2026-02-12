@@ -55,6 +55,7 @@ class THESEVENTHBULLET_API UAsyncDataManager : public UGameInstanceSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
+	static UAsyncDataManager* Get(const UObject* WorldContextObject);
 	
 	//Load
 	UFUNCTION(BlueprintCallable, Category = "Data|Async")
