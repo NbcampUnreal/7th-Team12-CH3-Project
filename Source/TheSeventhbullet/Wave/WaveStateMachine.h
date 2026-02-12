@@ -17,10 +17,9 @@ class THESEVENTHBULLET_API UWaveStateMachine : public UObject
 {
 	GENERATED_BODY()
 public:
-	void Initalize(AMainGameMode* InOwner);
+	void Initialize(AMainGameMode* InOwner);
 	void ChangeState(EWaveState NewState);
 	void Tick(float DeltaTime);
-	
 	FORCEINLINE EWaveState GetCurrentStateType() const {return CurrentStateType;}
 	FORCEINLINE AMainGameMode* GetOwner() const {return Owner;}
 	FORCEINLINE UBaseWaveState* GetCurrentState() const {return CurrentState;}

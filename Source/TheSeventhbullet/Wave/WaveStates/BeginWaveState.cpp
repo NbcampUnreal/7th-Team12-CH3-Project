@@ -6,12 +6,19 @@
 void UBeginWaveState::Enter()
 {
 	Super::Enter();
-	ChangeState(EWaveState::Progress);
+	UE_LOG(LogTemp,Log,TEXT("Begin Wave"));
+	AMainGameMode* GM = AMainGameMode::Get(this);
+	if (GM)
+	{
+		GM->PrepareNextWave();
+	}
+	
 }
 
 void UBeginWaveState::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	ChangeState(EWaveState::Progress);
 }
 
 void UBeginWaveState::Exit()
