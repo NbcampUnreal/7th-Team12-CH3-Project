@@ -573,3 +573,10 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/rider,visualstudio,unrealengine
+
+.idea/
+.vsconfig
+
+/Content/__ExternalActors__/Maps/TestMaps/
+/Content/__ExternalObjects__/Maps/TestMaps/
+/Content/Maps/TestMaps/
