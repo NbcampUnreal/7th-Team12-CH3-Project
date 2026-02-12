@@ -4,7 +4,9 @@
 #include "BehaviorTree/BTTaskNode.h"
 #include "BTTask_FindRandomLocation.generated.h"
 
-
+/**
+ * NavMesh 내에서 랜덤한 위치를 찾아 PatrolLocation에 반환합니다.
+ */
 UCLASS()
 class THESEVENTHBULLET_API UBTTask_FindRandomLocation : public UBTTaskNode
 {

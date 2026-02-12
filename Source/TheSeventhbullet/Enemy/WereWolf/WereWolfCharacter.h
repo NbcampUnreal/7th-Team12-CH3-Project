@@ -7,6 +7,10 @@
 #include "WereWolfCharacter.generated.h"
 class AWereWolfAIController;
 
+/**
+ * WereWolf 캐릭터입니다.
+ * 월드에 배치되거나 스폰될때 AIController에 빙의되게 만듭니다.
+ */
 UCLASS()
 class THESEVENTHBULLET_API AWereWolfCharacter : public ACharacter
 {

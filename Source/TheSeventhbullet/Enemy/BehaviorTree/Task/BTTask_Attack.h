@@ -4,7 +4,9 @@
 #include "BehaviorTree/BTTaskNode.h"
 #include "BTTask_Attack.generated.h"
 
-
+/**
+ * 공격 애니메이션을 재생하고 공격 종료 성공시 Succeeded를 반환합니다.
+ */
 UCLASS()
 class THESEVENTHBULLET_API UBTTask_Attack : public UBTTaskNode
 {

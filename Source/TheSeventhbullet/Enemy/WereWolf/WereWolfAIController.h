@@ -7,7 +7,7 @@
 #include "WereWolfAIController.generated.h"
 
 /**
- * 
+ * 웨어울프의 BT를 적용하기 위한 AIConroller입니다.
  */
 UCLASS()
 class THESEVENTHBULLET_API AWereWolfAIController : public AAIController
@@ -22,8 +22,6 @@ protected:
 	
 public:
 	virtual void Tick(float DeltaSeconds) override;
-	UFUNCTION()
-	void UpdateBlackboardOnHit(bool bIsDetected);
 
 private:
 	UPROPERTY(EditAnywhere)

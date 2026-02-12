@@ -30,6 +30,7 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 
 void UBTTask_Attack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
+	//AIController 가 없으면 Fail
 	AAIController* Owner = OwnerComp.GetAIOwner();
 	if (Owner == nullptr)
 	{
@@ -37,6 +38,7 @@ void UBTTask_Attack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 		return;
 	}
 
+	//캐릭터나 몽타주 둘중하나라도 없으면 Fail
 	ACharacter* AICharacter = Cast<ACharacter>(Owner->GetPawn());
 	if (AICharacter == nullptr || AttackMontage == nullptr)
 	{
@@ -44,6 +46,7 @@ void UBTTask_Attack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 		return;
 	}
 
+	//재생하고있는 애님인스턴스가 없으면 Succeeded
 	UAnimInstance* AnimInstance = AICharacter->GetMesh()->GetAnimInstance();
 	if (AnimInstance == nullptr)
 	{
@@ -51,6 +54,7 @@ void UBTTask_Attack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 		return;
 	}
 	
+	// 재생중인 몽타주가 멈췄으면 Succeeded
 	bool bStopped = AnimInstance->Montage_GetIsStopped(AttackMontage);
 	if (bStopped)
 	{

@@ -19,15 +19,18 @@ EBTNodeResult::Type UBTTask_FindRandomLocation::ExecuteTask(UBehaviorTreeCompone
 		return EBTNodeResult::Failed;
 	}
 
+	//NavMesh를 가져옵니다.
 	const UNavigationSystemV1* NavSystem = UNavigationSystemV1::GetCurrent(GetWorld());
 	if (NavSystem == nullptr)
 	{
 		return EBTNodeResult::Failed;
 	}
-
+	
+	//몬스터의 현재 위치
 	const FVector Origin = AiController->GetPawn()->GetActorLocation();
 	FNavLocation RandomLocation;
-
+	
+	//몬스터의 위치에서 일정 반경의 무작워 지점
 	const bool bFound = NavSystem->GetRandomReachablePointInRadius(Origin, SearchRadius, RandomLocation);
 	if (bFound)
 	{

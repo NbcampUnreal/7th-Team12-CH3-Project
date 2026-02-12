@@ -30,6 +30,7 @@ void AWereWolfCharacter::Tick(float DeltaTime)
 	
 }
 
+//블루프린트 디버깅용 입력 받기
 // Called to bind functionality to input
 void AWereWolfCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {

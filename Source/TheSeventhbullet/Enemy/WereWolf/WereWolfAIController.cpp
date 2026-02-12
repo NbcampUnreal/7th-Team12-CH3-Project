@@ -22,12 +22,9 @@ void AWereWolfAIController::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
 }
 
-void AWereWolfAIController::UpdateBlackboardOnHit(bool bIsDetected)
-{
-    GetBlackboardComponent()->SetValueAsBool(TEXT("isSearchArea"),bIsDetected);
-}
 void AWereWolfAIController::OnPossess(APawn* InPawn)
 {
+    //빙의 시 BehaviorTree를 시작합니다.
     Super::OnPossess(InPawn);
     if (WereWolfBehaviorTree)
     {
