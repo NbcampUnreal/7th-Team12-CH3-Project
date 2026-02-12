@@ -6,6 +6,7 @@
 #include "TheSeventhbullet/Character/MainPlayerController.h"
 #include "GameInstance/MainGameInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "TheSeventhbullet/Manager/SoundManager.h"
 #include "TheSeventhbullet/Manager/SyncDataManager.h"
 #include "TheSeventhbullet/Wave/WaveStateMachine.h"
 #include "TheSeventhbullet/Wave/Spawn/Spawner.h"
@@ -92,6 +93,7 @@ void AMainGameMode::BeginPlay()
 			Spawners.Add(Spawner);
 		}
 	}
+	
 	WaveStateMachine->ChangeState(EWaveState::Begin);
 }
 

@@ -42,7 +42,6 @@ struct FWaveRowData : public FTableRowBase
 	TArray<FSpawnRowData> SpawnList;
 };
 
-
 USTRUCT(BlueprintType)
 struct FMonsterRowData : public FTableRowBase
 {
@@ -54,5 +53,26 @@ struct FMonsterRowData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<AActor> Monster;
 	
+};
+
+USTRUCT(BlueprintType)
+struct FSoundData : public FTableRowBase
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName SoundName;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<USoundBase> SoundAsset;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIs3D = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float VolumeMultiplier = 1.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<USoundConcurrency> ConcurrencySettings;
 };
 
