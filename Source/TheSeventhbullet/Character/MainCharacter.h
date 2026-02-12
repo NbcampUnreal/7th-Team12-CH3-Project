@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "MainCharacter.generated.h"
 
+class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -62,8 +63,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	USpringArmComponent* SpringArm;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
-	UCameraComponent* Camera;
+	FVector NormalSpringArm;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
+	FVector AimmingSpringArm;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
+	UCameraComponent* Camera;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
+	float NormalArmLength; 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
+	float AimmingArmLength;
 #pragma endregion
 
 #pragma region Actions
@@ -76,8 +85,20 @@ public:
 	void PlayerAim(const FInputActionValue& value);
 	void PlayerAimFinished(const FInputActionValue& value);
 	void PlayerFire(const FInputActionValue& value);
+	void PlayerSkill(const FInputActionValue& value);
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
+#pragma endregion
+
+#pragma region Skill
+	
+	UPROPERTY(EditAnywhere, Category="Skill")
+	TSubclassOf<class APlayerSkill> PlayerSkillClass;
+	UPROPERTY(EditAnywhere, Category="Skill")
+	FVector MuzzleOffset;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	FName HandSocketName;
+	
 #pragma endregion
 	
 #pragma region Utilities
@@ -88,5 +109,4 @@ public:
 #pragma endregion
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
 };
