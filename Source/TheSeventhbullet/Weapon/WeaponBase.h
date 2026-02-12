@@ -22,11 +22,30 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Component")
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 	
+	
+	
+protected:
+	
+	virtual void BeginPlay() override;
+	
+	UFUNCTION()
+	virtual void OnItemOverlap(
+		UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult);
+	UFUNCTION()
+	virtual void OnItemEndOverlap(
+		UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex);
+	
+public:
 	// 무기 데이터 받아오는 구간
-	void Initialize(
-		TObjectPtr<APawn> NewOwner,
-		TObjectPtr<UWeaponDataAsset> InData
-	);
+	void Initialize(TObjectPtr<APawn> NewOwner);
 	// 발사 시작 : 공격키를 입력하고 있는 동안 지속적으로 Fire() 함수를 호출
 	void StartFire();
 	// 발사 종료 : 공격키 입력 중지 시에 호출
@@ -39,14 +58,17 @@ public:
 	void ConsumeAmmo();
 	// 트레이스 종료지점을 랜덤으로 계산하여 탄 퍼짐을 구현.
 	FVector TraceRandShot(const FVector& TraceStart, const FVector& MaxTargetLocation);
-
+	
+	// 테스트용 장착 로직
+	void EquipWeapon(TObjectPtr<AActor> NewWeaponOwner);
+	
 protected:
-	UPROPERTY(EditAnywhere, Category = "Weapon")
-	bool bDrawFireDebug = false; // 발사 디버그 표시 여부
-	UPROPERTY(EditAnywhere, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	bool bDrawFireDebug = true; // 발사 디버그 표시 여부
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float FireDebugDuration = 1.0f; // 발사 디버그 지속 시간
-	UPROPERTY(EditAnywhere, Category = "Weapon")
-	bool bDrawDebugInfinite = true; // 발사 디버그 드로우를 영구지속할지 여부
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	bool bDrawDebugInfinite = false; // 발사 디버그 드로우를 영구지속할지 여부
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<AActor> WeaponOwner;

@@ -1,10 +1,13 @@
 #include "WeaponBase.h"
+
+#include "IEditableSkeleton.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "TheSeventhbullet/Weapon/Data/WeaponDataAsset.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "TheSeventhbullet/Character/MainCharacter.h"
 
 AWeaponBase::AWeaponBase()
 {
@@ -17,25 +20,48 @@ AWeaponBase::AWeaponBase()
 	Collision->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 	Collision->SetupAttachment(RootComponent);
 	
+	// 테스트용 오버랩 방식 장착
+	Collision->OnComponentBeginOverlap.AddDynamic(this, &AWeaponBase::OnItemOverlap);
+	Collision->OnComponentEndOverlap.AddDynamic(this, &AWeaponBase::OnItemEndOverlap); 
+	
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	MeshComp->SetupAttachment(RootComponent);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	MeshComp->SetSimulatePhysics(false);
+	MeshComp->SetSimulatePhysics(false);	
 	
 	WeaponOwner = nullptr;
 }
 
-void AWeaponBase::Initialize(
-	TObjectPtr<APawn> NewOwner,
-	TObjectPtr<UWeaponDataAsset> InData
-)
+void AWeaponBase::BeginPlay()
+{
+	Super::BeginPlay();
+	Initialize(nullptr);
+}
+
+void AWeaponBase::OnItemOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+                                int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	EquipWeapon(OtherActor);
+}
+
+void AWeaponBase::OnItemEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	
+}
+
+void AWeaponBase::Initialize(TObjectPtr<APawn> NewOwner)
 {
 	WeaponOwner = NewOwner;
-	WeaponDataAsset = InData;
 	
-	if (InData->Mesh)
+	if (!WeaponDataAsset)
 	{
-		MeshComp->SetStaticMesh(WeaponDataAsset->Mesh.LoadSynchronous());
+		return;
+	}
+	
+	if (WeaponDataAsset->Mesh)
+	{
+		MeshComp->SetStaticMesh(WeaponDataAsset->Mesh);
 	}
 	
 	Damage = WeaponDataAsset->BaseDamage;
@@ -206,4 +232,31 @@ FVector AWeaponBase::TraceRandShot(const FVector& TraceStart, const FVector& Max
 	DrawDebugLine(GetWorld(), TraceStart, EndLocation, FColor::Magenta, bDrawDebugInfinite,FireDebugDuration);
 	
 	return EndLocation;
+}
+
+void AWeaponBase::EquipWeapon(TObjectPtr<AActor> NewWeaponOwner)
+{	
+	if (!WeaponDataAsset)
+	{
+		return;
+	}
+	
+	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(NewWeaponOwner))
+	{
+		if (MainCharacter->CurrentWeapon != nullptr)
+		{
+			MainCharacter->CurrentWeapon->Destroy();
+			MainCharacter->CurrentWeapon = nullptr;
+		}
+		
+		Initialize(MainCharacter);
+
+		AttachToComponent(
+			MainCharacter->GetMesh(),
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+			TEXT("Weapon_R")
+		);
+		MainCharacter->CurrentWeapon = this;
+		UE_LOG(LogTemp, Warning, TEXT("Equip"));
+	}
 }

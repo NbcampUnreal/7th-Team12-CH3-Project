@@ -50,7 +50,7 @@ public:
 	float IncreaseSpreadRadius = 0.5f; // 탄 퍼짐 증가폭(샷건의 경우 값을 수정해도 고정)
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Mesh")
-	TSoftObjectPtr<UStaticMesh> Mesh; // 메쉬
+	TObjectPtr<UStaticMesh> Mesh; // 메쉬
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
 	TSoftObjectPtr<UParticleSystem> MuzzleFlashEffect; // 발사 이펙트(총구)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
