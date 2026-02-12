@@ -3,6 +3,20 @@
 
 #include"AsyncDataManager.h"
 #include"Engine/AssetManager.h"
+#include "Kismet/GameplayStatics.h"
+
+class UAssetManager;
+
+
+
+UAsyncDataManager* UAsyncDataManager::Get(const UObject* WorldContextObject)
+{
+	if (UGameInstance* GI = UGameplayStatics::GetGameInstance(WorldContextObject))
+	{
+		return GI->GetSubsystem<UAsyncDataManager>();
+	}
+	return nullptr;
+}
 
 void UAsyncDataManager::Initialize(FSubsystemCollectionBase& Collection)
 {
