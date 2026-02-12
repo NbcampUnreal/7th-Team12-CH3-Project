@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "TheSeventhbullet/Weapon/WeaponBase.h"
 
 AMainCharacter::AMainCharacter()
 {
@@ -126,9 +127,17 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			// Fire 바인딩
 			InputComponents->BindAction(
 				PC->FireAction,
-				ETriggerEvent::Triggered,
+				ETriggerEvent::Started,
 				this,
 				&AMainCharacter::PlayerFire
+			);
+			
+			// Finish Fire 바인딩
+			InputComponents->BindAction(
+				PC->FireAction,
+				ETriggerEvent::Completed,
+				this,
+				&AMainCharacter::FinishFire
 			);
 			
 			// SKill 바인딩
@@ -250,6 +259,20 @@ void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 
 void AMainCharacter::PlayerFire(const FInputActionValue& value)
 {
+	if (!CurrentWeapon)
+	{
+		return;
+	}
+	CurrentWeapon->StartFire();
+}
+
+void AMainCharacter::FinishFire(const FInputActionValue& value)
+{
+	if (!CurrentWeapon)
+	{
+		return;
+	}
+	CurrentWeapon->StopFire();
 }
 
 void AMainCharacter::PlayerSkill(const FInputActionValue& value)

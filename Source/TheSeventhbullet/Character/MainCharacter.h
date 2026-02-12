@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "MainCharacter.generated.h"
 
+class AWeaponBase;
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
@@ -85,6 +86,7 @@ public:
 	void PlayerAim(const FInputActionValue& value);
 	void PlayerAimFinished(const FInputActionValue& value);
 	void PlayerFire(const FInputActionValue& value);
+	void FinishFire(const FInputActionValue& value);
 	void PlayerSkill(const FInputActionValue& value);
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
@@ -109,4 +111,9 @@ public:
 #pragma endregion
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	
+	// 주현 : 테스트용 무기
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Weapon")
+	TObjectPtr<AWeaponBase> CurrentWeapon;
 };
