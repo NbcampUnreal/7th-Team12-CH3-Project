@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Data/WeaponState.h"
 #include "GameFramework/Actor.h"
 #include "WeaponBase.generated.h"
 
@@ -26,8 +25,7 @@ public:
 	// 무기 데이터 받아오는 구간
 	void Initialize(
 		TObjectPtr<APawn> NewOwner,
-		TObjectPtr<UWeaponDataAsset> InData,
-		const FWeaponState& InState
+		TObjectPtr<UWeaponDataAsset> InData
 	);
 	// 발사 시작 : 공격키를 입력하고 있는 동안 지속적으로 Fire() 함수를 호출
 	void StartFire();
@@ -60,8 +58,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TObjectPtr<UWeaponDataAsset> WeaponDataAsset;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	FWeaponState WeaponState;
 	
 	float Damage = 10.f; // 최종 데미지
 	float FireInterval = 0.5f; // 발사 간격(발사속도)

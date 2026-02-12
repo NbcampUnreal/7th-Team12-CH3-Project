@@ -27,13 +27,11 @@ AWeaponBase::AWeaponBase()
 
 void AWeaponBase::Initialize(
 	TObjectPtr<APawn> NewOwner,
-	TObjectPtr<UWeaponDataAsset> InData,
-	const FWeaponState& InState
+	TObjectPtr<UWeaponDataAsset> InData
 )
 {
 	WeaponOwner = NewOwner;
 	WeaponDataAsset = InData;
-	WeaponState = InState;
 	
 	if (InData->Mesh)
 	{
