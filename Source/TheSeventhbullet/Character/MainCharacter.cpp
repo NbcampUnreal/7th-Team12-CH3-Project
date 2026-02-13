@@ -10,7 +10,7 @@
 
 AMainCharacter::AMainCharacter()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	
 	MaxHP = 100;
 	CurrentHP = MaxHP;
@@ -21,9 +21,10 @@ AMainCharacter::AMainCharacter()
 	MaxSpeed = 600.0f;
 	SprintMultifier = 1.5f;
 	NormalArmLength = 300.0f; 
-	AimmingArmLength = 0.0f;
+	AimingArmLength = 0.0f;
 	NormalSpringArm = FVector(0.0f, 25.0f, 0.0f);
-	AimmingSpringArm = FVector(0.0f, 25.0f, 55.0f);
+	AimingSpringArm = FVector(0.0f, 25.0f, 35.0f);
+	CameraInterpSpeed = 15.0f;
 	MuzzleOffset = FVector(300.0f, 0.0f, 0.0f);
 	HandSocketName = FName("MuzzleSocket");
 	
@@ -158,6 +159,34 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	}
 }
 
+void AMainCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+	// bIsAming 으로 조준 상태 구분
+	float TargetLength = bIsAiming ? AimingArmLength : NormalArmLength;
+	FVector TargetOffset = bIsAiming ? AimingSpringArm : NormalSpringArm;
+	
+	// Length 보간
+	float NewArmLength = FMath::FInterpTo(
+		SpringArm->TargetArmLength,
+		TargetLength,
+		DeltaTime,
+		CameraInterpSpeed
+	);
+	
+	// Socket 보간
+	FVector NewSocketOffSet = FMath::VInterpTo(
+		SpringArm->SocketOffset,
+		TargetOffset,
+		DeltaTime,
+		CameraInterpSpeed
+	);
+	
+	SpringArm->TargetArmLength = NewArmLength;
+	SpringArm->SocketOffset = NewSocketOffSet;
+}
+
 void AMainCharacter::PlayerMove(const FInputActionValue& value)
 {	
 	if (!Controller)	return;
@@ -230,22 +259,17 @@ void AMainCharacter::PlayerDodgeFinished(const FInputActionValue& value)
 
 void AMainCharacter::PlayerAim(const FInputActionValue& value)
 {
-	// 카메라의 시야변경
-	// ㄴ SpringArm length 줄이기 O
-	// ㄴ SpringArm 등에서 오른쪽 어깨로 이동 O
-	// ㄴ 시야 확대 (망원 효과)
-	// ㄴ 보간을 통해 부드러운 연출
-	SpringArm->TargetArmLength = AimmingArmLength;
-	SpringArm->SocketOffset = FVector(0.0f, 25.0f, 55.0f);
-	
+	PrimaryActorTick.bCanEverTick = true;	// 보간을 위한 Tick On
+	//bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리 / 추후 에니메이션 넣고 활성화
+	bIsAiming = true;
 	// 줌 하는 동안 이동속도 감소 / 시야에 맞춰 캐릭터 정면 고정 
 }
 
 void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 {
-
-	SpringArm->TargetArmLength = NormalArmLength;
-	SpringArm->SocketOffset = FVector(0.0f, 0.0f, 55.0f);
+	PrimaryActorTick.bCanEverTick = false;	// Tick Off
+	//bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 / 추후 에니메이션 넣고 활성화
+	bIsAiming = false;
 }
 
 void AMainCharacter::PlayerFire(const FInputActionValue& value)

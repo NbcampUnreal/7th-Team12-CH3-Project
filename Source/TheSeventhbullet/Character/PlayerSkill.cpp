@@ -28,7 +28,7 @@ APlayerSkill::APlayerSkill()
 	
 	ExplodeRadius = 500.0f;
 	DamageAmount = 50.0f;
-	KnockBackAmount = 500.0f;
+	KnockBackAmount = 1000.0f;
 }
 
 void APlayerSkill::BeginPlay()
@@ -104,7 +104,7 @@ void APlayerSkill::Explode()
 				KnockbackDir.Normalize();
 				
 				// Z축 보정
-				FVector KnockbackVelocity = (KnockbackDir * KnockBackAmount) + FVector(0.0f, 0.0f, KnockBackAmount * 0.5f);
+				FVector KnockbackVelocity = (KnockbackDir * KnockBackAmount);
 				
 				HitCharacter->LaunchCharacter(KnockbackVelocity, true, true);
 			}
