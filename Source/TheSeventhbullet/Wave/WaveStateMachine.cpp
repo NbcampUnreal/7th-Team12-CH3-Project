@@ -5,11 +5,12 @@
 
 #include "WaveStates/BaseWaveState.h"
 #include "WaveStates/BeginWaveState.h"
+#include "WaveStates/EndWaveState.h"
 #include "WaveStates/NoneWaveState.h"
 #include "WaveStates/ProgressWaveState.h"
 #include "WaveStates/IntermissionWaveState.h"
 
-void UWaveStateMachine::Initalize(AMainGameMode* InOwner)
+void UWaveStateMachine::Initialize(AMainGameMode* InOwner)
 {
 	Owner = InOwner;
 	CurrentStateType = EWaveState::None;
@@ -62,8 +63,14 @@ UBaseWaveState* UWaveStateMachine::GetOrCreateState(EWaveState StateType)
 	case EWaveState::Progress:
 		StateClass = UProgressWaveState::StaticClass();
 		break;
+	case EWaveState::End:
+		StateClass = UEndWaveState::StaticClass();
+		break;
 	case EWaveState::Intermission:
 		StateClass = UIntermissionWaveState::StaticClass();
+		break;
+	default:
+		UE_LOG(LogTemp,Warning,TEXT("Unknown Wave State Type"));
 		break;
 	}
 	if (StateClass == nullptr)
@@ -71,7 +78,12 @@ UBaseWaveState* UWaveStateMachine::GetOrCreateState(EWaveState StateType)
 		return nullptr;
 	}
 	
-	UBaseWaveState* NewState = NewObject<UBaseWaveState>(this, StaticClass());
+	UBaseWaveState* NewState = NewObject<UBaseWaveState>(this, StateClass);
+	if (!NewState)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("Can't Make UWaveState"));
+		return nullptr;
+	}
 	NewState->Initialize(this);
 	StateCache.Add(StateType, NewState);
 	

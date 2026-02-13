@@ -13,4 +13,6 @@ UCLASS()
 class THESEVENTHBULLET_API UMainGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
+public:
+	static UMainGameInstance* Get(const UObject* WorldContext);
 };
