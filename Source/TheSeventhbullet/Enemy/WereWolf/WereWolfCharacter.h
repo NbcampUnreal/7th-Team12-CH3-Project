@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "TheSeventhbullet/Enemy/EnemyBase.h"
 #include "WereWolfCharacter.generated.h"
 class AWereWolfAIController;
 
@@ -12,7 +13,7 @@ class AWereWolfAIController;
  * 월드에 배치되거나 스폰될때 AIController에 빙의되게 만듭니다.
  */
 UCLASS()
-class THESEVENTHBULLET_API AWereWolfCharacter : public ACharacter
+class THESEVENTHBULLET_API AWereWolfCharacter : public AEnemyBase
 {
 	GENERATED_BODY()
 

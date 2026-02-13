@@ -8,7 +8,6 @@
 
 AWereWolfAIController::AWereWolfAIController()
 {
-    WereWolfBehaviorTree = nullptr;
 }
 
 void AWereWolfAIController::BeginPlay()
@@ -26,9 +25,4 @@ void AWereWolfAIController::OnPossess(APawn* InPawn)
 {
     //빙의 시 BehaviorTree를 시작합니다.
     Super::OnPossess(InPawn);
-    if (WereWolfBehaviorTree)
-    {
-        bool bSuccess = RunBehaviorTree(WereWolfBehaviorTree);
-        UE_LOG(LogTemp,Warning,TEXT("%s"),bSuccess?TEXT("TRUE"):TEXT("FALSE"));
-    }
 }
