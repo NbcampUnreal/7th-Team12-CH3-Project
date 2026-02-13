@@ -56,24 +56,29 @@ public:
 	
 	bool bIsDodge = false;		// 회피 동작 상태
 	bool bIsInvicible = false;	// 무적 상태
-	
+	bool bIsAiming = false;		// 조준 상태
 #pragma endregion
 	
-#pragma region Component
+#pragma region Camera
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	USpringArmComponent* SpringArm;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
-	FVector NormalSpringArm;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
-	FVector AimmingSpringArm;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	UCameraComponent* Camera;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
+	FVector NormalSpringArm;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
+	FVector AimingSpringArm;
+	
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
 	float NormalArmLength; 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
-	float AimmingArmLength;
+	float AimingArmLength;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
+	float CameraInterpSpeed;
 #pragma endregion
 
 #pragma region Actions
@@ -86,7 +91,6 @@ public:
 	void PlayerAim(const FInputActionValue& value);
 	void PlayerAimFinished(const FInputActionValue& value);
 	void PlayerFire(const FInputActionValue& value);
-	void FinishFire(const FInputActionValue& value);
 	void PlayerSkill(const FInputActionValue& value);
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
@@ -111,7 +115,7 @@ public:
 #pragma endregion
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
+	virtual void Tick(float DeltaTime) override;
 	
 	// 주현 : 테스트용 무기
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Weapon")
