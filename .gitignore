@@ -4,6 +4,7 @@ Content/Asset/*
 .idea/
 .vsconfig
 Content/TheSeventhBullet/Maps/TestMaps/*
+.idea/
 # Created by https://www.toptal.com/developers/gitignore/api/rider,visualstudio,unrealengine
 # Edit at https://www.toptal.com/developers/gitignore?templates=rider,visualstudio,unrealengine
 
