@@ -168,6 +168,12 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	}
 }
 
+float AMainCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+}
+
 void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -269,7 +275,7 @@ void AMainCharacter::PlayerDodgeFinished(const FInputActionValue& value)
 void AMainCharacter::PlayerAim(const FInputActionValue& value)
 {
 	PrimaryActorTick.bCanEverTick = true;	// 보간을 위한 Tick On
-	//bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리 / 추후 에니메이션 넣고 활성화
+	//bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리 | 추후 에니메이션 넣고 활성화
 	bIsAiming = true;
 	// 줌 하는 동안 이동속도 감소 / 시야에 맞춰 캐릭터 정면 고정 
 }
@@ -277,7 +283,7 @@ void AMainCharacter::PlayerAim(const FInputActionValue& value)
 void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 {
 	PrimaryActorTick.bCanEverTick = false;	// Tick Off
-	//bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 / 추후 에니메이션 넣고 활성화
+	//bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 | 추후 에니메이션 넣고 활성화
 	bIsAiming = false;
 }
 

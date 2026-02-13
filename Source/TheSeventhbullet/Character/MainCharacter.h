@@ -94,6 +94,7 @@ public:
 	void PlayerSkill(const FInputActionValue& value);
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
+	void PlayerReload(const FInputActionValue& value);
 #pragma endregion
 
 #pragma region Skill
@@ -115,6 +116,7 @@ public:
 #pragma endregion
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void Tick(float DeltaTime) override;
 	
 	// 주현 : 테스트용 무기
