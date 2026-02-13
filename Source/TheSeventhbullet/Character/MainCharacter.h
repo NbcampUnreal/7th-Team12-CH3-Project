@@ -91,6 +91,7 @@ public:
 	void PlayerAim(const FInputActionValue& value);
 	void PlayerAimFinished(const FInputActionValue& value);
 	void PlayerFire(const FInputActionValue& value);
+	void FinishFire(const FInputActionValue& value);
 	void PlayerSkill(const FInputActionValue& value);
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
