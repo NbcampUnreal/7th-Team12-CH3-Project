@@ -6,7 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "ItemDataAsset.h"
-#include "WeaponDataAsset.generated.h"
+#include "WPDataAsset.generated.h"
 
 //class AWeaponBase;
 class UNiagaraSystem;
@@ -22,7 +22,7 @@ enum class EWeaponType : uint8
 };
 
 UCLASS()
-class THESEVENTHBULLET_API UWeaponDataAsset : public UItemDataAsset
+class THESEVENTHBULLET_API UWPDataAsset : public UItemDataAsset
 {
 	GENERATED_BODY()
 
