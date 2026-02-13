@@ -1,12 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Caution : WeaponBase 기반 코드들 주석 처리 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "CoreMinimal.h"
 #include "ItemDataAsset.h"
 #include "WeaponDataAsset.generated.h"
 
-class AWeaponBase;
+//class AWeaponBase;
 class UNiagaraSystem;
 
 UENUM(BlueprintType)
@@ -79,8 +81,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Animation")
 	TSubclassOf<UAnimInstance> WeaponAnimLayerClass;
 	// Weapon Base
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Actor")
-	TSubclassOf<AWeaponBase> WeaponActorClass;
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Actor")
+	//TSubclassOf<AWeaponBase> WeaponActorClass;
 #pragma endregion
 	
 
