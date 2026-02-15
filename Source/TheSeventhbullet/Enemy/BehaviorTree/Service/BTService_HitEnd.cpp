@@ -6,7 +6,7 @@
 
 UBTService_HitEnd::UBTService_HitEnd()
 {
-	NodeName = TEXT("Hit State Manager");
+	NodeName = TEXT("Hit End");
 	bNotifyCeaseRelevant = true;
 	//탈출만 사용하기에 Tick=false
 	bNotifyTick = false;
@@ -16,7 +16,7 @@ UBTService_HitEnd::UBTService_HitEnd()
 void UBTService_HitEnd::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	Super::OnCeaseRelevant(OwnerComp, NodeMemory);
-	TObjectPtr<UBlackboardComponent> BBComp=OwnerComp.GetBlackboardComponent();
+	BBComp=OwnerComp.GetBlackboardComponent();
 	if (BBComp)
 	{
 		BBComp->SetValueAsBool(FName("bIsHit"), false);

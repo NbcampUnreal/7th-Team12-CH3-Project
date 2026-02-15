@@ -27,12 +27,14 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UBehaviorTree> EnemyBehaviorTree;
-
 	TObjectPtr<UBlackboardComponent> BBComp;
+	
 	
 	virtual void OnPossess(APawn* InPawn) override;
 	UFUNCTION()
 	void HitEvent();
+	UFUNCTION()
+	void DeadEvent();
 	
 private:
 	FTimerHandle HitTimerHandle;

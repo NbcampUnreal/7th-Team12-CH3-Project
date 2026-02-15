@@ -1,19 +1,19 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "BTTask_Attack.generated.h"
+#include "BTTask_PlayAnimMontageBase.generated.h"
 
 /**
- * 공격 애니메이션을 재생하고 공격 종료 성공시 Succeeded를 반환합니다.
+ * 애니메이션을 재생하고 재생 종료 성공시 Succeeded를 반환합니다.
  */
 UCLASS()
-class THESEVENTHBULLET_API UBTTask_Attack : public UBTTaskNode
+class THESEVENTHBULLET_API UBTTask_PlayAnimMontageBase : public UBTTaskNode
 {
 	GENERATED_BODY()
 	
 public:
-	UBTTask_Attack();
+	UBTTask_PlayAnimMontageBase();
 	
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
@@ -25,6 +25,6 @@ public:
 	virtual void OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult) override;
 	
 protected:
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	TObjectPtr<UAnimMontage> AttackMontage;
+	UPROPERTY(EditAnywhere, Category = "AnimationMontage")
+	TObjectPtr<UAnimMontage> AnimMontage;
 };

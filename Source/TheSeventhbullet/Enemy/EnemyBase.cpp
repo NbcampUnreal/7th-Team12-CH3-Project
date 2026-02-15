@@ -2,10 +2,13 @@
 
 
 #include "EnemyBase.h"
+
+#include "AIController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -21,7 +24,7 @@ AEnemyBase::AEnemyBase()
 	ArmorPoint = 0.f;
 	AttackPoint = 10.0f;
 	KnockbackStrengh = 200.0f;
-	
+	bIsDead = false;
 }
 
 // Called when the game starts or when spawned
@@ -29,8 +32,6 @@ void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 	AEnemyBase::OnTakePointDamage.AddDynamic(this, &AEnemyBase::EnemyTakePointDamage);
-	
-	
 }
 
 // Called every frame
@@ -47,10 +48,10 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 void AEnemyBase::SetupEnemy(float InMaxHealth, float InArmorPoint, float InAttackPoint, float InKnockbackStrengh)
 {
-	MaxHealth=InMaxHealth;
-	ArmorPoint=InArmorPoint;
-	AttackPoint=InAttackPoint;
-	KnockbackStrengh=InKnockbackStrengh;
+	MaxHealth = InMaxHealth;
+	ArmorPoint = InArmorPoint;
+	AttackPoint = InAttackPoint;
+	KnockbackStrengh = InKnockbackStrengh;
 }
 
 
@@ -65,29 +66,44 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 	{
 		bIsHeadShot = true;
 	}
-	
+
 	//데미지 처리- 헤드샷 1.5배 데미지
 	SetHealth(NowHealth + ArmorPoint - (bIsHeadShot ? Damage * 1.5f : Damage));
 	UE_LOG(LogTemp, Warning, TEXT("LineTraceHit, %s, %f"), *BoneName.ToString(), NowHealth);
-	
+
+	// 적 캐릭터가 처음 죽었을 경우
+	if (!bIsDead && FMath::IsNearlyZero(NowHealth))
+	{
+		//사망 처리
+		bIsDead = true;
+		
+		//BT에 정보 전달
+		OnCharacterDead.Broadcast();
+		
+		
+		//5초 후 오브젝트 풀로 돌아간다.
+		FTimerHandle ReturnToPoolTimer;
+		GetWorld()->GetTimerManager().SetTimer(ReturnToPoolTimer, this, &AEnemyBase::ReturnToPool, 5.0f, false);
+	}
+
+
 	//헤드샷을 맞았을 경우
 	if (bIsHeadShot)
 	{
 		//HIT상태 전달을 위한 델리게이트
 		OnCharacterHit.Broadcast();
-		
+
 		//넉백 구현
 		FVector LaunchVelocity = ShotFromDirection * KnockbackStrengh;
 		LaunchCharacter(bIsHeadShot ? LaunchVelocity : FVector::ZeroVector, true, true);
-		
-		
-		
+
+
 		if (HeadShotParticle)
 		{
 			DisplayParticle(HitLocation, HeadShotParticle);
 		}
 	}
-	
+
 	//몸통에 맞았을 경우
 	else
 	{
@@ -96,16 +112,6 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 			DisplayParticle(HitLocation, HitParticle);
 		}
 	}
-	
-
-	
-	
-	
-	
-
-
-
-	
 }
 
 void AEnemyBase::SetHealth(float NewHealth)
@@ -143,6 +149,9 @@ void AEnemyBase::DisplayParticle(FVector HitLocation, UParticleSystem* InParticl
 	}
 }
 
-
-
-
+void AEnemyBase::ReturnToPool()
+{
+	//TODO : 오브젝트 풀로 리턴하는 함수를 호출
+	UE_LOG(LogTemp,Warning,TEXT("ReturnToPool"));
+	Destroy();
+}
