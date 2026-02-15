@@ -6,7 +6,7 @@
 #include "GameFramework/Character.h"
 #include "EnemyBase.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterHitSignnature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterEventSignnature);
 
 
 UCLASS()
@@ -26,8 +26,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	UPROPERTY(BlueprintAssignable, Category="Events")
-	FOnCharacterHitSignnature OnCharacterHit;
-	
+	FOnCharacterEventSignnature OnCharacterHit;
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnCharacterEventSignnature OnCharacterDead;
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -74,7 +75,9 @@ protected:
 	
 	void SetHealth(float NewHealth);
 	void DisplayParticle(FVector HitLocation, UParticleSystem* InParticle);
-	
+	void ReturnToPool();
 
+private:
+	bool bIsDead;
 	
 };

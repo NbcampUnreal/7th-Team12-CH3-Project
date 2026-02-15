@@ -38,9 +38,11 @@ void AEnemyAIControllerBase::OnPossess(APawn* InPawn)
 		UE_LOG(LogTemp, Warning, TEXT("%s"), bSuccess?TEXT("TRUE"):TEXT("FALSE"));
 
 
-		TObjectPtr<AWereWolfCharacter> Wolf = Cast<AWereWolfCharacter>(InPawn);
-		Wolf->OnCharacterHit.AddDynamic(this, &AEnemyAIControllerBase::HitEvent);
+		TObjectPtr<AEnemyBase> Enemy = Cast<AEnemyBase>(InPawn);
+		Enemy->OnCharacterHit.AddDynamic(this, &AEnemyAIControllerBase::HitEvent);
+		Enemy->OnCharacterDead.AddDynamic(this,&AEnemyAIControllerBase::DeadEvent);
 		BBComp = GetBlackboardComponent();
+		BBComp->SetValueAsObject(TEXT("SelfActor"),InPawn);
 	}
 }
 
@@ -48,4 +50,11 @@ void AEnemyAIControllerBase::HitEvent()
 {
 	//헤드샷시 2초 경직
 	BBComp->SetValueAsBool(TEXT("bIsHit"), true);
+}
+
+void AEnemyAIControllerBase::DeadEvent()
+{
+	//사망 애니메이션 처리
+	BBComp->SetValueAsBool(TEXT("bIsDead"), true);
+	UE_LOG(LogTemp,Warning,TEXT("DeadEvent"));
 }
