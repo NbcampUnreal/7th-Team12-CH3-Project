@@ -4,27 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTService.h"
-#include "BTService_HitEnd.generated.h"
+#include "BTService_DeadEnd.generated.h"
 
 /**
- * Hit의 중복 실행을 방지합니다.
+ * 캐릭터 사망 이후 애니메이션 일시정지, BT 정지 관련 처리를 합니다.
  */
 UCLASS()
-class THESEVENTHBULLET_API UBTService_HitEnd : public UBTService
+class THESEVENTHBULLET_API UBTService_DeadEnd : public UBTService
 {
 	GENERATED_BODY()
-	UBTService_HitEnd();
+	UBTService_DeadEnd();
 	
 public:
-	//bool BB키
+	//bool BB 키
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
-	FBlackboardKeySelector bIsHitKey;
-	
-	
+	FBlackboardKeySelector SelfActorKey;
 protected:
 	virtual void OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
-
-private:
+	TWeakObjectPtr<ACharacter> SelfActor;
 	TObjectPtr<UBlackboardComponent> BBComp;
+
 };

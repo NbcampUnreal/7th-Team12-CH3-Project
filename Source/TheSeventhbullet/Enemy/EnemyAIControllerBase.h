@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "EnemyAIControllerBase.generated.h"
 
 
@@ -27,12 +28,21 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UBehaviorTree> EnemyBehaviorTree;
-
 	TObjectPtr<UBlackboardComponent> BBComp;
+	
 	
 	virtual void OnPossess(APawn* InPawn) override;
 	UFUNCTION()
 	void HitEvent();
+	UFUNCTION()
+	void DeadEvent();
+	
+	//bool BB 키(FName)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
+	FName bIsDeadKey="bIsDead";
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
+	FName bIsHitKey="bIsHit";
+	;
 	
 private:
 	FTimerHandle HitTimerHandle;
