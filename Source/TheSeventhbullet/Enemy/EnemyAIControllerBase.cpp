@@ -5,6 +5,8 @@
 
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackBoardComponent.h"
+#include "BehaviorTree/Service/BTService_DeadEnd.h"
+#include "BehaviorTree/Service/BTService_HitEnd.h"
 #include "Kismet/GameplayStatics.h"
 #include "WereWolf/WereWolfCharacter.h"
 
@@ -15,6 +17,7 @@ AEnemyAIControllerBase::AEnemyAIControllerBase()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	EnemyBehaviorTree = nullptr;
+	
 }
 
 // Called when the game starts or when spawned
@@ -49,12 +52,12 @@ void AEnemyAIControllerBase::OnPossess(APawn* InPawn)
 void AEnemyAIControllerBase::HitEvent()
 {
 	//헤드샷시 2초 경직
-	BBComp->SetValueAsBool(TEXT("bIsHit"), true);
+	BBComp->SetValueAsBool(bIsHitKey, true);
 }
 
 void AEnemyAIControllerBase::DeadEvent()
 {
 	//사망 애니메이션 처리
-	BBComp->SetValueAsBool(TEXT("bIsDead"), true);
+	BBComp->SetValueAsBool(bIsDeadKey, true);
 	UE_LOG(LogTemp,Warning,TEXT("DeadEvent"));
 }

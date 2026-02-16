@@ -35,7 +35,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="Enemy|Status")
 	void SetupEnemy(float InMaxHealth=100.0f, float InArmorPoint=0.0f,float InAttackPoint=10.0f, float InKnockbackStrengh=200.0f);
-
+	
+	float GetAttackPoint();
 	
 
 

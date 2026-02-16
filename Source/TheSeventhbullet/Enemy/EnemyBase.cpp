@@ -54,6 +54,11 @@ void AEnemyBase::SetupEnemy(float InMaxHealth, float InArmorPoint, float InAttac
 	KnockbackStrengh = InKnockbackStrengh;
 }
 
+float AEnemyBase::GetAttackPoint()
+{
+	return AttackPoint;
+}
+
 
 void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy,
                                       FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName,

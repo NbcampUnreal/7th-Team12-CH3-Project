@@ -15,8 +15,16 @@ class THESEVENTHBULLET_API UBTService_HitEnd : public UBTService
 	GENERATED_BODY()
 	UBTService_HitEnd();
 	
+public:
+	//bool BB키
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
+	FBlackboardKeySelector bIsHitKey;
+	
+	
 protected:
 	virtual void OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
+
 private:
 	TObjectPtr<UBlackboardComponent> BBComp;
 };

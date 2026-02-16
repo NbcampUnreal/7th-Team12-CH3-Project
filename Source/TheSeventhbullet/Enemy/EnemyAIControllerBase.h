@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "EnemyAIControllerBase.generated.h"
 
 
@@ -35,6 +36,13 @@ protected:
 	void HitEvent();
 	UFUNCTION()
 	void DeadEvent();
+	
+	//bool BB 키(FName)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
+	FName bIsDeadKey="bIsDead";
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
+	FName bIsHitKey="bIsHit";
+	;
 	
 private:
 	FTimerHandle HitTimerHandle;
