@@ -5,7 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "TheSeventhbullet/Weapon/Data/WeaponDataAsset.h"
+#include "TheSeventhbullet/DataAsset/WeaponDataAsset.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "TheSeventhbullet/Character/MainCharacter.h"
 

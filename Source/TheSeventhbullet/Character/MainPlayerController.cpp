@@ -7,9 +7,9 @@ AMainPlayerController::AMainPlayerController()
 	SprintAction(nullptr),
 	DodgeAction(nullptr),
 	InteractAction(nullptr),
-	SkillAction(nullptr),
 	OpenInventoryAction(nullptr),
 	AimAction(nullptr),
-	FireAction(nullptr)
+	FireAction(nullptr),
+	SkillAction(nullptr)
 {
 }
