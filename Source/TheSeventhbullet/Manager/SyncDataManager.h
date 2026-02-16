@@ -40,7 +40,7 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
-	FWaveRowData GetWaveData(int32 WaveNumber) const;
+	FStageRowData GetStageData(int32 StageIndex) const;
 	
 	UFUNCTION(BlueprintPure, Category = "Data|Sync")
 	int32 GetTotalWaveCount() const;
@@ -48,13 +48,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
 	FMonsterRowData GetMonsterData(FName Tag) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
+	FWaveRowData GetWaveData(int32 StageIndex, int32 WaveIndex);
+	
 public:
 	template<typename RowType, typename KeyType>
 	static void LoadAndCacheTable(const TCHAR* Path, TMap<KeyType, RowType>& OutCache, TFunctionRef<KeyType(const RowType*)> KeySelector);
 	
 private:
 	UPROPERTY()
-	TMap<int32, FWaveRowData> WaveCache;
+	TMap<int32, FStageRowData> StageCache;
 	
 	UPROPERTY()
 	TMap<FName, FMonsterRowData> MonsterCache;

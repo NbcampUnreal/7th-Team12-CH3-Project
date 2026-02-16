@@ -19,4 +19,6 @@ public:
 	virtual void Enter() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void Exit() override;
+private:
+	float DelayTimer =3.0f;
 };
