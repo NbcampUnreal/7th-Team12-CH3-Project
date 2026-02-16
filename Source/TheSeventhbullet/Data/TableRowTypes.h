@@ -9,6 +9,16 @@
 /**
  * DataTable용 RowData 모음
  */
+UENUM(BlueprintType)
+enum class EMonsterType:uint8
+{
+	None,
+	WereWolf,
+	Sparrow,
+	Kwang,
+	Rampage,
+	Sevarog		
+};
 USTRUCT()
 struct FWaveMonsterRowData : public FTableRowBase
 {
@@ -83,4 +93,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USoundConcurrency> ConcurrencySettings;
 };
+
 

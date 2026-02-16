@@ -4,6 +4,8 @@
 #include "BTTask_PlayAnimMontageBase.h"
 #include "AIController.h"
 #include "GameFramework/Character.h"
+#include "TheSeventhbullet/Enemy/EnemyBase.h"
+
 
 UBTTask_PlayAnimMontageBase::UBTTask_PlayAnimMontageBase()
 {
@@ -18,13 +20,18 @@ EBTNodeResult::Type UBTTask_PlayAnimMontageBase::ExecuteTask(UBehaviorTreeCompon
 		return EBTNodeResult::Aborted;
 	}
 
-	ACharacter* AiController = Cast<ACharacter>(Owner->GetPawn());
-	if (AiController == nullptr || AnimMontage == nullptr)
+	ACharacter* AiCharacter = Cast<ACharacter>(Owner->GetPawn());
+	if (AiCharacter == nullptr || AnimMontageName == "")
+	{
+		return EBTNodeResult::Failed;
+	}
+	AEnemyBase* AIEnemyCharacter=Cast<AEnemyBase>(AiCharacter);
+	if(AIEnemyCharacter==nullptr)
 	{
 		return EBTNodeResult::Failed;
 	}
 
-	AiController->PlayAnimMontage(AnimMontage);
+	AiCharacter->PlayAnimMontage(AIEnemyCharacter->ReturnthisMontage(AnimMontageName));
 	return EBTNodeResult::InProgress;
 }
 
@@ -40,9 +47,14 @@ void UBTTask_PlayAnimMontageBase::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 
 	//캐릭터나 몽타주 둘중하나라도 없으면 Fail
 	ACharacter* AICharacter = Cast<ACharacter>(Owner->GetPawn());
-	if (AICharacter == nullptr || AnimMontage == nullptr)
+	if (AICharacter == nullptr || AnimMontageName == "")
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+		return;
+	}
+	AEnemyBase* AIEnemyCharacter=Cast<AEnemyBase>(AICharacter);
+	if(AIEnemyCharacter==nullptr)
+	{
 		return;
 	}
 
@@ -55,7 +67,7 @@ void UBTTask_PlayAnimMontageBase::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 	}
 
 	// 재생중인 몽타주가 멈췄으면 Succeeded
-	bool bStopped = AnimInstance->Montage_GetIsStopped(AnimMontage);
+	bool bStopped = AnimInstance->Montage_GetIsStopped(AIEnemyCharacter->ReturnthisMontage(AnimMontageName));
 	if (bStopped)
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);

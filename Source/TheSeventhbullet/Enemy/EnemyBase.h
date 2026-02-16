@@ -8,7 +8,10 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterEventSignnature);
 
-
+/**
+ * PDA를 통해 로드 완료된 데이터를 가져와서 적 캐릭터 정보를 들고 있고, 피격 등의 이벤트를 진행합니다.
+ */
+class UBehaviorTree;
 UCLASS()
 class THESEVENTHBULLET_API AEnemyBase : public ACharacter
 {
@@ -29,19 +32,37 @@ public:
 	FOnCharacterEventSignnature OnCharacterHit;
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnCharacterDead;
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnCharacterEventSignnature OnCharacterReset;
+	
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
+	//몬스터를 해당 값으로 초기화합니다.
 	UFUNCTION(BlueprintCallable,Category="Enemy|Status")
-	void SetupEnemy(float InMaxHealth=100.0f, float InArmorPoint=0.0f,float InAttackPoint=10.0f, float InKnockbackStrengh=200.0f);
-	
+	void SetupEnemy(UEnemyDataAsset* LoadedData);
+	//공격력을 반환합니다.
 	float GetAttackPoint();
 	
-
-
+	//오브젝트 풀에서 캐릭터를 생성할때 리셋해줍니다.
+	UFUNCTION(BlueprintCallable,Category="Enemy|Status")
+	void ResetEnemy();
+	//PDA에서 받은 로딩된 애님몽타주를 실행합니다.
+	UFUNCTION(BlueprintCallable,Category="Enemy|Status")
+	UAnimMontage* ReturnthisMontage(FName AMName);
+	//PDA에서 받은 로딩된 발사체 애님몽타주를 실행합니다.
+	UFUNCTION(BlueprintCallable,Category="Enemy|Status")
+	UAnimMontage* ReturnthisProjectileMontage();
+	
+	UFUNCTION()
+	EMonsterType GetMonsterType();
+	
+	UFUNCTION()
+	void SetMonsterType(EMonsterType InEnemyMonsterType);
+	
 
 protected:
+#pragma region EnemyStatus
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
 	float NowHealth;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
@@ -52,12 +73,22 @@ protected:
 	float AttackPoint;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
 	float KnockbackStrengh;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
-	TObjectPtr<UAnimMontage> HitAnimMontage;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
+	bool bIsLongRange;
+#pragma endregion
+	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
 	UParticleSystem* HitParticle;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
     UParticleSystem* HeadShotParticle;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
+	UBehaviorTree* EnemyBehaviorTree;
+	
+	TObjectPtr<UEnemyDataAsset> EnemyData;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy")
+	EMonsterType EnemyMonsterType;
 	
 	
 	
@@ -73,6 +104,8 @@ protected:
 	const class UDamageType* DamageType, 
 	AActor* DamageCauser
 	);
+	
+	
 	
 	void SetHealth(float NewHealth);
 	void DisplayParticle(FVector HitLocation, UParticleSystem* InParticle);
