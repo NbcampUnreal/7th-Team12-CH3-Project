@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "WeaponBase.generated.h"
 
+class UNiagaraSystem;
 class UWeaponDataAsset;
 class USphereComponent;
 
@@ -64,9 +65,9 @@ public:
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	bool bDrawFireDebug = true; // 발사 디버그 표시 여부
+	bool bDrawFireDebug = false; // 발사 디버그 표시 여부
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	float FireDebugDuration = 1.0f; // 발사 디버그 지속 시간
+	float FireDebugDuration = 0.f; // 발사 디버그 지속 시간
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	bool bDrawDebugInfinite = false; // 발사 디버그 드로우를 영구지속할지 여부
 	
@@ -90,4 +91,7 @@ protected:
 	int32 AmountOfPellets = 1; // 발사체 갯수
 	float PelletSpreadRadius = 3.f; // 탄 퍼짐 정도
 	float IncreaseSpreadRadiusValue = 0.5f; // 트리거 시 탄 퍼짐 증가폭(샷건이 아닌 경우)
+	
+	UPROPERTY()
+	UNiagaraSystem* CachedProjectileEffect; // 발사체 이펙트를 캐싱
 };
