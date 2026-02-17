@@ -186,6 +186,50 @@ void UAsyncDataManager::LoadSingleBundle(FPrimaryAssetType AssetType, FName Bund
 	}
 }
 
+void UAsyncDataManager::LoadAssetsByID(const TArray<FPrimaryAssetId>& AssetIDs, const TArray<FName>& Bundles, FOnBundleLoadComplete OnComplete)
+{
+	TArray<FPrimaryAssetId> IDsToLoad;
+	for (const FPrimaryAssetId& ID : AssetIDs)
+	{
+		if (ID.IsValid() && !LoadedAssets.Contains(ID))
+		{
+			IDsToLoad.Add(ID);
+		}
+	}
+
+	if (IDsToLoad.Num() == 0)
+	{
+		if (OnComplete.IsBound())
+		{
+			OnComplete.Execute();
+		}
+		return;
+	}
+
+	UAssetManager& Manager = UAssetManager::Get();
+	TSharedPtr<FStreamableHandle> Handle = Manager.LoadPrimaryAssets(
+		IDsToLoad,
+		Bundles,
+		FStreamableDelegate::CreateLambda([this, IDsToLoad, OnComplete]()
+		{
+			UAssetManager& Mgr = UAssetManager::Get();
+			for (const FPrimaryAssetId& ID : IDsToLoad)
+			{
+				if (UPrimaryDataAsset* Asset = Cast<UPrimaryDataAsset>(
+					Mgr.GetPrimaryAssetObject(ID)))
+				{
+					LoadedAssets.Add(ID, Asset);
+				}
+			}
+
+			if (OnComplete.IsBound())
+			{
+				OnComplete.Execute();
+			}
+		})
+	);
+}
+
 UPrimaryDataAsset* UAsyncDataManager::GetLoadedAsset(FPrimaryAssetId AssetID) const
 {
 	if (const TObjectPtr<UPrimaryDataAsset>* Found = LoadedAssets.Find(AssetID))
