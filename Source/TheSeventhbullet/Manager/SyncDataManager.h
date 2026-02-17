@@ -46,7 +46,7 @@ public:
 	int32 GetTotalWaveCount() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
-	FMonsterRowData GetMonsterData(FName Tag) const;
+	FMonsterRowData GetMonsterData(const EMonsterType Tag) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
 	FWaveRowData GetWaveData(int32 StageIndex, int32 WaveIndex);
@@ -60,7 +60,7 @@ private:
 	TMap<int32, FStageRowData> StageCache;
 	
 	UPROPERTY()
-	TMap<FName, FMonsterRowData> MonsterCache;
+	TMap<EMonsterType, FMonsterRowData> MonsterCache;
 	
 };
 

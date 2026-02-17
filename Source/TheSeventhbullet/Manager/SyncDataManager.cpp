@@ -23,7 +23,7 @@ void USyncDataManager::Initialize(FSubsystemCollectionBase& Collection)
 		[](const FStageRowData* Row) { return Row->WaveNumber;}
 	);
 	
-	LoadAndCacheTable<FMonsterRowData, FName>(
+	LoadAndCacheTable<FMonsterRowData, EMonsterType>(
 		TEXT("/Game/TheSeventhBullet/DataTable/DT_Monster"),
 		MonsterCache,
 		[](const FMonsterRowData* Row) {return Row->EnemyType;}
@@ -40,7 +40,7 @@ int32 USyncDataManager::GetTotalWaveCount() const
 	return StageCache.Num();
 }
 
-FMonsterRowData USyncDataManager::GetMonsterData(FName Tag) const
+FMonsterRowData USyncDataManager::GetMonsterData(const EMonsterType Tag) const
 {
 	const FMonsterRowData* Found = MonsterCache.Find(Tag);
 	if (!Found)
