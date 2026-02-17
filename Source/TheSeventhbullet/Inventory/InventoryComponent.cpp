@@ -16,7 +16,7 @@ void UInventoryComponent::BeginPlay()
 bool UInventoryComponent::AddItem(FPrimaryAssetId ItemID, int32 Count)
 {
 	UAsyncDataManager* Mgr = UAsyncDataManager::Get(this);
-	if (!Mgr || !Mgr->IsInitialLoadComplete()) return false;
+	if (!Mgr || !Mgr->IsAssetLoaded(ItemID)) return false;
 
 	UItemDataAsset* ItemData = Cast<UItemDataAsset>(Mgr->GetLoadedAsset(ItemID));
 	if (!ItemData)

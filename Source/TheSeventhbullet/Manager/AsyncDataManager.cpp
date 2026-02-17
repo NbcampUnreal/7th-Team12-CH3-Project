@@ -18,10 +18,8 @@ void UAsyncDataManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	bInitialLoadComplete = false;
-	PendingInitialLoadCount = 2;
-	LoadSingleBundle(FPrimaryAssetType("Item"), NAME_None, true);
-	LoadSingleBundle(FPrimaryAssetType("Item"), FName("Lobby"), true);
+	LoadSingleBundle(FPrimaryAssetType("Item"), NAME_None, FOnBundleLoadComplete());
+	LoadSingleBundle(FPrimaryAssetType("Item"), FName("Lobby"), FOnBundleLoadComplete());
 }
 
 void UAsyncDataManager::Deinitialize()
@@ -41,25 +39,20 @@ void UAsyncDataManager::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UAsyncDataManager::CheckInitialLoadComplete()
-{
-	if (PendingInitialLoadCount <= 0)
-	{
-		bInitialLoadComplete = true;
-	}
-}
-
-bool UAsyncDataManager::IsInitialLoadComplete() const
-{
-	return bInitialLoadComplete;
-}
-
-void UAsyncDataManager::LoadBundles(FPrimaryAssetType AssetType, const TArray<FName>& Bundles)
+void UAsyncDataManager::LoadBundles(FPrimaryAssetType AssetType, const TArray<FName>& Bundles, FOnBundleLoadComplete OnComplete)
 {
 	if (!BundleHandles.Contains(AssetType) || !BundleHandles[AssetType].Contains(NAME_None))
 	{
-		LoadSingleBundle(AssetType, NAME_None, false);
+		LoadSingleBundle(AssetType, NAME_None, FOnBundleLoadComplete());
 	}
+
+	if (Bundles.Num() == 0)
+	{
+		LoadSingleBundle(AssetType, NAME_None, OnComplete);
+		return;
+	}
+
+	TArray<FName> BundlesToLoad;
 
 	for (const FName& Bundle : Bundles)
 	{
@@ -70,8 +63,33 @@ void UAsyncDataManager::LoadBundles(FPrimaryAssetType AssetType, const TArray<FN
 				continue;
 			}
 		}
+		BundlesToLoad.Add(Bundle);
+	}
 
-		LoadSingleBundle(AssetType, Bundle, false);
+	if (BundlesToLoad.Num() == 0)
+	{
+		if (OnComplete.IsBound())
+		{
+			OnComplete.Execute();
+		}
+		return;
+	}
+
+	TSharedPtr<int32> PendingCount = MakeShared<int32>(BundlesToLoad.Num());
+
+	for (const FName& Bundle : BundlesToLoad)
+	{
+		FOnBundleLoadComplete BundleCallback;
+		BundleCallback.BindLambda([PendingCount, OnComplete]()
+		{
+			--(*PendingCount);
+			if (*PendingCount <= 0 && OnComplete.IsBound())
+			{
+				OnComplete.Execute();
+			}
+		});
+
+		LoadSingleBundle(AssetType, Bundle, BundleCallback);
 	}
 }
 
@@ -117,16 +135,15 @@ void UAsyncDataManager::UnloadAllByType(FPrimaryAssetType AssetType)
 	}
 }
 
-void UAsyncDataManager::LoadSingleBundle(FPrimaryAssetType AssetType, FName BundleName, bool bTrackCompletion)
+void UAsyncDataManager::LoadSingleBundle(FPrimaryAssetType AssetType, FName BundleName, FOnBundleLoadComplete OnComplete)
 {
 	TArray<FPrimaryAssetId> IDs = GetAllAssetIDs(AssetType);
 
 	if (IDs.Num() == 0)
 	{
-		if (bTrackCompletion)
+		if (OnComplete.IsBound())
 		{
-			--PendingInitialLoadCount;
-			CheckInitialLoadComplete();
+			OnComplete.Execute();
 		}
 		return;
 	}
@@ -141,7 +158,7 @@ void UAsyncDataManager::LoadSingleBundle(FPrimaryAssetType AssetType, FName Bund
 	TSharedPtr<FStreamableHandle> Handle = Manager.LoadPrimaryAssets(
 		IDs,
 		BundleArray,
-		FStreamableDelegate::CreateLambda([this, IDs, BundleName, bTrackCompletion]()
+		FStreamableDelegate::CreateLambda([this, IDs, BundleName, OnComplete]()
 		{
 			if (BundleName == NAME_None)
 			{
@@ -156,10 +173,9 @@ void UAsyncDataManager::LoadSingleBundle(FPrimaryAssetType AssetType, FName Bund
 				}
 			}
 
-			if (bTrackCompletion)
+			if (OnComplete.IsBound())
 			{
-				--PendingInitialLoadCount;
-				CheckInitialLoadComplete();
+				OnComplete.Execute();
 			}
 		})
 	);
@@ -168,6 +184,50 @@ void UAsyncDataManager::LoadSingleBundle(FPrimaryAssetType AssetType, FName Bund
 	{
 		BundleHandles.FindOrAdd(AssetType).Add(BundleName, Handle);
 	}
+}
+
+void UAsyncDataManager::LoadAssetsByID(const TArray<FPrimaryAssetId>& AssetIDs, const TArray<FName>& Bundles, FOnBundleLoadComplete OnComplete)
+{
+	TArray<FPrimaryAssetId> IDsToLoad;
+	for (const FPrimaryAssetId& ID : AssetIDs)
+	{
+		if (ID.IsValid() && !LoadedAssets.Contains(ID))
+		{
+			IDsToLoad.Add(ID);
+		}
+	}
+
+	if (IDsToLoad.Num() == 0)
+	{
+		if (OnComplete.IsBound())
+		{
+			OnComplete.Execute();
+		}
+		return;
+	}
+
+	UAssetManager& Manager = UAssetManager::Get();
+	TSharedPtr<FStreamableHandle> Handle = Manager.LoadPrimaryAssets(
+		IDsToLoad,
+		Bundles,
+		FStreamableDelegate::CreateLambda([this, IDsToLoad, OnComplete]()
+		{
+			UAssetManager& Mgr = UAssetManager::Get();
+			for (const FPrimaryAssetId& ID : IDsToLoad)
+			{
+				if (UPrimaryDataAsset* Asset = Cast<UPrimaryDataAsset>(
+					Mgr.GetPrimaryAssetObject(ID)))
+				{
+					LoadedAssets.Add(ID, Asset);
+				}
+			}
+
+			if (OnComplete.IsBound())
+			{
+				OnComplete.Execute();
+			}
+		})
+	);
 }
 
 UPrimaryDataAsset* UAsyncDataManager::GetLoadedAsset(FPrimaryAssetId AssetID) const
