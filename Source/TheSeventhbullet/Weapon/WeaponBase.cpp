@@ -1,13 +1,12 @@
 #include "WeaponBase.h"
-
-#include "IEditableSkeleton.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "TheSeventhbullet/DataAsset/WeaponDataAsset.h"
-#include "Particles/ParticleSystemComponent.h"
 #include "TheSeventhbullet/Character/MainCharacter.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 AWeaponBase::AWeaponBase()
 {
@@ -35,7 +34,7 @@ AWeaponBase::AWeaponBase()
 void AWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
-	Initialize(nullptr);
+	Initialize(nullptr);	
 }
 
 void AWeaponBase::OnItemOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -73,6 +72,16 @@ void AWeaponBase::Initialize(TObjectPtr<APawn> NewOwner)
 	
 	AmountOfPellets = WeaponDataAsset->PelletsCount;
 	PelletSpreadRadius = WeaponDataAsset->SpreadRadius;
+	
+	// ProjectileEffect 캐싱
+	if (!WeaponDataAsset->ProjectileEffect.ToSoftObjectPath().IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ProjectileEffect Path Invalid"));
+	}
+	else
+	{
+		CachedProjectileEffect = WeaponDataAsset->ProjectileEffect.LoadSynchronous();
+	}
 }
 
 void AWeaponBase::StartFire()
@@ -190,7 +199,22 @@ void AWeaponBase::Fire()
 				Hit.ImpactPoint,
 				Hit.ImpactNormal.Rotation()
 			);
-			// 명중한 대상에 데미지처리 로직을 추가할 예정
+			
+			// 명중한 대상이 Enemy 태그가 있는 경우 ApplyPointDamage를 호출해서 맞은 부위를 확인하고 데미지를 줌.
+			if (Hit.GetActor()->ActorHasTag("Enemy"))
+			{
+				FVector ShotDirection = (End - Start).GetSafeNormal();
+				
+				UGameplayStatics::ApplyPointDamage(
+					Hit.GetActor(),
+					Damage,
+					ShotDirection,
+					Hit,
+					Hit.GetActor()->GetInstigatorController(),
+					WeaponOwner,
+					UDamageType::StaticClass()
+					);
+			}
 		}
 	}
 	
@@ -223,13 +247,26 @@ FVector AWeaponBase::TraceRandShot(const FVector& TraceStart, const FVector& Max
 	// 실제 목표 지점.
 	FVector EndLocation = SphereCenter + RandomTarget;
 	
+	// 발사체 파티클
+	if (CachedProjectileEffect)
+	{
+		UNiagaraComponent* Projectile = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			CachedProjectileEffect,
+			TraceStart,
+			FRotator::ZeroRotator
+		);
+		Projectile->SetVectorParameter(FName("Start"), TraceStart);
+		Projectile->SetVectorParameter(FName("Target"), EndLocation);
+	}
+	
 	// 디버그 드로우
 	// 탄 퍼짐 범위
-	DrawDebugSphere(GetWorld(), SphereCenter, PelletSpreadRadius, 15.f, FColor::Red, bDrawDebugInfinite,FireDebugDuration);
+	//DrawDebugSphere(GetWorld(), SphereCenter, PelletSpreadRadius, 15.f, FColor::Red, bDrawDebugInfinite,FireDebugDuration);
 	// 탄환 목표 지점
-	DrawDebugSphere(GetWorld(), EndLocation, 2.f, 15.f, FColor::Emerald, bDrawDebugInfinite,FireDebugDuration);
+	//DrawDebugSphere(GetWorld(), EndLocation, 2.f, 15.f, FColor::Emerald, bDrawDebugInfinite,FireDebugDuration);
 	// 탄환 경로
-	DrawDebugLine(GetWorld(), TraceStart, EndLocation, FColor::Magenta, bDrawDebugInfinite,FireDebugDuration);
+	//DrawDebugLine(GetWorld(), TraceStart, EndLocation, FColor::Magenta, bDrawDebugInfinite,FireDebugDuration);
 	
 	return EndLocation;
 }
@@ -256,6 +293,7 @@ void AWeaponBase::EquipWeapon(TObjectPtr<AActor> NewWeaponOwner)
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 			TEXT("Weapon_R")
 		);
+		
 		MainCharacter->CurrentWeapon = this;
 		UE_LOG(LogTemp, Warning, TEXT("Equip"));
 	}
