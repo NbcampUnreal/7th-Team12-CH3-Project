@@ -30,7 +30,6 @@ void UBTService_DeadEnd::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint
 			SelfActor->GetMesh()->SetComponentTickEnabled(false);
 			//StopTree를 해도 바로 Wait으로 이동하고, Tick도 꺼놓았기 때문에 크래시가 나지 않았다.
 			OwnerComp.StopTree(EBTStopMode::Safe);
-			SelfActor->UnPossessed();
 		}
 	}
 }

@@ -26,5 +26,7 @@ public:
 	
 protected:
 	UPROPERTY(EditAnywhere, Category = "AnimationMontage")
-	TObjectPtr<UAnimMontage> AnimMontage;
+	FName AnimMontageName;
+	
+	
 };

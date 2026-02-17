@@ -4,11 +4,15 @@
 #include "EnemyBase.h"
 
 #include "AIController.h"
+#include "EnemyAIControllerBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "AnimInstance/EnemyAnimInstance.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "Components/CapsuleComponent.h"
+#include "DataAsset/EnemyDataAsset.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -17,6 +21,7 @@ AEnemyBase::AEnemyBase()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	AIControllerClass = AEnemyAIControllerBase::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	MaxHealth = 100.0f;
@@ -25,6 +30,7 @@ AEnemyBase::AEnemyBase()
 	AttackPoint = 10.0f;
 	KnockbackStrengh = 200.0f;
 	bIsDead = false;
+	bIsLongRange=false;
 }
 
 // Called when the game starts or when spawned
@@ -32,6 +38,7 @@ void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 	AEnemyBase::OnTakePointDamage.AddDynamic(this, &AEnemyBase::EnemyTakePointDamage);
+	Tags.Add(FName("Enemy"));
 }
 
 // Called every frame
@@ -46,17 +53,84 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-void AEnemyBase::SetupEnemy(float InMaxHealth, float InArmorPoint, float InAttackPoint, float InKnockbackStrengh)
+//TODO : 프라이머리 데이터 에셋으로 초기화
+void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 {
-	MaxHealth = InMaxHealth;
-	ArmorPoint = InArmorPoint;
-	AttackPoint = InAttackPoint;
-	KnockbackStrengh = InKnockbackStrengh;
+	EnemyData=LoadedData;
+	MaxHealth=EnemyData->MaxHealth;
+	NowHealth=MaxHealth;
+	ArmorPoint=EnemyData->ArmorPoint;
+	AttackPoint=EnemyData->AttackPoint;
+	bIsLongRange=EnemyData->bIsLongRange;
+	HitParticle=EnemyData->HitParticle.Get();
+	HeadShotParticle=EnemyData->HeadShotParticle.Get();
+	USkeletalMeshComponent* EnemyMeshComp=this->GetMesh();
+	
+	if (EnemyMeshComp)
+	{
+		this->GetMesh()->SetSkeletalMeshAsset(EnemyData->SkeletalMesh.Get());
+		this->GetMesh()->SetAnimInstanceClass(EnemyData->EnemyAnimationBlueprint.Get());
+		this->GetMesh()->SetRelativeLocation(FVector(0,0,-90.f));
+		this->GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
+		this->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+		UAnimInstance* AnimInstance=this->GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			if (UEnemyAnimInstance* EnemyAnimInstance=Cast<UEnemyAnimInstance>(AnimInstance))
+			{
+				EnemyAnimInstance->SetEnemyBlendSpace(EnemyData->EnemyBlendSpace.Get());
+			}
+		}
+	}
+	AEnemyAIControllerBase* EnemyAIControllerBase=Cast<AEnemyAIControllerBase>(this->GetController());
+	if (EnemyAIControllerBase)
+	{
+		EnemyBehaviorTree=EnemyData->EnemyBT.Get();
+		EnemyAIControllerBase->SetBT(EnemyBehaviorTree);
+	}
+	
 }
+
+
+
 
 float AEnemyBase::GetAttackPoint()
 {
 	return AttackPoint;
+}
+
+void AEnemyBase::ResetEnemy()
+{
+	//HP를 최대치로 채운다.
+	NowHealth=MaxHealth;
+	//BT를 초기화 후 재가동하기 위한 델리게이트
+	OnCharacterReset.Broadcast();
+}
+
+UAnimMontage* AEnemyBase::ReturnthisMontage(FName AMName)
+{
+	if (EnemyData==nullptr)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("%s"),*AMName.ToString());
+		return nullptr;
+	}
+	return EnemyData->AnimMontages[AMName].Get();
+}
+
+UAnimMontage* AEnemyBase::ReturnthisProjectileMontage()
+{
+	if (EnemyData==nullptr) return nullptr;
+	return EnemyData->ProjectileAnimMontage.Get();
+}
+
+EMonsterType AEnemyBase::GetMonsterType()
+{
+	return EnemyMonsterType;
+}
+
+void AEnemyBase::SetMonsterType(EMonsterType InEnemyMonsterType)
+{
+	EnemyMonsterType=InEnemyMonsterType;
 }
 
 
@@ -98,9 +172,9 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 		//HIT상태 전달을 위한 델리게이트
 		OnCharacterHit.Broadcast();
 
-		//넉백 구현
-		FVector LaunchVelocity = ShotFromDirection * KnockbackStrengh;
-		LaunchCharacter(bIsHeadShot ? LaunchVelocity : FVector::ZeroVector, true, true);
+		//넉백 구현 - 미적용
+		//FVector LaunchVelocity = ShotFromDirection * KnockbackStrengh;
+		//LaunchCharacter(bIsHeadShot ? LaunchVelocity : FVector::ZeroVector, true, true);
 
 
 		if (HeadShotParticle)

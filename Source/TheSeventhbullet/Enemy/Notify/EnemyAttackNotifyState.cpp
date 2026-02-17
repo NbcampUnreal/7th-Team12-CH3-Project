@@ -69,7 +69,9 @@ void UEnemyAttackNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 		FLinearColor::Green, // TraceHitColor
 		2.0f // DrawTime
 	);
+	//이전 소켓의 위치를 갱신
 	PresentAttackSocketLocation = CurrentAttackSocketLocation;
+	//피격되지 않았으면 Early Return
 	if (!bHit)
 	{
 		return;
@@ -77,16 +79,21 @@ void UEnemyAttackNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 	for (const FHitResult& HitResult : HitResults)
 	{
 		HittedActor=HitResult.GetActor();
+		//1번 공격시 이미 피격당한 목록에 있다면 중복 타격 방지
 		if (!HittedActor||HittedCharacterArray.Contains(HittedActor))
 		{
 			continue;
 		}
+		//피격당한 캐릭터를 메인캐릭터로 형변환
 		HittedCharacter=Cast<AMainCharacter>(HittedActor);
 		if (HittedCharacter == nullptr)
 		{
 			continue;
 		}
+		
+		//피격당한 목록에 추가
 		HittedCharacterArray.Add(HittedCharacter);
+		//데미지 적용
 		UGameplayStatics::ApplyDamage(
 		HittedCharacter,
 			OwnerEnemyBase->GetAttackPoint(),
@@ -101,5 +108,6 @@ void UEnemyAttackNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 void UEnemyAttackNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
 	Super::NotifyEnd(MeshComp, Animation);
+	//피격당한 목록을 비워준다.
 	HittedCharacterArray.Empty();
 }

@@ -24,6 +24,9 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	
+	UFUNCTION()
+	void SetBT(UBehaviorTree* EnemyBT);
 
 protected:
 	UPROPERTY(EditAnywhere)
@@ -36,13 +39,15 @@ protected:
 	void HitEvent();
 	UFUNCTION()
 	void DeadEvent();
+	UFUNCTION()
+	void ResetEvent();
 	
 	//bool BB 키(FName)
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
 	FName bIsDeadKey="bIsDead";
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
 	FName bIsHitKey="bIsHit";
-	;
+	
 	
 private:
 	FTimerHandle HitTimerHandle;
