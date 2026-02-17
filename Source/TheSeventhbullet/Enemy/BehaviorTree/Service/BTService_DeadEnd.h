@@ -21,7 +21,6 @@ public:
 	FBlackboardKeySelector SelfActorKey;
 protected:
 	virtual void OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	TWeakObjectPtr<ACharacter> SelfActor;
 	TObjectPtr<UBlackboardComponent> BBComp;
 
 };

@@ -58,18 +58,21 @@ void AEnemyAIControllerBase::HitEvent()
 {
 	//헤드샷시 2초 경직
 	UE_LOG(LogTemp, Warning, TEXT("HeadHit"));
+	if (BBComp==nullptr) return;
 	BBComp->SetValueAsBool(bIsHitKey, true);
 }
 
 void AEnemyAIControllerBase::DeadEvent()
 {
 	//사망 애니메이션 처리
+	if (BBComp==nullptr) return;
 	BBComp->SetValueAsBool(bIsDeadKey, true);
 	UE_LOG(LogTemp, Warning, TEXT("DeadEvent"));
 }
 
 void AEnemyAIControllerBase::ResetEvent()
 {
+	if (BBComp==nullptr) return;
 	BBComp->InitializeBlackboard(*EnemyBehaviorTree->BlackboardAsset);
 	RunBehaviorTree(EnemyBehaviorTree);
 }

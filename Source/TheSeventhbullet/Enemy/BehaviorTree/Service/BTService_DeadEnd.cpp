@@ -23,7 +23,7 @@ void UBTService_DeadEnd::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint
 	BBComp = OwnerComp.GetBlackboardComponent();
 	if (BBComp)
 	{
-		SelfActor = Cast<ACharacter>(BBComp->GetValueAsObject(SelfActorKey.SelectedKeyName));
+		TWeakObjectPtr<ACharacter> SelfActor = Cast<ACharacter>(BBComp->GetValueAsObject(SelfActorKey.SelectedKeyName));
 		if (SelfActor!=nullptr)
 		{
 			SelfActor->GetMesh()->bPauseAnims = true;

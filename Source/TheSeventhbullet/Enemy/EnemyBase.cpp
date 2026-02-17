@@ -11,9 +11,12 @@
 #include "Animation/AnimMontage.h"
 #include "AnimInstance/EnemyAnimInstance.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "DataAsset/EnemyDataAsset.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Materials/Material.h"
+#include "Data/TableRowTypes.h"
 
 
 // Sets default values
@@ -53,7 +56,7 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-//TODO : 프라이머리 데이터 에셋으로 초기화
+// 프라이머리 데이터 에셋으로 초기화
 void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 {
 	EnemyData=LoadedData;
@@ -62,6 +65,7 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 	ArmorPoint=EnemyData->ArmorPoint;
 	AttackPoint=EnemyData->AttackPoint;
 	bIsLongRange=EnemyData->bIsLongRange;
+	AttackRadius=EnemyData->AttackRadius;
 	HitParticle=EnemyData->HitParticle.Get();
 	HeadShotParticle=EnemyData->HeadShotParticle.Get();
 	USkeletalMeshComponent* EnemyMeshComp=this->GetMesh();
@@ -73,6 +77,7 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 		this->GetMesh()->SetRelativeLocation(FVector(0,0,-90.f));
 		this->GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
 		this->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+		this->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 		UAnimInstance* AnimInstance=this->GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
@@ -87,7 +92,14 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 	{
 		EnemyBehaviorTree=EnemyData->EnemyBT.Get();
 		EnemyAIControllerBase->SetBT(EnemyBehaviorTree);
+		EnemyBBComp=EnemyAIControllerBase->GetBlackboardComponent();
+		EnemyBBComp->SetValueAsBool(FName("bIsLongRange"),bIsLongRange);
+		EnemyBBComp->SetValueAsFloat(FName("AttackRadius"),AttackRadius);
+		
 	}
+	this->GetMesh()->SetOverlayMaterial(EnemyData->EnemyMaterial.Get());
+	
+	
 	
 }
 
@@ -111,16 +123,26 @@ UAnimMontage* AEnemyBase::ReturnthisMontage(FName AMName)
 {
 	if (EnemyData==nullptr)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("%s"),*AMName.ToString());
 		return nullptr;
 	}
-	return EnemyData->AnimMontages[AMName].Get();
+	if (EnemyData->AnimMontages.Contains(AMName))
+	{
+		return EnemyData->AnimMontages[AMName].Get();
+	}
+	return nullptr;
 }
 
 UAnimMontage* AEnemyBase::ReturnthisProjectileMontage()
 {
-	if (EnemyData==nullptr) return nullptr;
-	return EnemyData->ProjectileAnimMontage.Get();
+	if (EnemyData==nullptr)
+	{
+		return nullptr;
+	}
+	if (EnemyData->ProjectileAnimMontage)
+	{
+		return EnemyData->ProjectileAnimMontage.Get();
+	}
+	return nullptr;
 }
 
 EMonsterType AEnemyBase::GetMonsterType()
