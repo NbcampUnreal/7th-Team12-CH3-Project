@@ -43,6 +43,9 @@ public:
 	//원거리 몬스터인가?
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy")
 	bool bIsLongRange;
+	//공격 범위
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy")
+	float AttackRadius;
 	
 	
 	//스켈레탈 메시
@@ -75,4 +78,6 @@ public:
 	//BehaviorTree
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy", meta=(AssetBundles="Enemy"))
 	TSoftObjectPtr<UBehaviorTree> EnemyBT;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy", meta=(AssetBundles="Enemy"))
+	TSoftObjectPtr<UMaterial> EnemyMaterial;
 };

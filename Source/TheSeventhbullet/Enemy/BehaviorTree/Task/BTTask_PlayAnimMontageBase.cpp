@@ -14,6 +14,7 @@ UBTTask_PlayAnimMontageBase::UBTTask_PlayAnimMontageBase()
 
 EBTNodeResult::Type UBTTask_PlayAnimMontageBase::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
+	
 	AAIController* Owner = OwnerComp.GetAIOwner();
 	if (Owner == nullptr)
 	{
@@ -21,7 +22,7 @@ EBTNodeResult::Type UBTTask_PlayAnimMontageBase::ExecuteTask(UBehaviorTreeCompon
 	}
 
 	ACharacter* AiCharacter = Cast<ACharacter>(Owner->GetPawn());
-	if (AiCharacter == nullptr || AnimMontageName == "")
+	if (AiCharacter == nullptr || AnimMontageName == "None")
 	{
 		return EBTNodeResult::Failed;
 	}
@@ -30,7 +31,7 @@ EBTNodeResult::Type UBTTask_PlayAnimMontageBase::ExecuteTask(UBehaviorTreeCompon
 	{
 		return EBTNodeResult::Failed;
 	}
-
+	if (AIEnemyCharacter->ReturnthisMontage(AnimMontageName)==nullptr) return EBTNodeResult::Failed;
 	AiCharacter->PlayAnimMontage(AIEnemyCharacter->ReturnthisMontage(AnimMontageName));
 	return EBTNodeResult::InProgress;
 }
@@ -66,6 +67,11 @@ void UBTTask_PlayAnimMontageBase::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 		return;
 	}
 
+	//몽타주가 없으면 리턴
+	if (AIEnemyCharacter->ReturnthisMontage(AnimMontageName)==nullptr)
+	{
+		return;
+	}
 	// 재생중인 몽타주가 멈췄으면 Succeeded
 	bool bStopped = AnimInstance->Montage_GetIsStopped(AIEnemyCharacter->ReturnthisMontage(AnimMontageName));
 	if (bStopped)

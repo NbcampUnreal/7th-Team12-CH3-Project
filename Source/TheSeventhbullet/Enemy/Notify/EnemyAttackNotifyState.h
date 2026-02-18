@@ -35,14 +35,18 @@ private:
 	FVector PresentAttackSocketLocation=FVector::ZeroVector;
 	FVector CurrentAttackSocketLocation=FVector::ZeroVector;
 	//공격을 진행하는 적 액터
+	UPROPERTY()
 	TObjectPtr<AActor> Owner;
 	//적 액터를 캐릭터로 형변환
+	UPROPERTY()
 	TObjectPtr<AEnemyBase> OwnerEnemyBase;
 	//맞은 액터(대부분 플레이어 캐릭터)
+	UPROPERTY()
 	TObjectPtr<AActor> HittedActor;
 	//맞은 액터를 메인 캐릭터로 형변환
+	UPROPERTY()
 	TObjectPtr<AMainCharacter> HittedCharacter;
-	
+	UPROPERTY()	
 	TArray<TObjectPtr<AActor>> HittedCharacterArray;
 	
 	
