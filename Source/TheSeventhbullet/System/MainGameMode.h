@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Data/TableRowTypes.h"
 #include "GameFramework/GameMode.h"
 #include "MainGameMode.generated.h"
 
@@ -61,7 +62,7 @@ private:
 	UPROPERTY()
 	int32 CurrentStageIndex=0; // WaveData의 인덱스 번호
 	UPROPERTY()
-	TArray<TSoftClassPtr<AActor>> SpawnQueue;
+	TArray<EMonsterType> SpawnQueue;
 	
 	float SpawnTimer = 0.0f;
 	float SpawnInterval = 0.0f;

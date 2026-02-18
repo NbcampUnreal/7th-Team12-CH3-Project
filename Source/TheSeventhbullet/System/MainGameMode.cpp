@@ -6,7 +6,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "TheSeventhbullet/Manager/SyncDataManager.h"
 #include "TheSeventhbullet/Wave/WaveStateMachine.h"
-#include "TheSeventhbullet/Wave/Spawn/Spawner.h"
 
 AMainGameMode::AMainGameMode()
 {
@@ -45,34 +44,35 @@ void AMainGameMode::PrepareStageAndPreLoad()
 	
 	FStageRowData StageData = DataManager->GetStageData(CurrentStageIndex);
 	
-	TMap<TSoftClassPtr<AActor>, int32> MaxMonsterRequirements;
+	TMap<EMonsterType, int32> MaxMonsterRequirements;
 	
 	for (const FWaveRowData& Wave : StageData.Waves)
 	{
-		TMap<TSoftClassPtr<AActor>,int32> CurrentWaveCounts;
-		//혹시 한 웨이브에서 같은 타입의 몬스터가 있는 경우를 대비
+		TMap<EMonsterType,int32> CurrentWaveCounts;
+		//최댓값 갱신
 		for (const FWaveMonsterRowData& MonsterInfo : Wave.Monster)
 		{
-			FMonsterRowData MonsterData = DataManager->GetMonsterData(MonsterInfo.EnemyTypes);
-			if (MonsterData.MonsterClass.IsNull()) continue;
+			EMonsterType Type = MonsterInfo.EnemyTypes;
+			if (Type == EMonsterType::None) continue;
 			
-			int32& Count = CurrentWaveCounts.FindOrAdd(MonsterData.MonsterClass);
-			Count+=MonsterInfo.EnemyCount;
+			int32& Count = CurrentWaveCounts.FindOrAdd(Type);
+			Count += MonsterInfo.EnemyCount;
 		}
-		//최댓값 갱신
+		
 		for (auto& Elem : CurrentWaveCounts)
 		{
-			TSoftClassPtr<AActor> KeyClass = Elem.Key;
-			int32 RequiredForThisWave = Elem.Value;
+			EMonsterType KeyType = Elem.Key;
+			int32 Required = Elem.Value;
 			
-			int32& GlobalMax = MaxMonsterRequirements.FindOrAdd(KeyClass);
-			
-			if (RequiredForThisWave > GlobalMax)
+			int32& GlobalMax = MaxMonsterRequirements.FindOrAdd(KeyType);
+			if (Required > GlobalMax)
 			{
-				GlobalMax = RequiredForThisWave;
+				GlobalMax = Required;
 			}
 		}
+		
 	}
+	
 	//서브시스템에 최댓값 pool 개수를 만들어서 넘김
 	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
 	if (SubSystem)
@@ -82,7 +82,6 @@ void AMainGameMode::PrepareStageAndPreLoad()
 			FSimpleDelegate::CreateUObject(this, &AMainGameMode::OnStageReady)
 		);
 	}
-	
 }
 
 void AMainGameMode::OnStageReady()
@@ -110,12 +109,11 @@ void AMainGameMode::SetupCurrentWaveData()
 	
 	for (const FWaveMonsterRowData& MonsterInfo : WaveData.Monster)
 	{
-		FMonsterRowData MonsterData = DataManager->GetMonsterData(MonsterInfo.EnemyTypes);
-		if (MonsterData.MonsterClass.IsNull()) continue;
+		if (MonsterInfo.EnemyTypes == EMonsterType::None) continue;
 		
 		for (int32 i = 0 ; i < MonsterInfo.EnemyCount; i++)
 		{
-			SpawnQueue.Add(MonsterData.MonsterClass);
+			SpawnQueue.Add(MonsterInfo.EnemyTypes);
 		}
 	}
 	
@@ -168,7 +166,7 @@ void AMainGameMode::SpawnOneMonster()
 {
 	if (SpawnQueue.IsEmpty()) return;
 	
-	TSoftClassPtr<AActor> MonsterToSpawn = SpawnQueue[0];
+	EMonsterType MonsterToSpawn = SpawnQueue[0];
 	SpawnQueue.RemoveAt(0);
 	
 	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
@@ -194,9 +192,12 @@ void AMainGameMode::BeginPlay()
 	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
 	if (SubSystem)
 	{
-		SubSystem->OnMonsterKilled.AddDynamic(this, &AMainGameMode::OnMonsterKilled);
+		if (!SubSystem->OnMonsterKilled.IsAlreadyBound(this, &AMainGameMode::OnMonsterKilled))
+		{
+			SubSystem->OnMonsterKilled.AddDynamic(this, &AMainGameMode::OnMonsterKilled);
+		}
 	}
-	
+	PrepareStageAndPreLoad();
 }
 
 void AMainGameMode::Tick(float DeltaSeconds)
