@@ -32,6 +32,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnCharacterHit;
 	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnCharacterEventSignnature OnCharacterHeadHit;
+	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnCharacterDead;
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnCharacterReset;
