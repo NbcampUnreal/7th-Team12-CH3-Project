@@ -41,7 +41,7 @@ void UBTService_DetectTarget::TickNode(
 		AiController->GetPawn()->GetActorLocation(),
 		PlayerPawn->GetActorLocation());
 	
-	UE_LOG(LogTemp,Warning,TEXT("%f"),Distance);
+	//UE_LOG(LogTemp,Warning,TEXT("%f"),Distance);
 	
 	//플레이어와 적 사이의 거리를 판단해 가까우면 BB에 설정하고, 멀면 버립니다.
 	if (Distance <= DetectRadius)
