@@ -50,6 +50,7 @@ void AEnemyAIControllerBase::OnPossess(APawn* InPawn)
 	Enemy->OnCharacterHit.AddDynamic(this, &AEnemyAIControllerBase::HitEvent);
 	Enemy->OnCharacterDead.AddDynamic(this, &AEnemyAIControllerBase::DeadEvent);
 	Enemy->OnCharacterReset.AddDynamic(this, &AEnemyAIControllerBase::ResetEvent);
+	Enemy->OnCharacterHeadHit.AddDynamic(this, &AEnemyAIControllerBase::HeadHitEvent);
 }
 
 void AEnemyAIControllerBase::HitEvent()
@@ -76,4 +77,10 @@ void AEnemyAIControllerBase::ResetEvent()
 	BBComp->SetValueAsBool(bIsDeadKey,false);
 	BBComp->SetValueAsBool(bIsHitKey,false);
 	RunBehaviorTree(EnemyBehaviorTree);
+}
+
+void AEnemyAIControllerBase::HeadHitEvent()
+{
+	if (BBComp==nullptr) return;
+	BBComp->SetValueAsBool(bIsHeadHitKey, true);
 }

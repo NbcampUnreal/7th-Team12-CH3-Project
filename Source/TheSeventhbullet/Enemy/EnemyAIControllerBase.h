@@ -41,12 +41,16 @@ protected:
 	void DeadEvent();
 	UFUNCTION()
 	void ResetEvent();
+	UFUNCTION()
+	void HeadHitEvent();
 	
 	//bool BB 키(FName)
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
 	FName bIsDeadKey="bIsDead";
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
 	FName bIsHitKey="bIsHit";
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
+	FName bIsHeadHitKey="bIsHeadHit";
 	
 	
 private:

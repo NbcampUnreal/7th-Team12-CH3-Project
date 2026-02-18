@@ -65,7 +65,7 @@ public:
 	TMap<FName,TSoftObjectPtr<USoundCue>> SoundCues;
 	//발사체의 스켈레탈 메시
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy", meta=(AssetBundles="Enemy"))
-	TSoftObjectPtr<USkeletalMesh> ProjectileSkeletalMesh;
+	TSoftObjectPtr<UStaticMesh> ProjectileStaticMesh;
 	//발사체의 애님몽타주
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy", meta=(AssetBundles="Enemy"))
 	TSoftObjectPtr<UAnimMontage> ProjectileAnimMontage;

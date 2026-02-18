@@ -203,8 +203,8 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 	//헤드샷을 맞았을 경우
 	if (bIsHeadShot)
 	{
-		//HIT상태 전달을 위한 델리게이트
-		OnCharacterHit.Broadcast();
+		//HEADHIT상태 전달을 위한 델리게이트
+		OnCharacterHeadHit.Broadcast();
 
 		//넉백 구현 - 미적용
 		//FVector LaunchVelocity = ShotFromDirection * KnockbackStrengh;
@@ -220,6 +220,8 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 	//몸통에 맞았을 경우
 	else
 	{
+		//HIT상태 전달을 위한 델리게이트
+		OnCharacterHit.Broadcast();
 		if (HitParticle)
 		{
 			DisplayParticle(HitLocation, HitParticle);
@@ -264,7 +266,6 @@ void AEnemyBase::DisplayParticle(FVector HitLocation, UParticleSystem* InParticl
 
 void AEnemyBase::ReturnToPool()
 {
-	//TODO : 오브젝트 풀로 리턴하는 함수를 호출
 	UE_LOG(LogTemp,Warning,TEXT("ReturnToPool"));
 	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
 	if (SubSystem)
