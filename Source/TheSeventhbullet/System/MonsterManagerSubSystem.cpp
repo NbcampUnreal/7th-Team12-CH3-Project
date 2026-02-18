@@ -1,5 +1,6 @@
 #include "MonsterManagerSubSystem.h"
 
+#include "DataAsset/EnemyDataAsset.h"
 #include "DSP/LFO.h"
 #include "Enemy/EnemyBase.h"
 #include "Engine/AssetManager.h"
@@ -53,6 +54,7 @@ void UMonsterManagerSubSystem::CacheSpawners()
 void UMonsterManagerSubSystem::InitializePoolWithCounts(const TMap<EMonsterType, int32>& Requirements, FSimpleDelegate OnComplete)
 {
 	//요청받은 데이터 멤버변수에 백업(로딩하는 동안 사라지면 안되니까)
+	UE_LOG(LogTemp,Error,TEXT("InitializePoolwithCounts"));
 	PendingPoolRequirements = Requirements;
 	OnPoolInitializationComplete = OnComplete;
 	
@@ -65,35 +67,30 @@ void UMonsterManagerSubSystem::InitializePoolWithCounts(const TMap<EMonsterType,
 	USyncDataManager* SyncData = USyncDataManager::Get(this);
 	if (!SyncData) return;
 	
-	TArray<FSoftObjectPath> PathsToLoad;
+	TArray<FPrimaryAssetId> AssetsToLoad;
+	
+	TArray<FName> BundlesToLoad;
+	BundlesToLoad.Add(FName("Enemy"));
 	
 	for (auto& Pair : Requirements)
 	{
 		EMonsterType Type = Pair.Key;
-		
-		//Enum으로 RowData 조회
 		FMonsterRowData RowData = SyncData->GetMonsterData(Type);
 		
-		// PDA ID(FName)를 이용해 실제 에셋 경로 찾기 (PrimaryAssetId 사용 가정)
-		// 만약 RowData에 TSoftObjectPtr가 있다면 바로 ToSoftObjectPath() 쓰면 됨.
-		// SyncManager나 AssetManager를 통해 FName -> SoftObjectPath 변환 로직이 필요
-		// 예시: FPrimaryAssetId AssetId("Enemy", RowData.MonsterPDAId);
 		FPrimaryAssetId AssetId("Enemy", RowData.MonsterPDAId);
 		if (AssetId.IsValid())
 		{
-			UAssetManager& AssetManager = UAssetManager::Get();
-			FSoftObjectPath Path = AssetManager.GetPrimaryAssetObject(AssetId);
-			if (Path.IsValid())
-			{
-				PathsToLoad.Add(Path);
-			}
+			AssetsToLoad.AddUnique(AssetId);
 		}
 	}
 	UAsyncDataManager* AsyncData = UAsyncDataManager::Get(this);
 	if (AsyncData)
 	{
-		//TODO : AsyncManager에서 TArray<FSoftObjectPath> 매개변수 값을 넘겨받아 load하는 함수 필요
-		//예시) AsyncData->LoadAssetListByPath(PathsToLoad, FSimpleDelegate:CreateUObject(this, &UMonsterManagerSubSystem::OnAssetsLoadedForPool));
+		AsyncData->LoadAssetsByID(
+			AssetsToLoad,
+			BundlesToLoad,
+			FOnBundleLoadComplete::CreateUObject(this, &UMonsterManagerSubSystem::OnAssetsLoadedForPool)
+			);
 	}
 	else
 	{
@@ -135,8 +132,8 @@ void UMonsterManagerSubSystem::SpawnMonster(EMonsterType MonsterType, int32 Spaw
         
 		if (EnemyToSpawn && PDA)
 		{
-			//EnemyToSpawn->InitializeMonster(PDA);
-			//EnemyToSpawn->SetMonsterType(MonsterType);
+			EnemyToSpawn->SetupEnemy(PDA);
+			EnemyToSpawn->SetMonsterType(MonsterType);
 		}
 	}
 	
@@ -150,6 +147,7 @@ void UMonsterManagerSubSystem::SpawnMonster(EMonsterType MonsterType, int32 Spaw
 				SelectedSpawner->GetActorRotation()
 			);
 		}
+		EnemyToSpawn->ResetEnemy();
 		EnemyToSpawn->SetActorHiddenInGame(false); // 끄면 숨김
 		EnemyToSpawn->SetActorTickEnabled(true);   // 끄면 멈춤
 		EnemyToSpawn->SetActorEnableCollision(true);
@@ -186,7 +184,8 @@ void UMonsterManagerSubSystem::OnAssetsLoadedForPool()
 	UE_LOG(LogTemp, Log, TEXT("Assets Loaded. Start Creating Object Pool.."));
 	
 	USyncDataManager* SyncData = USyncDataManager::Get(this);
-	UAssetManager& AssetManager = UAssetManager::Get();
+	UAsyncDataManager* AsyncData = UAsyncDataManager::Get(this);
+	if (!SyncData || !AsyncData) return;
 	
 	for (auto& Pair : PendingPoolRequirements)
 	{
@@ -196,7 +195,7 @@ void UMonsterManagerSubSystem::OnAssetsLoadedForPool()
 		FMonsterRowData RowData = SyncData->GetMonsterData(Type);
 		FPrimaryAssetId AssetId("Enemy",RowData.MonsterPDAId);
 		
-		UEnemyDataAsset* LoadedPDA = AssetManager.GetPrimaryAssetObject<UEnemyDataAsset>(AssetId);
+		UEnemyDataAsset* LoadedPDA = Cast<UEnemyDataAsset>(AsyncData->GetLoadedAsset(AssetId));
 		
 		if (!LoadedPDA) 
 		{
@@ -222,11 +221,8 @@ void UMonsterManagerSubSystem::OnAssetsLoadedForPool()
 
 			if (NewMonster)
 			{
-				//NewMonster->InitializeMonster(LoadedPDA); 
-				// 반납할 때 자신이 무슨 타입인지 알아야 하므로 저장 (AMonsterBase에 변수 필요)
-				//NewMonster->SetMonsterType(Type); 
-
-				// 풀에 넣기 (비활성화)
+				NewMonster->SetupEnemy(LoadedPDA);
+				NewMonster->SetMonsterType(Type);
 				ReturnToPool(NewMonster);
 			}
 		}

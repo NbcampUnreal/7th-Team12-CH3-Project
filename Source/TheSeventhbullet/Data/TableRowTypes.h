@@ -38,6 +38,7 @@ struct FWaveRowData : public FTableRowBase
 {
 	GENERATED_BODY()
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FWaveMonsterRowData> Monster;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

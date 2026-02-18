@@ -70,7 +70,9 @@ void AMainGameMode::PrepareStageAndPreLoad()
 				GlobalMax = Required;
 			}
 		}
+		
 	}
+	
 	//서브시스템에 최댓값 pool 개수를 만들어서 넘김
 	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
 	if (SubSystem)
@@ -195,7 +197,7 @@ void AMainGameMode::BeginPlay()
 			SubSystem->OnMonsterKilled.AddDynamic(this, &AMainGameMode::OnMonsterKilled);
 		}
 	}
-	
+	PrepareStageAndPreLoad();
 }
 
 void AMainGameMode::Tick(float DeltaSeconds)
