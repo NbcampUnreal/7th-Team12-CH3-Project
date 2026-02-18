@@ -5,8 +5,6 @@
 
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackBoardComponent.h"
-#include "BehaviorTree/Service/BTService_DeadEnd.h"
-#include "BehaviorTree/Service/BTService_HitEnd.h"
 #include "Kismet/GameplayStatics.h"
 #include "WereWolf/WereWolfCharacter.h"
 
@@ -74,5 +72,8 @@ void AEnemyAIControllerBase::ResetEvent()
 {
 	if (BBComp==nullptr) return;
 	BBComp->InitializeBlackboard(*EnemyBehaviorTree->BlackboardAsset);
+	//명시적 초기화
+	BBComp->SetValueAsBool(bIsDeadKey,false);
+	BBComp->SetValueAsBool(bIsHitKey,false);
 	RunBehaviorTree(EnemyBehaviorTree);
 }

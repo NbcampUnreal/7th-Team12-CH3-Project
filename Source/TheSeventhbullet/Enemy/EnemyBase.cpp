@@ -17,6 +17,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Materials/Material.h"
 #include "Data/TableRowTypes.h"
+#include "System/MonsterManagerSubSystem.h"
+#include "Data/TableRowTypes.h"
 
 
 // Sets default values
@@ -117,6 +119,15 @@ void AEnemyBase::ResetEnemy()
 	NowHealth=MaxHealth;
 	//BT를 초기화 후 재가동하기 위한 델리게이트
 	OnCharacterReset.Broadcast();
+	
+	//사망 상태를 다시 바꾼다.
+	bIsDead=false;
+	
+	//일시정지되었던 애니메이션 재시작
+	GetMesh()->bPauseAnims=false;
+	GetMesh()->SetComponentTickEnabled(true);
+	
+	
 }
 
 UAnimMontage* AEnemyBase::ReturnthisMontage(FName AMName)
@@ -181,6 +192,7 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 		//BT에 정보 전달
 		OnCharacterDead.Broadcast();
 		
+
 		
 		//5초 후 오브젝트 풀로 돌아간다.
 		FTimerHandle ReturnToPoolTimer;
@@ -254,5 +266,14 @@ void AEnemyBase::ReturnToPool()
 {
 	//TODO : 오브젝트 풀로 리턴하는 함수를 호출
 	UE_LOG(LogTemp,Warning,TEXT("ReturnToPool"));
-	Destroy();
+	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
+	if (SubSystem)
+	{
+		SubSystem->ReturnToPool(this);
+	}
+	else
+	{
+		Destroy();	
+	}
+	
 }
