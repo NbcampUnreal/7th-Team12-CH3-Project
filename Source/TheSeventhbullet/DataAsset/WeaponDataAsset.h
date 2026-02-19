@@ -4,6 +4,7 @@
 #include "Engine/DataAsset.h"
 #include "WeaponDataAsset.generated.h"
 
+class UNiagaraSystem;
 class AWeaponBase;
 
 UENUM(BlueprintType)
@@ -53,6 +54,8 @@ public:
 	TObjectPtr<UStaticMesh> Mesh; // 메쉬
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
 	TSoftObjectPtr<UParticleSystem> MuzzleFlashEffect; // 발사 이펙트(총구)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
+	TSoftObjectPtr<UNiagaraSystem> ProjectileEffect; // 발사체 이펙트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
 	TSoftObjectPtr<UParticleSystem> ImpactEffect; // Hit 이펙트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Animation")

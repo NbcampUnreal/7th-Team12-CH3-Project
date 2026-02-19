@@ -6,7 +6,8 @@
 #include "GameFramework/Character.h"
 #include "MainCharacter.generated.h"
 
-class AWeaponBase;
+class UCombatComponent; // CombatComponent 전방선언
+class AWeaponBase; // WeaponBase 전방선언
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
@@ -123,4 +124,8 @@ public:
 	// 주현 : 테스트용 무기
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Weapon")
 	TObjectPtr<AWeaponBase> CurrentWeapon;
+	
+	// 주현 : CombatComponent
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
+	TObjectPtr<UCombatComponent> CombatComponent;
 };
