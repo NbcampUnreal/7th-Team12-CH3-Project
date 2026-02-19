@@ -26,9 +26,7 @@ void UCombatComponent::InitializeWeaponData(AWeaponBase* Weapon)
 	
 	FireInterval = WeaponData->FireInterval;
 	MaxAmmo = WeaponData->MaxAmmo;
-	CurrentAmmo = MaxAmmo;	
-	PelletSpreadRadius = WeaponData->SpreadRadius;
-	IncreaseSpreadRadiusValue = WeaponData->IncreaseSpreadRadius;
+	CurrentAmmo = MaxAmmo;
 }
 
 void UCombatComponent::BeginPlay()
@@ -64,6 +62,7 @@ void UCombatComponent::StopFire()
 	bIsFiring = false;
 	UE_LOG(LogTemp, Warning, TEXT("StopFire"));
 	GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
+	CurrentWeapon->ResetSpreadRadius();
 }
 
 void UCombatComponent::HitScanFire()
@@ -91,9 +90,9 @@ void UCombatComponent::HitScanFire()
 	
 	FHitResult Hit;
 	CurrentWeapon->PerformTrace(Hit);
+	CurrentWeapon->SpreadBullet();
 	ApplyDamageByHit(CurrentWeapon, Hit);
 	SpawnFireParticles(Hit);
-	SpreadBullet();
 	ConsumeAmmo();
 }
 
@@ -125,7 +124,6 @@ void UCombatComponent::Reload()
 void UCombatComponent::ConsumeAmmo()
 {
 	CurrentAmmo = FMath::Clamp(CurrentAmmo - 1, 0, MaxAmmo);
-	PelletSpreadRadius = WeaponData->SpreadRadius;
 	UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, MaxAmmo);
 }
 
@@ -201,17 +199,6 @@ void UCombatComponent::SpawnFireParticles(const FHitResult& Hit)
 			Projectile->SetVectorParameter(FName("Start"), Hit.TraceStart);
 			Projectile->SetVectorParameter(FName("Target"), Hit.TraceEnd);
 		}
-	}
-}
-
-void UCombatComponent::SpreadBullet()
-{
-	if (WeaponData->WeaponType != EWeaponTypes::ShotGun)
-	{
-		PelletSpreadRadius = FMath::Clamp(
-			PelletSpreadRadius + IncreaseSpreadRadiusValue, 
-			WeaponData->SpreadRadius,
-			WeaponData->MaxSpreadRadius);
 	}
 }
 

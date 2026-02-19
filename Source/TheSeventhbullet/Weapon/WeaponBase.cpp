@@ -69,6 +69,7 @@ void AWeaponBase::Initialize(TObjectPtr<APawn> NewOwner)
 	Range = WeaponDataAsset->Range;
 	AmountOfPellets = WeaponDataAsset->PelletsCount;
 	PelletSpreadRadius = WeaponDataAsset->SpreadRadius;
+	IncreaseSpreadRadiusValue = WeaponDataAsset->IncreaseSpreadRadius;
 }
 
 bool AWeaponBase::PerformTrace(FHitResult& OutHit)
@@ -134,6 +135,22 @@ FVector AWeaponBase::TraceRandShot(const FVector& TraceStart, const FVector& Max
 	//DrawDebugLine(GetWorld(), TraceStart, EndLocation, FColor::Magenta, bDrawDebugInfinite,FireDebugDuration);
 	
 	return EndLocation;
+}
+
+void AWeaponBase::SpreadBullet()
+{
+	if (WeaponDataAsset->WeaponType != EWeaponTypes::ShotGun)
+	{
+		PelletSpreadRadius = FMath::Clamp(
+			PelletSpreadRadius+IncreaseSpreadRadiusValue, 
+			WeaponDataAsset->SpreadRadius,
+			WeaponDataAsset->MaxSpreadRadius);
+	}
+}
+
+void AWeaponBase::ResetSpreadRadius()
+{
+	PelletSpreadRadius = WeaponDataAsset->SpreadRadius;
 }
 
 void AWeaponBase::EquipWeapon(TObjectPtr<AActor> NewWeaponOwner)

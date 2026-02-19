@@ -47,12 +47,13 @@ protected:
 public:
 	// 무기 데이터 받아오는 구간
 	void Initialize(TObjectPtr<APawn> NewOwner);
-	// 재장전
-	void Reload();
 	// 라인트레이스로 히트스캔
 	bool PerformTrace(FHitResult& OutHit);
 	// 트레이스 종료지점을 랜덤으로 계산하여 탄 퍼짐을 구현.
 	FVector TraceRandShot(const FVector& TraceStart, const FVector& MaxTargetLocation);
+	
+	void SpreadBullet();
+	void ResetSpreadRadius();
 	
 	TObjectPtr<UWeaponDataAsset> GetWeaponDataAsset() const { return WeaponDataAsset; }
 	float GetBaseDamage() const { return BaseDamage; }
@@ -83,5 +84,6 @@ protected:
 	float FireInterval = 1.f;
 	float Range = 850.f; // 사거리
 	int32 AmountOfPellets = 1; // 발사체 갯수
-	float PelletSpreadRadius = 3.f;
+	float PelletSpreadRadius = 3.f; // 탄 퍼짐 정도
+	float IncreaseSpreadRadiusValue = 0.5f; // 트리거 시 탄 퍼짐 증가폭(샷건이 아닌 경우)
 };
