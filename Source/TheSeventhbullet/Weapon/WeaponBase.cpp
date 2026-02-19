@@ -65,7 +65,6 @@ void AWeaponBase::Initialize(TObjectPtr<APawn> NewOwner)
 	}
 	
 	BaseDamage = WeaponDataAsset->BaseDamage;
-	BaseDamage = WeaponDataAsset->BaseDamage;
 	FireInterval = WeaponDataAsset->FireInterval;
 	Range = WeaponDataAsset->Range;
 	AmountOfPellets = WeaponDataAsset->PelletsCount;
@@ -99,46 +98,7 @@ void AWeaponBase::Reload()
 }
 
 bool AWeaponBase::PerformTrace(FHitResult& OutHit)
-{	
-
-	// 재장전 중 상태로 변경
-	bIsReloading = true;
-	
-	UE_LOG(LogTemp, Warning, TEXT("Start Reload"));
-	
-	// 재장전 시간(ReloadTime) 이후에 재장전 완료
-	GetWorld()->GetTimerManager().SetTimer(
-		ReloadTimerHandle,
-		FTimerDelegate::CreateLambda([this]()
-		{
-			CurrentAmmo = MaxAmmo;
-			bIsReloading = false;
-			UE_LOG(LogTemp, Warning, TEXT("Reload"));
-			UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, MaxAmmo);
-		}),
-		ReloadTime,
-		false
-	);
-}
-
-bool AWeaponBase::PerformTrace(FHitResult& OutHit)
 {
-	// 총알이 0발 이하로 남았다면 재장전을 자동으로 수행 + 발사하지 않음
-	if (CurrentAmmo <= 0)
-	{
-		Reload();
-		return false;
-	}
-	
-	// 현재시간 - 마지막 발사시간 < 발사간격인 경우 발사가 불가능
-	// 연사가 아닌 단발사격인 경우에도 무기마다 발사간격(발사속도)을 구현하기 위한 로직.
-	const float Now = GetWorld()->GetTimeSeconds();
-	if (Now - LastFireTime < FireInterval)
-	{
-		return false;
-	}
-	LastFireTime = Now;
-	
 	FVector CameraLocation;
 	FRotator CameraRotation;
 	WeaponOwner->GetActorEyesViewPoint(CameraLocation, CameraRotation);

@@ -80,6 +80,7 @@ protected:
 	TObjectPtr<UWeaponDataAsset> WeaponDataAsset;
 	
 	float BaseDamage = 1.f;
+	float FireInterval = 1.f;
 	float Range = 850.f; // 사거리
 	int32 AmountOfPellets = 1; // 발사체 갯수
 	float PelletSpreadRadius = 3.f;
