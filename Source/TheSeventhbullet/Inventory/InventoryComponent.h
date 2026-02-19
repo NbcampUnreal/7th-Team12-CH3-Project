@@ -57,7 +57,6 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FItemInstance> Items;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 	int32 MaxSlots = 30;
 

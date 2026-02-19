@@ -1,10 +1,13 @@
-﻿#include "MainCharacter.h"
+#include "MainCharacter.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "MainPlayerController.h"
 #include "PlayerSkill.h"
 #include "Camera/CameraComponent.h"
 #include "Component/CombatComponent.h" // 주현 : CombatComponent
+#include "Inventory/InventoryComponent.h" // Inventory
+#include "UI/UITags.h"
+#include "Manager/UIManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -41,7 +44,7 @@ AMainCharacter::AMainCharacter()
 	
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
 	
-	
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComp"));
 	// 주현 : CombatComponent 초기화
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
 }
@@ -165,7 +168,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			// OpenInventory 바인딩
 			InputComponents->BindAction(
 				PC->OpenInventoryAction,
-				ETriggerEvent::Triggered,
+				ETriggerEvent::Completed,
 				this,
 				&AMainCharacter::PlayerOpenInventory
 			);
@@ -359,5 +362,9 @@ void AMainCharacter::PlayerInteract(const FInputActionValue& value)
 
 void AMainCharacter::PlayerOpenInventory(const FInputActionValue& value)
 {
+	if (UUIManager* UIMgr = UUIManager::Get(this))
+	{
+		UIMgr->Toggle(UITags::Inventory);
+	}
 }
 

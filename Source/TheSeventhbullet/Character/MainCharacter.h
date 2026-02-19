@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "MainCharacter.generated.h"
 
+class UInventoryComponent;
 class UCombatComponent; // CombatComponent 전방선언
 class AWeaponBase; // WeaponBase 전방선언
 class UInputAction;
@@ -128,4 +129,9 @@ public:
 	// 주현 : CombatComponent
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
 	TObjectPtr<UCombatComponent> CombatComponent;
+	
+	// Inventory
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Inventory")
+	TObjectPtr<UInventoryComponent> InventoryComponent;
+
 };
