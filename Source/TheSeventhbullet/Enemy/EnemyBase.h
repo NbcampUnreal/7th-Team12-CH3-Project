@@ -12,6 +12,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterEventSignnature);
  * PDA를 통해 로드 완료된 데이터를 가져와서 적 캐릭터 정보를 들고 있고, 피격 등의 이벤트를 진행합니다.
  */
 class UBehaviorTree;
+class UBlackboardComponent;
 UCLASS()
 class THESEVENTHBULLET_API AEnemyBase : public ACharacter
 {
@@ -75,6 +76,8 @@ protected:
 	float KnockbackStrengh;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
 	bool bIsLongRange;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
+	float AttackRadius;
 #pragma endregion
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
@@ -90,7 +93,7 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy")
 	EMonsterType EnemyMonsterType;
 	
-	
+	TObjectPtr<UBlackboardComponent> EnemyBBComp;
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void EnemyTakePointDamage(

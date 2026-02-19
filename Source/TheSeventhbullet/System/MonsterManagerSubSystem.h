@@ -3,23 +3,23 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/StreamableManager.h"
+#include "Data/TableRowTypes.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "Enemy/EnemyBase.h"
 #include "MonsterManagerSubSystem.generated.h"
 
-
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMonsterKilledDelegate);
+
 
 class ASpawner;
 
 USTRUCT()
-struct FMonsterPoolArray
+struct FMonsterPoolList
 {
 	GENERATED_BODY()
 	
 	UPROPERTY()
-	TArray<AActor*> Monsters;
+	TArray<AEnemyBase*> Enemys;
 };
 /**
  * @brief [ Monster Logistics & Pooling Manager ]
@@ -59,7 +59,7 @@ public:
 	 * 액터를 Destroy하지 않고, 비활성화(Hidden, CollisionOff) 후 풀에 반납합니다.
 	 * * 추가로 OnMonsterKilled 델리게이트를 방송하여 GameMode에 알립니다.
 	 */
-	void ReturnToPool(AActor* Monster);
+	void ReturnToPool(AEnemyBase* Monster);
 	/**
 	 * 현재 레벨에 있는 모든 ASpawner를 찾아 CachedSpawners 배열에 저장합니다.
 	 * OnWorldBeginPlay에서 자동으로 호출됩니다.
@@ -74,7 +74,7 @@ public:
 	 * @param Requirements { 몬스터 클래스(SoftPtr) : 필요한 최대 수량 }
 	 * @param OnComplete 작업이 끝났을 때 GameMode에게 알릴 콜백
 	 */
-	void InitializePoolWithCounts(const TMap<TSoftClassPtr<AActor>, int32>& Requirements, FSimpleDelegate OnComplete);
+	void InitializePoolWithCounts(const TMap<EMonsterType, int32>& Requirements, FSimpleDelegate OnComplete);
 	int32 GetCachedSpawnerCount();
 	/**
 	 * [몬스터 배치 (Activate)]
@@ -84,7 +84,7 @@ public:
 	 * @param MonsterAssetType 스폰할 몬스터의 클래스 정보
 	 * @param SpawnPointIndex 배치할 스포너의 인덱스
 	 */
-	void SpawnMonster(TSoftClassPtr<AActor> MonsterAssetType, int32 SpawnPointIndex);
+	void SpawnMonster(EMonsterType MonsterType, int32 SpawnPointIndex);
 public:
 	/** * 몬스터가 ReturnToPool을 통해 회수될 때 호출되는 이벤트입니다.
 	 * MainGameMode가 이를 구독하여 AliveMonsterCount를 감소시킵니다.
@@ -96,12 +96,13 @@ private:
 	 * 비동기 로딩이 완료된 후 호출되는 내부 콜백 함수입니다.
 	 * 실제 액터 생성(SpawnActor)과 풀 채우기(Warm-Up)가 여기서 수행됩니다.
 	 */
-	void OnAssetsLoadedForPool(FSimpleDelegate OnComplete);
+	void OnAssetsLoadedForPool();
+	FSimpleDelegate OnPoolInitializationComplete;
 	/** 로딩 도중 데이터 손실 방지를 위한 임시 저장소 */
-	TMap<TSoftClassPtr<AActor>, int32> PendingPoolRequirements;
+	TMap<EMonsterType, int32> PendingPoolRequirements;
 private:
 	UPROPERTY()
-	TMap<UClass*, FMonsterPoolArray> MonsterPool;
+	TMap<EMonsterType, FMonsterPoolList> MonsterPool;
 	
 	UPROPERTY()
 	TArray<ASpawner*> CachedSpawners;

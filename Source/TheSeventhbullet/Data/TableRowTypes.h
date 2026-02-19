@@ -9,16 +9,18 @@
 /**
  * DataTable용 RowData 모음
  */
+
 UENUM(BlueprintType)
-enum class EMonsterType:uint8
+enum class EMonsterType : uint8
 {
 	None,
 	WereWolf,
 	Sparrow,
 	Kwang,
 	Rampage,
-	Sevarog		
+	Sevarog // Boss
 };
+
 USTRUCT()
 struct FWaveMonsterRowData : public FTableRowBase
 {
@@ -28,7 +30,7 @@ struct FWaveMonsterRowData : public FTableRowBase
 	int32 EnemyCount = 5;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FName EnemyTypes;
+	EMonsterType EnemyTypes;
 };
 
 USTRUCT(BlueprintType)
@@ -36,6 +38,7 @@ struct FWaveRowData : public FTableRowBase
 {
 	GENERATED_BODY()
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FWaveMonsterRowData> Monster;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -66,10 +69,10 @@ struct FMonsterRowData : public FTableRowBase
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FName EnemyType;
+	EMonsterType EnemyType;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSoftClassPtr<AActor> MonsterClass;
+	FName MonsterPDAId;
 	
 };
 
@@ -93,5 +96,4 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USoundConcurrency> ConcurrencySettings;
 };
-
 

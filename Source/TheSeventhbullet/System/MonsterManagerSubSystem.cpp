@@ -1,6 +1,12 @@
 #include "MonsterManagerSubSystem.h"
+
+#include "DataAsset/EnemyDataAsset.h"
+#include "DSP/LFO.h"
+#include "Enemy/EnemyBase.h"
+#include "Engine/AssetManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Manager/AsyncDataManager.h"
+#include "Manager/SyncDataManager.h"
 #include "Wave/Spawn/Spawner.h"
 
 void UMonsterManagerSubSystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -28,6 +34,7 @@ void UMonsterManagerSubSystem::OnWorldBeginPlay(UWorld& InWorld)
 	Super::OnWorldBeginPlay(InWorld);
 	CacheSpawners();
 }
+
 void UMonsterManagerSubSystem::CacheSpawners()
 {
 	//맵에 있는 스포너를 Array에 담음
@@ -44,38 +51,51 @@ void UMonsterManagerSubSystem::CacheSpawners()
 	}
 }
 
-void UMonsterManagerSubSystem::InitializePoolWithCounts(const TMap<TSoftClassPtr<AActor>, int32>& Requirements,
-	FSimpleDelegate OnComplete)
+void UMonsterManagerSubSystem::InitializePoolWithCounts(const TMap<EMonsterType, int32>& Requirements, FSimpleDelegate OnComplete)
 {
 	//요청받은 데이터 멤버변수에 백업(로딩하는 동안 사라지면 안되니까)
+	UE_LOG(LogTemp,Error,TEXT("InitializePoolwithCounts"));
 	PendingPoolRequirements = Requirements;
+	OnPoolInitializationComplete = OnComplete;
+	
 	if (Requirements.IsEmpty())
 	{
 		OnComplete.ExecuteIfBound();
 		return;
 	}
 	
-	//로드해야 할 에셋 경로만 추출
-	TArray<FSoftObjectPath> PathsToLoad;
+	USyncDataManager* SyncData = USyncDataManager::Get(this);
+	if (!SyncData) return;
+	
+	TArray<FPrimaryAssetId> AssetsToLoad;
+	
+	TArray<FName> BundlesToLoad;
+	BundlesToLoad.Add(FName("Enemy"));
+	
 	for (auto& Pair : Requirements)
 	{
-		PathsToLoad.Add(Pair.Key.ToSoftObjectPath());
+		EMonsterType Type = Pair.Key;
+		FMonsterRowData RowData = SyncData->GetMonsterData(Type);
+		
+		FPrimaryAssetId AssetId("Enemy", RowData.MonsterPDAId);
+		if (AssetId.IsValid())
+		{
+			AssetsToLoad.AddUnique(AssetId);
+		}
 	}
-	
-	//AsyncDataManager를 통해 비동기 로드 시작
-	UAsyncDataManager* DataManager = UAsyncDataManager::Get(this);
-	if (DataManager)
+	UAsyncDataManager* AsyncData = UAsyncDataManager::Get(this);
+	if (AsyncData)
 	{
-		//로드가 다 끝나면 OnAssetLoadedForPool 함수 콜백
-		//TODO : AsyncManager에 추가되어야 할 코드
-		//AsyncManager에게 이 경로들에 있는 에셋들 로딩해주고, 다 되면 OnLoaded 실행
-		//DataManager->LoadAssetListByPath(PathsToLoad, OnAssetLoadedForPool);
+		AsyncData->LoadAssetsByID(
+			AssetsToLoad,
+			BundlesToLoad,
+			FOnBundleLoadComplete::CreateUObject(this, &UMonsterManagerSubSystem::OnAssetsLoadedForPool)
+			);
 	}
 	else
 	{
-		OnComplete.ExecuteIfBound();
+		OnPoolInitializationComplete.ExecuteIfBound();
 	}
-	
 }
 
 int32 UMonsterManagerSubSystem::GetCachedSpawnerCount()
@@ -83,101 +103,130 @@ int32 UMonsterManagerSubSystem::GetCachedSpawnerCount()
 	return CachedSpawners.Num();
 }
 
-void UMonsterManagerSubSystem::SpawnMonster(TSoftClassPtr<AActor> MonsterAssetType, int32 SpawnPointIndex)
+void UMonsterManagerSubSystem::SpawnMonster(EMonsterType MonsterType, int32 SpawnPointIndex)
 {
-	UClass* MonsterClass = MonsterAssetType.Get();
-	if (!MonsterClass)
+	AEnemyBase* EnemyToSpawn = nullptr;
+	
+	if (MonsterPool.Contains(MonsterType))
 	{
-		UE_LOG(LogTemp, Error, TEXT("SpawnMonster Failed : Asset is not loaded (%s)"), *MonsterAssetType.ToString());
-		return;
+		TArray<AEnemyBase*>& Pool = MonsterPool[MonsterType].Enemys;
+		if (Pool.Num()>0)
+		{
+			EnemyToSpawn = Pool.Pop();
+		}
 	}
 	
-	AActor* MonsterToSpawn = nullptr;
+	if (!EnemyToSpawn)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Pool Empty! Creating New %d"), (int32)MonsterType);
+        
+		// 동기 로드로 PDA 가져와서 생성 (최적화상 피해야 함)
+		USyncDataManager* SyncData = USyncDataManager::Get(this);
+		FMonsterRowData RowData = SyncData->GetMonsterData(MonsterType);
+		FPrimaryAssetId AssetId("Enemy", RowData.MonsterPDAId);
+		UEnemyDataAsset* PDA = UAssetManager::Get().GetPrimaryAssetObject<UEnemyDataAsset>(AssetId); // 로드 되어있다고 가정
+        
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		EnemyToSpawn = GetWorld()->SpawnActor<AEnemyBase>(AEnemyBase::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+        
+		if (EnemyToSpawn && PDA)
+		{
+			EnemyToSpawn->SetupEnemy(PDA);
+			EnemyToSpawn->SetMonsterType(MonsterType);
+		}
+	}
 	
-	if (MonsterPool.Contains(MonsterClass) && MonsterPool[MonsterClass].Monsters.Num() > 0)
+	if (EnemyToSpawn)
 	{
-		MonsterToSpawn = MonsterPool[MonsterClass].Monsters.Pop();
+		if (CachedSpawners.IsValidIndex(SpawnPointIndex))
+		{
+			ASpawner* SelectedSpawner = CachedSpawners[SpawnPointIndex];
+			EnemyToSpawn->SetActorLocationAndRotation(
+				SelectedSpawner->GetRandomPointInVolume(), 
+				SelectedSpawner->GetActorRotation()
+			);
+		}
+		EnemyToSpawn->ResetEnemy();
+		EnemyToSpawn->SetActorHiddenInGame(false); // 끄면 숨김
+		EnemyToSpawn->SetActorTickEnabled(true);   // 끄면 멈춤
+		EnemyToSpawn->SetActorEnableCollision(true);
 	}
-	else
-	{
-		FActorSpawnParameters SpawnParameters;
-		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		
-		MonsterToSpawn = GetWorld()->SpawnActor<AActor>(
-		MonsterClass,
-		FVector::ZeroVector,
-		FRotator::ZeroRotator,
-		SpawnParameters
-		);
-		
-		UE_LOG(LogTemp, Warning, TEXT("Pool was Empty! Created new instance of %s"), *GetNameSafe(MonsterClass));
-	}
-	if (MonsterToSpawn && CachedSpawners.IsValidIndex(SpawnPointIndex))
-	{
-		ASpawner* SelectedSpawner = CachedSpawners[SpawnPointIndex];
-			
-		FVector SpawnLocation = SelectedSpawner->GetRandomPointInVolume();
-		FRotator SpawnRotator = SelectedSpawner->GetActorRotation();
-			
-		MonsterToSpawn->SetActorLocationAndRotation(SpawnLocation, SpawnRotator);
-	}
-	if (MonsterToSpawn)
-	{
-		MonsterToSpawn->SetActorHiddenInGame(false);
-		MonsterToSpawn->SetActorEnableCollision(true);
-		// if (AMonsterBase* Monster = Cast<AMonsterBase>(MonsterToSpawn))
-		// {
-		// 	//TODO : 몬스터 상태 초기화
-		// }
-	}
+	
 }
 
 //몬스터 회수, 몬스터가 죽으면 Destroy() 대신 이 함수를 호출해야 함
-void UMonsterManagerSubSystem::ReturnToPool(AActor* Monster)
+void UMonsterManagerSubSystem::ReturnToPool(AEnemyBase* Monster)
 {
 	if (!Monster) return;
 	
-	Monster->SetActorHiddenInGame(true);
-	Monster->SetActorEnableCollision(false);
+	Monster->SetActorHiddenInGame(false);
+	Monster->SetActorTickEnabled(false); 
+	Monster->SetActorEnableCollision(true);
 	
-	UClass* Class = Monster->GetClass();
-	MonsterPool.FindOrAdd(Class).Monsters.Add(Monster);
+	EMonsterType Type = Monster->GetMonsterType();
+	if (Type != EMonsterType::None)
+	{
+		MonsterPool.FindOrAdd(Type).Enemys.Add(Monster);
+	}
+	else
+	{
+		Monster->Destroy(); // 타입 정보 없으면 파괴
+	}
 	if (OnMonsterKilled.IsBound())
 	{
 		OnMonsterKilled.Broadcast();
 	}
-	
 }
 
-void UMonsterManagerSubSystem::OnAssetsLoadedForPool(FSimpleDelegate OnComplete)
+void UMonsterManagerSubSystem::OnAssetsLoadedForPool()
 {
 	UE_LOG(LogTemp, Log, TEXT("Assets Loaded. Start Creating Object Pool.."));
 	
+	USyncDataManager* SyncData = USyncDataManager::Get(this);
+	UAsyncDataManager* AsyncData = UAsyncDataManager::Get(this);
+	if (!SyncData || !AsyncData) return;
+	
 	for (auto& Pair : PendingPoolRequirements)
 	{
-		TSoftClassPtr<AActor> SoftClass = Pair.Key;
+		EMonsterType Type = Pair.Key;
 		int32 MaxCount = Pair.Value;
 		
-		UClass* MonsterClass = SoftClass.Get();
-		if (!MonsterClass) continue;
+		FMonsterRowData RowData = SyncData->GetMonsterData(Type);
+		FPrimaryAssetId AssetId("Enemy",RowData.MonsterPDAId);
 		
-		int32 CurrentPoolSize = 0;
-		if (MonsterPool.Contains(MonsterClass))
+		UEnemyDataAsset* LoadedPDA = Cast<UEnemyDataAsset>(AsyncData->GetLoadedAsset(AssetId));
+		
+		if (!LoadedPDA) 
 		{
-			CurrentPoolSize = MonsterPool[MonsterClass].Monsters.Num();
+			UE_LOG(LogTemp, Error, TEXT("PDA Load Failed for Type: %d"), (int32)Type);
+			continue;
 		}
-		int32 NeededCount = MaxCount-CurrentPoolSize;
-		for (int32 i = 0; i < NeededCount;i++)
+		
+		TArray<AEnemyBase*>& PoolArray = MonsterPool.FindOrAdd(Type).Enemys;
+		int32 NeededCount = MaxCount - PoolArray.Num();
+		
+		for (int32 i = 0; i < NeededCount; i++)
 		{
 			FActorSpawnParameters Params;
 			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			
-			AActor* NewMonster = GetWorld()->SpawnActor<AActor>(MonsterClass, FVector(0,0,-10000), FRotator::ZeroRotator, Params);
-			
-			ReturnToPool(NewMonster);
+
+			// 화면 밖 생성
+			AEnemyBase* NewMonster = GetWorld()->SpawnActor<AEnemyBase>(
+				AEnemyBase::StaticClass(), 
+				FVector(0, 0, -10000), 
+				FRotator::ZeroRotator, 
+				Params
+			);
+
+			if (NewMonster)
+			{
+				NewMonster->SetupEnemy(LoadedPDA);
+				NewMonster->SetMonsterType(Type);
+				ReturnToPool(NewMonster);
+			}
 		}
 	}
 	UE_LOG(LogTemp, Log, TEXT("Pool Initialization Complete"));
-	
-	OnComplete.ExecuteIfBound();
+	OnPoolInitializationComplete.ExecuteIfBound();
 }
