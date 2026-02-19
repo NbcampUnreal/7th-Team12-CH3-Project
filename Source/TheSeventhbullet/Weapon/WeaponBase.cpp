@@ -7,6 +7,7 @@
 #include "TheSeventhbullet/Character/MainCharacter.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "Character/Component/CombatComponent.h"
 
 AWeaponBase::AWeaponBase()
 {
@@ -63,7 +64,7 @@ void AWeaponBase::Initialize(TObjectPtr<APawn> NewOwner)
 		MeshComp->SetStaticMesh(WeaponDataAsset->Mesh);
 	}
 	
-	Damage = WeaponDataAsset->BaseDamage;
+	BaseDamage = WeaponDataAsset->BaseDamage;
 	FireInterval = WeaponDataAsset->FireInterval;
 	Range = WeaponDataAsset->Range;
 	MaxAmmo = WeaponDataAsset->MaxAmmo;
@@ -84,37 +85,16 @@ void AWeaponBase::Initialize(TObjectPtr<APawn> NewOwner)
 	}
 }
 
-void AWeaponBase::StartFire()
-{
-	GetWorld()->GetTimerManager().SetTimer(
-		FireTimerHandle,
-		this,
-		&AWeaponBase::Fire,
-		FireInterval,
-		true,
-		0
-	);
-	
-	UE_LOG(LogTemp, Warning, TEXT("Start Fire"));
-}
-
-void AWeaponBase::StopFire()
-{
-	GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
-	PelletSpreadRadius = WeaponDataAsset->SpreadRadius;
-	UE_LOG(LogTemp, Warning, TEXT("StopFire"));
-}
-
 void AWeaponBase::Reload()
 {
 	// 재장전 중인지 여부를 판단. 이미 재장전 중이라면 실행하지 않음.
-	if (bisReloading)
+	if (bIsReloading)
 	{
 		return;
 	}
 
 	// 재장전 중 상태로 변경
-	bisReloading = true;
+	bIsReloading = true;
 	
 	UE_LOG(LogTemp, Warning, TEXT("Start Reload"));
 	
@@ -124,7 +104,7 @@ void AWeaponBase::Reload()
 		FTimerDelegate::CreateLambda([this]()
 		{
 			CurrentAmmo = MaxAmmo;
-			bisReloading = false;
+			bIsReloading = false;
 			UE_LOG(LogTemp, Warning, TEXT("Reload"));
 			UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, MaxAmmo);
 		}),
@@ -133,13 +113,13 @@ void AWeaponBase::Reload()
 	);
 }
 
-void AWeaponBase::Fire()
+bool AWeaponBase::PerformTrace(FHitResult& OutHit)
 {
 	// 총알이 0발 이하로 남았다면 재장전을 자동으로 수행 + 발사하지 않음
 	if (CurrentAmmo <= 0)
 	{
 		Reload();
-		return;
+		return false;
 	}
 	
 	// 현재시간 - 마지막 발사시간 < 발사간격인 경우 발사가 불가능
@@ -147,11 +127,9 @@ void AWeaponBase::Fire()
 	const float Now = GetWorld()->GetTimeSeconds();
 	if (Now - LastFireTime < FireInterval)
 	{
-		return;
+		return false;
 	}
 	LastFireTime = Now;
-	
-	ConsumeAmmo();
 	
 	FVector CameraLocation;
 	FRotator CameraRotation;
@@ -160,7 +138,6 @@ void AWeaponBase::Fire()
 	FVector Start = CameraLocation;
 	FVector MaxTargetLocation = Start + (CameraRotation.Vector() * Range);
 	
-	FHitResult Hit;
 	const ETraceTypeQuery TraceType = UEngineTypes::ConvertToTraceType(ECC_Visibility);
 
 	TArray<AActor*> ActorsToIgnore;
@@ -183,7 +160,7 @@ void AWeaponBase::Fire()
 			true,
 			ActorsToIgnore,
 			DebugType,
-			Hit,
+			OutHit,
 			true,
 			FLinearColor::Red,
 			FLinearColor::Green,
@@ -196,42 +173,12 @@ void AWeaponBase::Fire()
 			UGameplayStatics::SpawnEmitterAtLocation(
 				GetWorld(),
 				WeaponDataAsset->ImpactEffect.LoadSynchronous(),
-				Hit.ImpactPoint,
-				Hit.ImpactNormal.Rotation()
+				OutHit.ImpactPoint,
+				OutHit.ImpactNormal.Rotation()
 			);
-			
-			// 명중한 대상이 Enemy 태그가 있는 경우 ApplyPointDamage를 호출해서 맞은 부위를 확인하고 데미지를 줌.
-			if (Hit.GetActor()->ActorHasTag("Enemy"))
-			{
-				FVector ShotDirection = (End - Start).GetSafeNormal();
-				
-				UGameplayStatics::ApplyPointDamage(
-					Hit.GetActor(),
-					Damage,
-					ShotDirection,
-					Hit,
-					Hit.GetActor()->GetInstigatorController(),
-					WeaponOwner,
-					UDamageType::StaticClass()
-					);
-			}
 		}
 	}
-	
-	// 1발 발사 후에 탄 퍼짐이 증가. 트리거 시 계속 증가.
-	if (WeaponDataAsset->WeaponType != EWeaponTypes::ShotGun)
-	{
-		PelletSpreadRadius = FMath::Clamp(
-			PelletSpreadRadius + WeaponDataAsset->IncreaseSpreadRadius, 
-			WeaponDataAsset->SpreadRadius,
-			WeaponDataAsset->MaxSpreadRadius);
-	}
-}
-
-void AWeaponBase::ConsumeAmmo()
-{
-	CurrentAmmo = FMath::Clamp(CurrentAmmo - 1, 0, MaxAmmo);
-	UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, MaxAmmo);
+	return true;
 }
 
 FVector AWeaponBase::TraceRandShot(const FVector& TraceStart, const FVector& MaxTargetLocation)
@@ -287,6 +234,7 @@ void AWeaponBase::EquipWeapon(TObjectPtr<AActor> NewWeaponOwner)
 		}
 		
 		Initialize(MainCharacter);
+		MainCharacter->CombatComponent->InitializeWeaponData(this);
 
 		AttachToComponent(
 			MainCharacter->GetMesh(),
