@@ -170,6 +170,7 @@ public:
 	
 	bool IsDodge();
 	bool IsInvicible();
+	bool IsAiming();
 	
 #pragma endregion
 	
