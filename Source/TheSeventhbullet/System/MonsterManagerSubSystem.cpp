@@ -160,7 +160,7 @@ void UMonsterManagerSubSystem::ReturnToPool(AEnemyBase* Monster)
 {
 	if (!Monster) return;
 	
-	Monster->SetActorHiddenInGame(false);
+	Monster->SetActorHiddenInGame(true);
 	Monster->SetActorTickEnabled(false); 
 	Monster->SetActorEnableCollision(true);
 	
