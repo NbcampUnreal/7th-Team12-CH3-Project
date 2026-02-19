@@ -57,5 +57,4 @@ private:
 	float ReloadTime = 1.0f; // 재장전 시간
 	float PelletSpreadRadius = 3.f; // 탄 퍼짐 정도
 	float IncreaseSpreadRadiusValue = 0.5f; // 트리거 시 탄 퍼짐 증가폭(샷건이 아닌 경우)
-
 };
