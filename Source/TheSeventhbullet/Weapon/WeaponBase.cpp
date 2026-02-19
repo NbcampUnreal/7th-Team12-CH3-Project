@@ -65,12 +65,7 @@ void AWeaponBase::Initialize(TObjectPtr<APawn> NewOwner)
 	}
 	
 	BaseDamage = WeaponDataAsset->BaseDamage;
-	FireInterval = WeaponDataAsset->FireInterval;
 	Range = WeaponDataAsset->Range;
-	MaxAmmo = WeaponDataAsset->MaxAmmo;
-	CurrentAmmo = MaxAmmo;	
-	ReloadTime = WeaponDataAsset->ReloadTime;
-	
 	AmountOfPellets = WeaponDataAsset->PelletsCount;
 	PelletSpreadRadius = WeaponDataAsset->SpreadRadius;
 	
@@ -85,52 +80,8 @@ void AWeaponBase::Initialize(TObjectPtr<APawn> NewOwner)
 	}
 }
 
-void AWeaponBase::Reload()
-{
-	// 재장전 중인지 여부를 판단. 이미 재장전 중이라면 실행하지 않음.
-	if (bIsReloading)
-	{
-		return;
-	}
-
-	// 재장전 중 상태로 변경
-	bIsReloading = true;
-	
-	UE_LOG(LogTemp, Warning, TEXT("Start Reload"));
-	
-	// 재장전 시간(ReloadTime) 이후에 재장전 완료
-	GetWorld()->GetTimerManager().SetTimer(
-		ReloadTimerHandle,
-		FTimerDelegate::CreateLambda([this]()
-		{
-			CurrentAmmo = MaxAmmo;
-			bIsReloading = false;
-			UE_LOG(LogTemp, Warning, TEXT("Reload"));
-			UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, MaxAmmo);
-		}),
-		ReloadTime,
-		false
-	);
-}
-
 bool AWeaponBase::PerformTrace(FHitResult& OutHit)
-{
-	// 총알이 0발 이하로 남았다면 재장전을 자동으로 수행 + 발사하지 않음
-	if (CurrentAmmo <= 0)
-	{
-		Reload();
-		return false;
-	}
-	
-	// 현재시간 - 마지막 발사시간 < 발사간격인 경우 발사가 불가능
-	// 연사가 아닌 단발사격인 경우에도 무기마다 발사간격(발사속도)을 구현하기 위한 로직.
-	const float Now = GetWorld()->GetTimeSeconds();
-	if (Now - LastFireTime < FireInterval)
-	{
-		return false;
-	}
-	LastFireTime = Now;
-	
+{	
 	FVector CameraLocation;
 	FRotator CameraRotation;
 	WeaponOwner->GetActorEyesViewPoint(CameraLocation, CameraRotation);
@@ -151,7 +102,7 @@ bool AWeaponBase::PerformTrace(FHitResult& OutHit)
 	{
 		FVector End = TraceRandShot(Start, MaxTargetLocation);
 		
-		// Start 지점에서 End 지점까지 Linetrace를 수행하고 Hit 여부를 return
+		// Start 지점에서 End 지점까지 Trace를 수행하고 Hit 여부를 return
 		const bool bHit = UKismetSystemLibrary::LineTraceSingle(
 			GetWorld(),
 			Start,
@@ -185,10 +136,8 @@ FVector AWeaponBase::TraceRandShot(const FVector& TraceStart, const FVector& Max
 {
 	// 시작점에서 목표지점까지의 벡터를 정규화(방향만 유지, 크기는 1)
 	FVector ToTargetNormalized = (MaxTargetLocation - TraceStart).GetSafeNormal();
-	
 	// 사거리 끝 지점에 구체의 중심점을 찍음.
 	FVector SphereCenter = TraceStart + ToTargetNormalized * Range;
-	
 	// 구체 중심을 기준으로 지정된 탄퍼짐 범위(PelletSpreadRadius)만큼의 범위 안에서 타겟 지점을 랜덤으로 정함.
 	FVector RandomTarget = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, PelletSpreadRadius);
 	// 실제 목표 지점.

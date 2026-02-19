@@ -71,12 +71,53 @@ void UCombatComponent::HitScanFire()
 		return;
 	}
 	
+	// 총알이 0발 이하로 남았다면 재장전을 자동으로 수행 + 발사하지 않음
+	if (CurrentAmmo <= 0)
+	{
+		Reload();
+		return;
+	}
+	
+	// 현재시간 - 마지막 발사시간 < 발사간격인 경우 발사가 불가능
+	// 연사가 아닌 단발사격인 경우에도 무기마다 발사간격(발사속도)을 구현하기 위한 로직.
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastFireTime < FireInterval)
+	{
+		return;
+	}
+	LastFireTime = Now;
+	
 	FHitResult Hit;
 	CurrentWeapon->PerformTrace(Hit);
 	ApplyDamageByHit(CurrentWeapon, Hit);
 	DrawFireParticles(Hit);
 	SpreadBullet();
 	ConsumeAmmo();
+}
+
+void UCombatComponent::Reload()
+{
+	if (bIsReloading)
+	{
+		return;
+	}
+	
+	bIsReloading = true;
+	UE_LOG(LogTemp, Warning, TEXT("Start Reload"));
+	
+	// 재장전 시간(ReloadTime) 이후에 재장전 완료
+	GetWorld()->GetTimerManager().SetTimer(
+	ReloadTimerHandle,
+	FTimerDelegate::CreateLambda([this]()
+	{
+		CurrentAmmo = MaxAmmo;
+		bIsReloading = false;
+		UE_LOG(LogTemp, Warning, TEXT("Reload"));
+		UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, MaxAmmo);
+	}),
+	ReloadTime,
+	false
+);
 }
 
 void UCombatComponent::ConsumeAmmo()
