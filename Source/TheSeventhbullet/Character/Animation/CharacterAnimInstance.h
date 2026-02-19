@@ -21,6 +21,7 @@ public:
 protected:
 	UPROPERTY(blueprintreadwrite, Category = "Movement")
 	float MovementSpeed;
+
 	UPROPERTY(blueprintreadwrite, Category = "Movement")
 	bool bIsFalling;
 	UPROPERTY(blueprintreadwrite, Category = "Action")
