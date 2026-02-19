@@ -69,32 +69,6 @@ void AWeaponBase::Initialize(TObjectPtr<APawn> NewOwner)
 	Range = WeaponDataAsset->Range;
 	AmountOfPellets = WeaponDataAsset->PelletsCount;
 	PelletSpreadRadius = WeaponDataAsset->SpreadRadius;
-	
-	// ProjectileEffect 캐싱
-	if (!WeaponDataAsset->ProjectileEffect.ToSoftObjectPath().IsValid())
-	
-	// ProjectileEffect 캐싱
-	if (!WeaponDataAsset->ProjectileEffect.ToSoftObjectPath().IsValid())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ProjectileEffect Path Invalid"));
-	}
-	else
-	{
-		CachedProjectileEffect = WeaponDataAsset->ProjectileEffect.LoadSynchronous();
-	}
-}
-
-void AWeaponBase::Reload()
-{
-	// 재장전 중인지 여부를 판단. 이미 재장전 중이라면 실행하지 않음.
-	if (bIsReloading)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ProjectileEffect Path Invalid"));
-	}
-	else
-	{
-		CachedProjectileEffect = WeaponDataAsset->ProjectileEffect.LoadSynchronous();
-	}
 }
 
 bool AWeaponBase::PerformTrace(FHitResult& OutHit)
@@ -114,13 +88,14 @@ bool AWeaponBase::PerformTrace(FHitResult& OutHit)
 
 	// 디버그 드로우 여부 판단
 	const EDrawDebugTrace::Type DebugType = bDrawFireDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
-
+	bool bHit = false;
+	
 	for (int32 i = 0; i < AmountOfPellets; i++)
 	{
 		FVector End = TraceRandShot(Start, MaxTargetLocation);
 		
 		// Start 지점에서 End 지점까지 Trace를 수행하고 Hit 여부를 return
-		const bool bHit = UKismetSystemLibrary::LineTraceSingle(
+		bHit = UKismetSystemLibrary::LineTraceSingle(
 			GetWorld(),
 			Start,
 			End,
@@ -134,19 +109,9 @@ bool AWeaponBase::PerformTrace(FHitResult& OutHit)
 			FLinearColor::Green,
 			FireDebugDuration
 		);
-
-		if (bHit)
-		{
-			// 명중한 곳에 파티클 구현, 추후에 태그를 검사해서 태그에 따른 서로 다른 파티클을 구현할 예정.
-			UGameplayStatics::SpawnEmitterAtLocation(
-				GetWorld(),
-				WeaponDataAsset->ImpactEffect.LoadSynchronous(),
-				OutHit.ImpactPoint,
-				OutHit.ImpactNormal.Rotation()
-			);
-		}
 	}
-	return true;
+	
+	return bHit;
 }
 
 FVector AWeaponBase::TraceRandShot(const FVector& TraceStart, const FVector& MaxTargetLocation)
@@ -159,19 +124,6 @@ FVector AWeaponBase::TraceRandShot(const FVector& TraceStart, const FVector& Max
 	FVector RandomTarget = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, PelletSpreadRadius);
 	// 실제 목표 지점.
 	FVector EndLocation = SphereCenter + RandomTarget;
-	
-	// 발사체 파티클
-	if (CachedProjectileEffect)
-	{
-		UNiagaraComponent* Projectile = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			GetWorld(),
-			CachedProjectileEffect,
-			TraceStart,
-			FRotator::ZeroRotator
-		);
-		Projectile->SetVectorParameter(FName("Start"), TraceStart);
-		Projectile->SetVectorParameter(FName("Target"), EndLocation);
-	}
 	
 	// 디버그 드로우
 	// 탄 퍼짐 범위

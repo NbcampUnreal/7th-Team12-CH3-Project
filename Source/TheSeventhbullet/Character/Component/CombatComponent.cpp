@@ -1,5 +1,7 @@
 #include "CombatComponent.h"
 
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Damage/Modifier/WeaponDamageModifier.h"
 #include "DataAsset/WeaponDataAsset.h"
 #include "Damage/DamageContext.h"
@@ -90,7 +92,7 @@ void UCombatComponent::HitScanFire()
 	FHitResult Hit;
 	CurrentWeapon->PerformTrace(Hit);
 	ApplyDamageByHit(CurrentWeapon, Hit);
-	DrawFireParticles(Hit);
+	SpawnFireParticles(Hit);
 	SpreadBullet();
 	ConsumeAmmo();
 }
@@ -168,9 +170,38 @@ void UCombatComponent::ExecutePipeline(FDamageContext& Context)
 	}
 }
 
-void UCombatComponent::DrawFireParticles(const FHitResult& Hit)
+void UCombatComponent::SpawnFireParticles(const FHitResult& Hit)
 {
-	
+	if (!WeaponData->ProjectileEffect.ToSoftObjectPath().IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ProjectileEffect is null"));
+		return;
+	}
+	else
+	{
+		if (WeaponData->ImpactEffect.ToSoftObjectPath().IsValid())
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				WeaponData->ImpactEffect.LoadSynchronous(),
+				Hit.ImpactPoint,
+				FRotator::ZeroRotator,
+				true
+			);
+		}
+		
+		if (WeaponData->ProjectileEffect.ToSoftObjectPath().IsValid())
+		{
+			UNiagaraComponent* Projectile = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				WeaponData->ProjectileEffect.LoadSynchronous(),
+				Hit.TraceStart,
+				FRotator::ZeroRotator
+			);
+			Projectile->SetVectorParameter(FName("Start"), Hit.TraceStart);
+			Projectile->SetVectorParameter(FName("Target"), Hit.TraceEnd);
+		}
+	}
 }
 
 void UCombatComponent::SpreadBullet()

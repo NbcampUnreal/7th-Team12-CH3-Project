@@ -62,7 +62,7 @@ public:
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	bool bDrawFireDebug = false; // 발사 디버그 표시 여부
+	bool bDrawFireDebug = true; // 발사 디버그 표시 여부
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float FireDebugDuration = 0.f; // 발사 디버그 지속 시간
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
@@ -84,7 +84,4 @@ protected:
 	float Range = 850.f; // 사거리
 	int32 AmountOfPellets = 1; // 발사체 갯수
 	float PelletSpreadRadius = 3.f;
-
-	UPROPERTY()
-	UNiagaraSystem* CachedProjectileEffect; // 발사체 이펙트를 캐싱
 };

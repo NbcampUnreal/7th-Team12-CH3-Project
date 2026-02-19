@@ -29,7 +29,7 @@ public:
 	void ApplyDamageByHit(AWeaponBase* Weapon, const FHitResult& Hit);
 	void ExecutePipeline(FDamageContext& Context);
 	
-	void DrawFireParticles(const FHitResult& Hit);
+	void SpawnFireParticles(const FHitResult& Hit);
 	void SpreadBullet();
 	
 protected:
