@@ -4,6 +4,7 @@
 #include "MainPlayerController.h"
 #include "PlayerSkill.h"
 #include "Camera/CameraComponent.h"
+#include "Component/CombatComponent.h" // 주현 : CombatComponent
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -39,6 +40,10 @@ AMainCharacter::AMainCharacter()
 	Camera->bUsePawnControlRotation = false;
 	
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
+	
+	
+	// 주현 : CombatComponent 초기화
+	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
 }
 
 void AMainCharacter::BeginPlay()
@@ -293,7 +298,7 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 	{
 		return;
 	}
-	CurrentWeapon->StartFire();
+	CombatComponent->StartFire();
 }
 
 void AMainCharacter::FinishFire(const FInputActionValue& value)
@@ -302,7 +307,7 @@ void AMainCharacter::FinishFire(const FInputActionValue& value)
 	{
 		return;
 	}
-	CurrentWeapon->StopFire();
+	CombatComponent->StopFire();
 }
 
 void AMainCharacter::PlayerSkill(const FInputActionValue& value)
