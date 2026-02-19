@@ -2,7 +2,6 @@
 
 
 #include "EnemyBase.h"
-
 #include "AIController.h"
 #include "EnemyAIControllerBase.h"
 #include "Kismet/GameplayStatics.h"
@@ -26,16 +25,14 @@ AEnemyBase::AEnemyBase()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	AIControllerClass = AEnemyAIControllerBase::StaticClass();
-	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
+	//별도로 데이터를 주입하지 않은 캐릭터의 기본 스테이터스
 	MaxHealth = 100.0f;
 	NowHealth = MaxHealth;
 	ArmorPoint = 0.f;
 	AttackPoint = 10.0f;
 	KnockbackStrengh = 200.0f;
 	bIsDead = false;
-	bIsLongRange=false;
 }
 
 // Called when the game starts or when spawned
@@ -58,7 +55,7 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-// 프라이머리 데이터 에셋으로 초기화
+// (데이터 드리븐)프라이머리 데이터 에셋으로 초기화
 void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 {
 	EnemyData=LoadedData;
@@ -66,12 +63,12 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 	NowHealth=MaxHealth;
 	ArmorPoint=EnemyData->ArmorPoint;
 	AttackPoint=EnemyData->AttackPoint;
-	bIsLongRange=EnemyData->bIsLongRange;
 	AttackRadius=EnemyData->AttackRadius;
 	HitParticle=EnemyData->HitParticle.Get();
 	HeadShotParticle=EnemyData->HeadShotParticle.Get();
 	USkeletalMeshComponent* EnemyMeshComp=this->GetMesh();
 	
+	//Mesh관련 처리
 	if (EnemyMeshComp)
 	{
 		this->GetMesh()->SetSkeletalMeshAsset(EnemyData->SkeletalMesh.Get());
@@ -80,6 +77,8 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 		this->GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
 		this->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 		this->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+		this->GetMesh()->SetOverlayMaterial(EnemyData->EnemyMaterial.Get());
+		
 		UAnimInstance* AnimInstance=this->GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
@@ -89,28 +88,52 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 			}
 		}
 	}
-	AEnemyAIControllerBase* EnemyAIControllerBase=Cast<AEnemyAIControllerBase>(this->GetController());
-	if (EnemyAIControllerBase)
+	if (EnemyData->AIControllerClass.Get()!=nullptr)
 	{
-		EnemyBehaviorTree=EnemyData->EnemyBT.Get();
-		EnemyAIControllerBase->SetBT(EnemyBehaviorTree);
-		EnemyBBComp=EnemyAIControllerBase->GetBlackboardComponent();
-		EnemyBBComp->SetValueAsBool(FName("bIsLongRange"),bIsLongRange);
-		EnemyBBComp->SetValueAsFloat(FName("AttackRadius"),AttackRadius);
-		
+		AIControllerClass = EnemyData->AIControllerClass.Get();
+		AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+		if (GetController() == nullptr)
+		{
+			SpawnDefaultController();
+		}
+		//BehaviorTree 및 AttackRadius BB키 세팅
+		OnCharacterSetAI.Broadcast(EnemyData->EnemyBT.Get(),AttackRadius);
 	}
-	this->GetMesh()->SetOverlayMaterial(EnemyData->EnemyMaterial.Get());
-	
-	
 	
 }
-
 
 
 
 float AEnemyBase::GetAttackPoint()
 {
 	return AttackPoint;
+}
+
+TObjectPtr<UStaticMesh> AEnemyBase::GetProjectileStaticMesh()
+{	
+	if (EnemyData==nullptr)
+	{
+		return nullptr;
+	}
+	return EnemyData->ProjectileStaticMesh.Get();		
+}
+
+float AEnemyBase::GetProjectileSpeed()
+{
+	if (EnemyData==nullptr)
+	{
+		return 0.0f;
+	}
+	return EnemyData->ProjectileSpeed;
+}
+
+bool AEnemyBase::GetbIsHoming()
+{
+	if (EnemyData!=nullptr)
+	{
+		return EnemyData->bIsHoming;
+	}
+	return false;
 }
 
 void AEnemyBase::ResetEnemy()
@@ -143,18 +166,6 @@ UAnimMontage* AEnemyBase::ReturnthisMontage(FName AMName)
 	return nullptr;
 }
 
-UAnimMontage* AEnemyBase::ReturnthisProjectileMontage()
-{
-	if (EnemyData==nullptr)
-	{
-		return nullptr;
-	}
-	if (EnemyData->ProjectileAnimMontage)
-	{
-		return EnemyData->ProjectileAnimMontage.Get();
-	}
-	return nullptr;
-}
 
 EMonsterType AEnemyBase::GetMonsterType()
 {

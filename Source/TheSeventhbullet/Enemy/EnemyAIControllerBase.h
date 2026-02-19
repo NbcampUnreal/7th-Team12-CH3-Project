@@ -43,6 +43,8 @@ protected:
 	void ResetEvent();
 	UFUNCTION()
 	void HeadHitEvent();
+	UFUNCTION()
+	void SetAI(UBehaviorTree* ParamBT,float AttackRadius);
 	
 	//bool BB 키(FName)
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")

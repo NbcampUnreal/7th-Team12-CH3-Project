@@ -31,14 +31,7 @@ void AEnemyAIControllerBase::Tick(float DeltaTime)
 
 void AEnemyAIControllerBase::SetBT(UBehaviorTree* EnemyBT)
 {
-	if (EnemyBT == nullptr) return;
-	EnemyBehaviorTree = EnemyBT;
-	RunBehaviorTree(EnemyBehaviorTree);
-	BBComp = GetBlackboardComponent();
-	if (BBComp&&GetPawn())
-	{
-		BBComp->SetValueAsObject(TEXT("SelfActor"), GetPawn());
-	}
+	
 }
 
 void AEnemyAIControllerBase::OnPossess(APawn* InPawn)
@@ -51,6 +44,7 @@ void AEnemyAIControllerBase::OnPossess(APawn* InPawn)
 	Enemy->OnCharacterDead.AddDynamic(this, &AEnemyAIControllerBase::DeadEvent);
 	Enemy->OnCharacterReset.AddDynamic(this, &AEnemyAIControllerBase::ResetEvent);
 	Enemy->OnCharacterHeadHit.AddDynamic(this, &AEnemyAIControllerBase::HeadHitEvent);
+	Enemy->OnCharacterSetAI.AddDynamic(this,&AEnemyAIControllerBase::SetAI);
 }
 
 void AEnemyAIControllerBase::HitEvent()
@@ -84,3 +78,20 @@ void AEnemyAIControllerBase::HeadHitEvent()
 	if (BBComp==nullptr) return;
 	BBComp->SetValueAsBool(bIsHeadHitKey, true);
 }
+
+void AEnemyAIControllerBase::SetAI(UBehaviorTree* ParamBT, float AttackRadius)
+{
+	UE_LOG(LogTemp, Warning, TEXT("SetAI"));
+	if (ParamBT == nullptr) return;
+	EnemyBehaviorTree = ParamBT;
+	RunBehaviorTree(EnemyBehaviorTree);
+	BBComp = GetBlackboardComponent();
+	
+	if (BBComp&&GetPawn())
+	{
+		BBComp->SetValueAsObject(TEXT("SelfActor"), GetPawn());
+		BBComp->SetValueAsFloat(FName("AttackRadius"),AttackRadius);
+	}
+	
+}
+
