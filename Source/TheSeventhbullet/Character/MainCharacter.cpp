@@ -59,6 +59,21 @@ void AMainCharacter::BeginPlay()
 	}
 }
 
+bool AMainCharacter::IsDodge()
+{
+	return bIsDodge;
+}
+
+bool AMainCharacter::IsInvicible()
+{
+	return bIsInvicible;
+}
+
+bool AMainCharacter::IsAiming()
+{
+	return bIsAiming;
+}
+
 void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
