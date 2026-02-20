@@ -77,7 +77,7 @@ void UInventorySlotWidget::UpdateSlot(const FItemInstance& Item)
 		UItemTooltipWidget* TooltipWidget = CreateWidget<UItemTooltipWidget>(this, TooltipWidgetClass);
 		if (TooltipWidget)
 		{
-			TooltipWidget->SetItemInfo(ItemData->DisplayName, ItemData->Description);
+			TooltipWidget->SetItemInfo(ItemData->DisplayName, ItemData->Description, Item.StackCount, ItemData->Icon.Get());
 			SetToolTip(TooltipWidget);
 		}
 	}
