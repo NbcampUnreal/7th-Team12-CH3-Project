@@ -21,10 +21,10 @@ APlayerSkill::APlayerSkill()
 	
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = Collision;
-	ProjectileMovement->InitialSpeed = 3000.0f;
-	ProjectileMovement->MaxSpeed = 5000.0f;
+	ProjectileMovement->InitialSpeed = 2000.0f;
+	ProjectileMovement->MaxSpeed = 2000.0f;
 	ProjectileMovement->bRotationFollowsVelocity = true;	// 날아가는 방향으로 회전 True
-	ProjectileMovement->bShouldBounce = true;	// 벽에 닿으면 튕김
+	ProjectileMovement->bShouldBounce = false;	// 벽에 닿으면 튕김
 	
 	ExplodeRadius = 500.0f;
 	DamageAmount = 50.0f;
@@ -35,6 +35,14 @@ void APlayerSkill::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	AActor* Player = GetOwner();
+	
+	UPrimitiveComponent* CollisionComp = Cast<UPrimitiveComponent>(RootComponent);
+	
+	if (CollisionComp && Player)
+	{
+		CollisionComp->IgnoreActorWhenMoving(Player, true);
+	}
 }
 
 void APlayerSkill::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
