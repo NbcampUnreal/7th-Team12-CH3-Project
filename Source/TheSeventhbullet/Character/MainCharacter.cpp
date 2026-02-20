@@ -3,6 +3,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "MainPlayerController.h"
 #include "PlayerSkill.h"
+#include "Animation/CharacterAnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Component/CombatComponent.h" // 주현 : CombatComponent
 #include "GameFramework/CharacterMovementComponent.h"
@@ -29,7 +30,7 @@ AMainCharacter::AMainCharacter()
 	AimingSpringArm = FVector(0.0f, 25.0f, 35.0f);
 	CameraInterpSpeed = 15.0f;
 	MuzzleOffset = FVector(300.0f, 0.0f, 0.0f);
-	HandSocketName = FName("MuzzleSocket");
+	HandSocketName = FName("Muzzle_01");
 	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
@@ -42,6 +43,7 @@ AMainCharacter::AMainCharacter()
 	
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
 	
+	bIsDodge = false;
 	
 	// 주현 : CombatComponent 초기화
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
@@ -56,6 +58,74 @@ void AMainCharacter::BeginPlay()
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(PC->InputMappingContext, 0);
+		}
+	}
+}
+
+void AMainCharacter::ThrowGrenade()
+{
+	// 클래스 할당 확인
+	if (PlayerSkillClass)
+	{
+		UWorld* World = GetWorld();
+		
+		if (World)
+		{
+			
+			
+			// FRotator SpawnRotation = GetControlRotation();	// 카메라 회전
+			// FVector SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);	// 캐릭터 위치 + 앞쪽 오프셋
+			
+			FVector SpawnLocation;
+			FRotator SpawnRotation;
+			
+			// 소켓 존재 여부 확인
+			if (GetMesh()->DoesSocketExist(HandSocketName))
+			{
+				// 소켓 월드 위치 가져오기
+				SpawnLocation = GetMesh()->GetSocketLocation(HandSocketName);
+			}
+			else
+			{
+				SpawnRotation = GetControlRotation();	// 카메라 회전
+				SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);	// 캐릭터 위치 + 앞쪽 오프셋
+			}
+			
+			// 카메라의 위치, 회전값
+			FVector CameraLocation;
+			FRotator CameraRotation;
+			Controller->GetPlayerViewPoint(CameraLocation, CameraRotation);
+			
+			// 카메라 방향 끝점 계산
+			float TraceDistance = 5000.0f;
+			FVector TraceEnd = CameraLocation + (CameraRotation.Vector() * TraceDistance);
+			
+			// 레이트레이싱 변수
+			FHitResult HitResult;
+			FCollisionQueryParams QueryParams;
+			QueryParams.AddIgnoredActor(this);	// 본인 충돌 제외
+			
+			FVector TargetLocation = TraceEnd;
+			
+			if (World->LineTraceSingleByChannel(HitResult, CameraLocation, TraceEnd,ECC_Visibility, QueryParams))
+			{
+				TargetLocation = HitResult.ImpactPoint;	// 벽, 타겟 위치를 그 맞은 지점으로 갱신
+			}
+			
+			FVector DirectionToTarget = TargetLocation - SpawnLocation;
+			DirectionToTarget = DirectionToTarget.GetSafeNormal();
+			
+			SpawnRotation = DirectionToTarget.Rotation();
+			
+			float SpawnOffsetDistance = 40.0f;
+			SpawnLocation = SpawnLocation + (DirectionToTarget * SpawnOffsetDistance);
+			
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;	// 누가 던졌는지 기록 추후 데미지 판정에 씀
+			SpawnParams.Instigator = GetInstigator();
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+			
+			World->SpawnActor<APlayerSkill>(PlayerSkillClass, SpawnLocation, SpawnRotation, SpawnParams);
 		}
 	}
 }
@@ -356,45 +426,18 @@ void AMainCharacter::FinishFire(const FInputActionValue& value)
 
 void AMainCharacter::PlayerSkill(const FInputActionValue& value)
 {
-	// 클래스 할당 확인
-	if (PlayerSkillClass)
+	if (SkillMontage == nullptr) return;
+	
+	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
+	
+	if (CharacterAnimInstance)
 	{
-		UWorld* World = GetWorld();
-		
-		if (World)
+		if (!CharacterAnimInstance->Montage_IsPlaying(SkillMontage))
 		{
-			
-			
-			// FRotator SpawnRotation = GetControlRotation();	// 카메라 회전
-			// FVector SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);	// 캐릭터 위치 + 앞쪽 오프셋
-			
-			FVector SpawnLocation;
-			FRotator SpawnRotation;
-			
-			// 소켓 존재 여부 확인
-			if (GetMesh()->DoesSocketExist(HandSocketName))
-			{
-				// 소켓 월드 위치 가져오기
-				SpawnLocation = GetMesh()->GetSocketLocation(HandSocketName);
-				
-				
-				SpawnRotation = GetControlRotation();	// 카메라가 바라보는 방향으로 던짐 
-				//SpawnRotation = GetMesh()->GetSocketRotation(HandSocketName);
-				
-			}
-			else
-			{
-				SpawnRotation = GetControlRotation();	// 카메라 회전
-				SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);	// 캐릭터 위치 + 앞쪽 오프셋
-			}
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = this;	// 누가 던졌는지 기록 추후 데미지 판정에 씀
-			SpawnParams.Instigator = GetInstigator();
-			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-			
-			World->SpawnActor<APlayerSkill>(PlayerSkillClass, SpawnLocation, SpawnRotation, SpawnParams);
+			CharacterAnimInstance->Montage_Play(SkillMontage, 1.0f);
 		}
 	}
+	
 }
 
 void AMainCharacter::PlayerInteract(const FInputActionValue& value)

@@ -112,6 +112,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	FName HandSocketName;
 	
+	void ThrowGrenade();	// 스킬 실행
+	
 #pragma endregion
 	
 #pragma region Utilities
@@ -122,6 +124,12 @@ public:
 	
 #pragma endregion
 	
+#pragma region Animation
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<class UAnimMontage> SkillMontage;
+	
+#pragma endregion
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void Tick(float DeltaTime) override;

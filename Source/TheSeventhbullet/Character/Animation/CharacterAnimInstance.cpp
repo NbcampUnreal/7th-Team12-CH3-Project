@@ -47,3 +47,11 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsAiming = MainCharacter->IsAiming();
 	}
 }
+
+void UCharacterAnimInstance::AnimNotify_Throw()
+{
+	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(TryGetPawnOwner()))
+	{
+		MainCharacter->ThrowGrenade();
+	}
+}

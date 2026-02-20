@@ -31,6 +31,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Action")
 	bool bIsAiming;
 	
+	UFUNCTION()
+	void AnimNotify_Throw();
 private:
 	UPROPERTY()
 	TObjectPtr<class ACharacter> OwnerCharacter;
