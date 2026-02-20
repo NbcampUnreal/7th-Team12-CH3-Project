@@ -18,6 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterSetAISignnature,
  * PDA를 통해 로드 완료된 데이터를 가져와서 적 캐릭터 정보를 들고 있고, 피격 등의 이벤트를 진행합니다.
  */
 class UBehaviorTree;
+struct FProjectileStatus;
 UCLASS()
 class THESEVENTHBULLET_API AEnemyBase : public ACharacter
 {
@@ -60,12 +61,12 @@ public:
 	//공격력을 반환합니다.
 	float GetAttackPoint();
 	
-	//Projectile의 StaticMesh를 전달합니다.
-	TObjectPtr<UStaticMesh> GetProjectileStaticMesh();
-	//Projectile의 속도를 전달합니다.
-	float GetProjectileSpeed();
-	//Projectile의 호밍 여부를 전달합니다.
-	bool GetbIsHoming();
+	
+	//발사체의 정보를 담고 있습니다.
+	TSharedPtr<FProjectileStatus>  PStatus;	
+	//발사체의 정보를 반환합니다.
+	TSharedPtr<FProjectileStatus>  GetProjectileStatus();
+	
 	
 	//오브젝트 풀에서 캐릭터를 생성할때 리셋해줍니다.
 	UFUNCTION(BlueprintCallable,Category="Enemy|Status")

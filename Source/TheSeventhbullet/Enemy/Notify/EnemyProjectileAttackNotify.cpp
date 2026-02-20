@@ -5,6 +5,8 @@
 
 #include "Enemy/EnemyBase.h"
 #include "Enemy/Projectile/ProjectileActor.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Manager/ProjectilePoolManager.h"
 
 UEnemyProjectileAttackNotify::UEnemyProjectileAttackNotify()
@@ -34,14 +36,24 @@ void UEnemyProjectileAttackNotify::Notify(USkeletalMeshComponent* MeshComp, UAni
 		return;
 	}
 	ProjectileActor=Cast<AProjectileActor>(Actor);
-	//발사체의 StaticMesh와 발사체를 쏜 적 캐릭터를 세팅합니다.
-	ProjectileActor->SetStaticMesh(EnemyCharacter->GetProjectileStaticMesh());
+	//발사체의 Status를 세팅합니다.
 	ProjectileActor->SetEnemySetting(EnemyCharacter);
 
 	//발사체의 위치와 방향을 세팅합니다.
 	FVector SpawnLocation = EnemyCharacter->GetMesh()->GetSocketTransform(FName("Attack_Socket"), RTS_World).
 												  GetLocation();
-	FRotator SpawnRotation=EnemyCharacter->GetActorRotation();
+	
+	//기존 바라보는 방향대로 타겟
+	//FRotator SpawnRotation=EnemyCharacter->GetActorRotation();
+	//싱글 플레이 전용- 플레이어에게 타겟
+	FRotator SpawnRotation;
+	if (UGameplayStatics::GetPlayerPawn(MeshComp->GetWorld(), 0))
+	{
+		SpawnRotation = (UGameplayStatics::GetPlayerPawn(MeshComp->GetWorld(),0)->GetActorLocation() - SpawnLocation).Rotation();
+		
+	}
+	
+	
 	ProjectileActor->SetActorLocation(SpawnLocation);
 	
 	

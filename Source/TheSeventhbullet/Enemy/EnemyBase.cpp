@@ -18,6 +18,7 @@
 #include "Data/TableRowTypes.h"
 #include "System/MonsterManagerSubSystem.h"
 #include "Data/TableRowTypes.h"
+#include "Projectile/ProjectileStat.h"
 
 
 // Sets default values
@@ -99,6 +100,11 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 		//BehaviorTree 및 AttackRadius BB키 세팅
 		OnCharacterSetAI.Broadcast(EnemyData->EnemyBT.Get(),AttackRadius);
 	}
+	PStatus=MakeShared<FProjectileStatus>();
+	PStatus->StaticMesh=EnemyData->ProjectileStaticMesh.Get();
+	PStatus->Speed=EnemyData->ProjectileSpeed;
+	PStatus->bIsHoming=EnemyData->bIsHoming;
+	PStatus->Material=EnemyData->EnemyMaterial.Get();
 	
 }
 
@@ -109,31 +115,10 @@ float AEnemyBase::GetAttackPoint()
 	return AttackPoint;
 }
 
-TObjectPtr<UStaticMesh> AEnemyBase::GetProjectileStaticMesh()
-{	
-	if (EnemyData==nullptr)
-	{
-		return nullptr;
-	}
-	return EnemyData->ProjectileStaticMesh.Get();		
-}
 
-float AEnemyBase::GetProjectileSpeed()
+TSharedPtr<FProjectileStatus> AEnemyBase::GetProjectileStatus()
 {
-	if (EnemyData==nullptr)
-	{
-		return 0.0f;
-	}
-	return EnemyData->ProjectileSpeed;
-}
-
-bool AEnemyBase::GetbIsHoming()
-{
-	if (EnemyData!=nullptr)
-	{
-		return EnemyData->bIsHoming;
-	}
-	return false;
+	return PStatus;	
 }
 
 void AEnemyBase::ResetEnemy()
