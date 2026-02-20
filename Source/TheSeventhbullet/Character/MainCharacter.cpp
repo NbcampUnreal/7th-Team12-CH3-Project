@@ -199,28 +199,28 @@ void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	// // bIsAming 으로 조준 상태 구분
-	// float TargetLength = bIsAiming ? AimingArmLength : NormalArmLength;
-	// FVector TargetOffset = bIsAiming ? AimingSpringArm : NormalSpringArm;
-	//
-	// // Length 보간
-	// float NewArmLength = FMath::FInterpTo(
-	// 	SpringArm->TargetArmLength,
-	// 	TargetLength,
-	// 	DeltaTime,
-	// 	CameraInterpSpeed
-	// );
-	//
-	// // Socket 보간
-	// FVector NewSocketOffSet = FMath::VInterpTo(
-	// 	SpringArm->SocketOffset,
-	// 	TargetOffset,
-	// 	DeltaTime,
-	// 	CameraInterpSpeed
-	// );
-	//
-	// SpringArm->TargetArmLength = NewArmLength;
-	// SpringArm->SocketOffset = NewSocketOffSet;
+	// bIsAming 으로 조준 상태 구분
+	float TargetLength = bIsAiming ? AimingArmLength : NormalArmLength;
+	FVector TargetOffset = bIsAiming ? AimingSpringArm : NormalSpringArm;
+	
+	// Length 보간
+	float NewArmLength = FMath::FInterpTo(
+		SpringArm->TargetArmLength,
+		TargetLength,
+		DeltaTime,
+		CameraInterpSpeed
+	);
+	
+	// Socket 보간
+	FVector NewSocketOffSet = FMath::VInterpTo(
+		SpringArm->SocketOffset,
+		TargetOffset,
+		DeltaTime,
+		CameraInterpSpeed
+	);
+	
+	SpringArm->TargetArmLength = NewArmLength;
+	SpringArm->SocketOffset = NewSocketOffSet;
 }
 
 void AMainCharacter::PlayerMove(const FInputActionValue& value)
