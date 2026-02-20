@@ -15,17 +15,31 @@ void UInventoryComponent::BeginPlay()
 
 bool UInventoryComponent::AddItem(FPrimaryAssetId ItemID, int32 Count)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[Inventory] AddItem called - ID: %s, Count: %d"), *ItemID.ToString(), Count);
+
 	UAsyncDataManager* Mgr = UAsyncDataManager::Get(this);
-	if (!Mgr || !Mgr->IsAssetLoaded(ItemID)) return false;
+	if (!Mgr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Inventory] AsyncDataManager is NULL"));
+		return false;
+	}
+	if (!Mgr->IsAssetLoaded(ItemID))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Inventory] Asset not loaded - ID: %s"), *ItemID.ToString());
+		return false;
+	}
 
 	UItemDataAsset* ItemData = Cast<UItemDataAsset>(Mgr->GetLoadedAsset(ItemID));
 	if (!ItemData)
 	{
+		UE_LOG(LogTemp, Error, TEXT("[Inventory] ItemDataAsset Cast failed - ID: %s"), *ItemID.ToString());
 		return false;
 	}
+	UE_LOG(LogTemp, Log, TEXT("[Inventory] ItemData loaded - Name: %s, MaxStack: %d"), *ItemData->DisplayName.ToString(), ItemData->MaxStackCount);
+
 	int32 Remaining = Count;
 	int32 MaxStack = ItemData->MaxStackCount;
-	
+
 	if (MaxStack > 1)
 	{
 		int32 StackSlot = FindStackableSlot(ItemID, MaxStack);
@@ -39,7 +53,7 @@ bool UInventoryComponent::AddItem(FPrimaryAssetId ItemID, int32 Count)
 			StackSlot = FindStackableSlot(ItemID, MaxStack);
 		}
 	}
-	
+
 	while (Remaining > 0 && Items.Num() < MaxSlots)
 	{
 		int32 AddCount = FMath::Min(Remaining, MaxStack);
@@ -47,9 +61,12 @@ bool UInventoryComponent::AddItem(FPrimaryAssetId ItemID, int32 Count)
 		int32 NewSlot = Items.Add(NewItem);
 		Remaining -= AddCount;
 
+		UE_LOG(LogTemp, Log, TEXT("[Inventory] New slot created - Slot: %d, StackCount: %d"), NewSlot, AddCount);
 		OnItemAdded.Broadcast(NewItem, NewSlot);
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("[Inventory] AddItem result - Success: %s, Remaining: %d, TotalSlots: %d"),
+		Remaining == 0 ? TEXT("true") : TEXT("false"), Remaining, Items.Num());
 	return Remaining == 0;
 }
 

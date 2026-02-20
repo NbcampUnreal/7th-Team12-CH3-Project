@@ -9,7 +9,6 @@
 void UInventorySlotWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
 	if (SlotButton && !SlotButton->OnClicked.IsAlreadyBound(this, &UInventorySlotWidget::OnSlotClicked))
 	{
 		SlotButton->OnClicked.AddDynamic(this, &UInventorySlotWidget::OnSlotClicked);
@@ -74,5 +73,5 @@ void UInventorySlotWidget::SetIcon(UTexture2D* Texture)
 
 void UInventorySlotWidget::OnSlotClicked()
 {
-	UE_LOG(LogTemp, Log, TEXT("Slot Clicked: %s"), *CachedItemID.ToString());
+	
 }

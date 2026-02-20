@@ -6,7 +6,7 @@
 void UInventoryWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
+	
 	InitializeSlots();
 
 	if (!InventoryComp)

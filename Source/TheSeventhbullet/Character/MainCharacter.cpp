@@ -52,7 +52,8 @@ AMainCharacter::AMainCharacter()
 void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	UE_LOG(LogTemp, Warning, TEXT("[MainCharacter] BeginPlay - World: %s, Name: %s"), GetWorld() ? *GetWorld()->GetName() : TEXT("NULL"), *GetName());
+
 	if (AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
@@ -168,7 +169,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			// OpenInventory 바인딩
 			InputComponents->BindAction(
 				PC->OpenInventoryAction,
-				ETriggerEvent::Completed,
+				ETriggerEvent::Started,
 				this,
 				&AMainCharacter::PlayerOpenInventory
 			);
@@ -366,5 +367,6 @@ void AMainCharacter::PlayerOpenInventory(const FInputActionValue& value)
 	{
 		UIMgr->Toggle(UITags::Inventory);
 	}
+	
 }
 

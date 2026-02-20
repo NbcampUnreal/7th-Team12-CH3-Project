@@ -19,7 +19,7 @@ void UAsyncDataManager::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 
 	LoadSingleBundle(FPrimaryAssetType("Item"), NAME_None, FOnBundleLoadComplete());
-	LoadSingleBundle(FPrimaryAssetType("Item"), FName("Lobby"), FOnBundleLoadComplete());
+	LoadSingleBundle(FPrimaryAssetType("Item"), FName("UI"), FOnBundleLoadComplete());
 }
 
 void UAsyncDataManager::Deinitialize()

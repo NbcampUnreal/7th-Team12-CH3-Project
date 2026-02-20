@@ -178,13 +178,12 @@ TSubclassOf<UUserWidget> UUIManager::FindWidget(FName Tag) const
 {
 	if (!UIDataAsset)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UIManager::FindWidget — UIDataAsset is null, cannot resolve tag '%s'"), *Tag.ToString());
 		return nullptr;
 	}
 	TSubclassOf<UUserWidget> WidgetClass = UIDataAsset->FindWidget(Tag);
 	if (!WidgetClass)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UIManager::FindWidget — No widget class mapped for tag '%s'"), *Tag.ToString());
+	{	
+		return nullptr;
 	}
 	return WidgetClass;
 }

@@ -34,7 +34,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
 	FText Description;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item", meta = (AssetBundles = "UI"))
 	TSoftObjectPtr<UTexture2D> Icon;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
