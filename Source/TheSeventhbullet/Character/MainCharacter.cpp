@@ -22,6 +22,7 @@ AMainCharacter::AMainCharacter()
 	DodgeDistance = 3000.0f;
 	MaxSpeed = 600.0f;
 	SprintMultifier = 1.5f;
+	AimSpeed = 400.0f;
 	NormalArmLength = 300.0f; 
 	AimingArmLength = 0.0f;
 	NormalSpringArm = FVector(0.0f, 25.0f, 0.0f);
@@ -198,28 +199,28 @@ void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	// bIsAming 으로 조준 상태 구분
-	float TargetLength = bIsAiming ? AimingArmLength : NormalArmLength;
-	FVector TargetOffset = bIsAiming ? AimingSpringArm : NormalSpringArm;
-	
-	// Length 보간
-	float NewArmLength = FMath::FInterpTo(
-		SpringArm->TargetArmLength,
-		TargetLength,
-		DeltaTime,
-		CameraInterpSpeed
-	);
-	
-	// Socket 보간
-	FVector NewSocketOffSet = FMath::VInterpTo(
-		SpringArm->SocketOffset,
-		TargetOffset,
-		DeltaTime,
-		CameraInterpSpeed
-	);
-	
-	SpringArm->TargetArmLength = NewArmLength;
-	SpringArm->SocketOffset = NewSocketOffSet;
+	// // bIsAming 으로 조준 상태 구분
+	// float TargetLength = bIsAiming ? AimingArmLength : NormalArmLength;
+	// FVector TargetOffset = bIsAiming ? AimingSpringArm : NormalSpringArm;
+	//
+	// // Length 보간
+	// float NewArmLength = FMath::FInterpTo(
+	// 	SpringArm->TargetArmLength,
+	// 	TargetLength,
+	// 	DeltaTime,
+	// 	CameraInterpSpeed
+	// );
+	//
+	// // Socket 보간
+	// FVector NewSocketOffSet = FMath::VInterpTo(
+	// 	SpringArm->SocketOffset,
+	// 	TargetOffset,
+	// 	DeltaTime,
+	// 	CameraInterpSpeed
+	// );
+	//
+	// SpringArm->TargetArmLength = NewArmLength;
+	// SpringArm->SocketOffset = NewSocketOffSet;
 }
 
 void AMainCharacter::PlayerMove(const FInputActionValue& value)
@@ -228,14 +229,28 @@ void AMainCharacter::PlayerMove(const FInputActionValue& value)
 	
 	const FVector2D MoveInput = value.Get<FVector2D>();
 	
-	if (!FMath::IsNearlyZero(MoveInput.X))
+	if (bIsAiming)
 	{
-		AddMovementInput(GetActorForwardVector(), MoveInput.X);
-	}
+		if (!FMath::IsNearlyZero(MoveInput.X))
+		{
+			AddMovementInput(GetActorForwardVector(), MoveInput.X);
+		}
 	
-	if (!FMath::IsNearlyZero(MoveInput.Y))
+		if (!FMath::IsNearlyZero(MoveInput.Y))
+		{
+			AddMovementInput(GetActorRightVector(), MoveInput.Y);
+		}
+	}
+	else
 	{
-		AddMovementInput(GetActorRightVector(), MoveInput.Y);
+		FRotator CharacterRotation = Controller->GetControlRotation();	// 카메라 기준 회전값
+		FRotator YawRotation(0, CharacterRotation.Yaw, 0);	// Yaw 값만 사용
+		
+		FVector ForwardDir = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);	// 카메라 기준 forwardVector
+		FVector RightDir = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);		// 카메라 기준 RightVector
+		
+		AddMovementInput(ForwardDir, MoveInput.X);
+		AddMovementInput(RightDir, MoveInput.Y);
 	}
 }
 
@@ -295,15 +310,29 @@ void AMainCharacter::PlayerDodgeFinished(const FInputActionValue& value)
 void AMainCharacter::PlayerAim(const FInputActionValue& value)
 {
 	PrimaryActorTick.bCanEverTick = true;	// 보간을 위한 Tick On
-	//bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리 | 추후 에니메이션 넣고 활성화
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	bUseControllerRotationYaw = true;		// 카메라와 캐릭터 방향 분리 
+	
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = AimSpeed;	// 줌 하는 동안 이동속도 감소
+	}
+	
 	bIsAiming = true;
-	// 줌 하는 동안 이동속도 감소 / 시야에 맞춰 캐릭터 정면 고정 
+	 
 }
 
 void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 {
 	PrimaryActorTick.bCanEverTick = false;	// Tick Off
-	//bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 | 추후 에니메이션 넣고 활성화
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 
+	
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;	
+	}
+	
 	bIsAiming = false;
 }
 
