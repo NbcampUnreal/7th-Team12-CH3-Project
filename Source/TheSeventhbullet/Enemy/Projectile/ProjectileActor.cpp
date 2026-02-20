@@ -3,12 +3,15 @@
 
 #include "ProjectileActor.h"
 
+#include "ProjectileStat.h"
+#include "Projects.h"
 #include "Character/MainCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Enemy/EnemyBase.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Manager/ProjectilePoolManager.h"
+#include "Tests/AutomationEditorCommon.h"
 
 
 // Sets default values
@@ -59,26 +62,48 @@ void AProjectileActor::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor
 }
 
 
-void AProjectileActor::SetStaticMesh(TObjectPtr<UStaticMesh> InProjectileStaticMesh)
-{
-	if (InProjectileStaticMesh)
-	{
-		ProjectileStaticMesh->SetStaticMesh(InProjectileStaticMesh);
-	}
-}
 
 
 void AProjectileActor::SetEnemySetting(TObjectPtr<AEnemyBase> InEnemy)
 {
 	Enemy=InEnemy;
 	AttackPoint=InEnemy->GetAttackPoint();
-	ProjectileSpeed=InEnemy->GetProjectileSpeed();
 	SphereComponent->IgnoreActorWhenMoving(Enemy, true);
 	
 	if (ProjectileMovement!=nullptr)
 	{
-		ProjectileMovement->InitialSpeed = ProjectileSpeed;
+		TSharedPtr<FProjectileStatus>  PStatus=InEnemy->GetProjectileStatus();
+		ProjectileMovement->InitialSpeed = PStatus->Speed;
+		
+		if (PStatus->bIsHoming)
+		{
+			ProjectileMovement->bIsHomingProjectile = true;
+			if (UGameplayStatics::GetPlayerPawn(this, 0))
+			{
+				//싱글 플레이 전용- 플레이어에게 호밍
+				ProjectileMovement->HomingTargetComponent = UGameplayStatics::GetPlayerPawn(this, 0)->GetRootComponent();
+			}
+			
+			ProjectileMovement->HomingAccelerationMagnitude = 2000.f; 
+		}
+		else
+		{
+			ProjectileMovement->bIsHomingProjectile=false;
+		}
+		
+		if (PStatus->StaticMesh!=nullptr)
+		{
+			ProjectileStaticMesh->SetStaticMesh(PStatus->StaticMesh);
+		}
+		if (PStatus->Material!=nullptr)
+		{
+			ProjectileStaticMesh->SetOverlayMaterial(PStatus->Material);
+		}
+		
 	}
+	
+	
+
 }
 
 
@@ -98,16 +123,7 @@ void AProjectileActor::SetActiveAndCollision(bool InActive)
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle,this,&AProjectileActor::LifeTimeEnd,5.0f,false);
 		UE_LOG(LogTemp,Warning,TEXT("Activated"));
 		
-		if (Enemy->GetbIsHoming())
-		{
-			ProjectileMovement->bIsHomingProjectile = true;
-			if (UGameplayStatics::GetPlayerPawn(this, 0))
-			{
-				ProjectileMovement->HomingTargetComponent = UGameplayStatics::GetPlayerPawn(this, 0)->GetRootComponent();
-			}
-			
-			ProjectileMovement->HomingAccelerationMagnitude = 8000.f; 
-		}
+
 
 	}
 	else

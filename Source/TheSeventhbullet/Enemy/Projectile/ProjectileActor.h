@@ -30,7 +30,6 @@ public:
 		const FHitResult& Hit
 		);
 	
-	void SetStaticMesh(TObjectPtr<UStaticMesh> InProjectileStaticMesh);
 	
 	void SetEnemySetting(TObjectPtr<AEnemyBase> InEnemy);
 	
@@ -44,6 +43,9 @@ private:
 	
 	UPROPERTY(VisibleAnywhere)
 	float ProjectileSpeed=1000.0f;	
+	
+	UPROPERTY(VisibleAnywhere)
+	bool bIsHoming=false;
 	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USphereComponent> SphereComponent;

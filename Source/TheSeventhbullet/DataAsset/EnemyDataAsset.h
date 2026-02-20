@@ -44,10 +44,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Status")
 	float AttackRadius;
 	//발사체의 속도
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Status")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Projectile")
 	float ProjectileSpeed;
 	//발사체의 호밍 여부
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Status")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Projectile")
 	bool bIsHoming;
 	
 	
@@ -67,7 +67,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data", meta=(AssetBundles="Enemy"))
 	TMap<FName,TSoftObjectPtr<USoundCue>> SoundCues;
 	//발사체의 스켈레탈 메시
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data", meta=(AssetBundles="Enemy"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Projectile", meta=(AssetBundles="Enemy"))
 	TSoftObjectPtr<UStaticMesh> ProjectileStaticMesh;
 
 	//히트 파티클
