@@ -26,7 +26,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	// 캐릭터 회전값 계산
 	FRotator CharacterRotation = OwnerCharacter->GetBaseAimRotation();
 	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, CharacterRotation);
-	UE_LOG(LogTemp, Warning, TEXT("Direction : %.f"),Direction );
+	
 	// 공중 체공 상태 계산
 	UCharacterMovementComponent* MovementComp = OwnerCharacter->GetCharacterMovement();
 	if (MovementComp)
