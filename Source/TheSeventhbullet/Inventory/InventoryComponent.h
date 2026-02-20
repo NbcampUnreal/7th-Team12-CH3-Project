@@ -61,6 +61,7 @@ protected:
 	int32 MaxSlots = 30;
 
 private:
+	bool AddItemInternal(FPrimaryAssetId ItemID, int32 Count);
 	int32 FindStackableSlot(FPrimaryAssetId ItemID, int32 MaxStack) const;
 };
 

@@ -10,6 +10,7 @@ class UButton;
 class UImage;
 class UTextBlock;
 class UTexture2D;
+class UItemTooltipWidget;
 
 UCLASS()
 class THESEVENTHBULLET_API UInventorySlotWidget : public UUserWidget
@@ -40,6 +41,9 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> CountText;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Tooltip")
+	TSubclassOf<UItemTooltipWidget> TooltipWidgetClass;
 
 private:
 	UFUNCTION()
