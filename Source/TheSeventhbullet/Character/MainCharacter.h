@@ -92,6 +92,8 @@ public:
 	float MaxSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	float SprintMultifier;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
+	float AimSpeed;
 	
 #pragma endregion
 
@@ -136,6 +138,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
 	float CameraInterpSpeed;
+	
+	
 #pragma endregion
 
 #pragma region Actions

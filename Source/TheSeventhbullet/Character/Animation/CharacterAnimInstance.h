@@ -19,14 +19,16 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	
 protected:
-	UPROPERTY(blueprintreadwrite, Category = "Movement")
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float MovementSpeed;
-
-	UPROPERTY(blueprintreadwrite, Category = "Movement")
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float Direction;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsFalling;
-	UPROPERTY(blueprintreadwrite, Category = "Action")
+	UPROPERTY(BlueprintReadOnly, Category = "Action")
 	bool bIsDodging;
-	UPROPERTY(blueprintreadwrite, Category = "Action")
+	UPROPERTY(BlueprintReadOnly, Category = "Action")
 	bool bIsAiming;
 	
 private:

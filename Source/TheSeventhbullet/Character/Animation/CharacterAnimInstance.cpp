@@ -5,6 +5,7 @@
 #include "Character/MainCharacter.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "KismetAnimationLibrary.h"
 
 void UCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -22,6 +23,10 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Velocity.Z = 0.0f;
 	MovementSpeed = Velocity.Size();
 	
+	// 캐릭터 회전값 계산
+	FRotator CharacterRotation = OwnerCharacter->GetBaseAimRotation();
+	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, CharacterRotation);
+	UE_LOG(LogTemp, Warning, TEXT("Direction : %.f"),Direction );
 	// 공중 체공 상태 계산
 	UCharacterMovementComponent* MovementComp = OwnerCharacter->GetCharacterMovement();
 	if (MovementComp)
