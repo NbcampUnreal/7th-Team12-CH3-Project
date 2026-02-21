@@ -123,4 +123,8 @@ public:
 	// 주현 : 테스트용 무기
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Weapon")
 	TObjectPtr<AWeaponBase> CurrentWeapon;
+	
+	//현석 : AI 퍼셉션 감지 대상용 컴포넌트
+	UPROPERTY(VisibleAnywhere, Category = "AI")
+	class UAIPerceptionStimuliSourceComponent* StimuliSource;
 };

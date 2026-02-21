@@ -22,10 +22,12 @@ AProjectileActor::AProjectileActor()
 	SetRootComponent(SphereComponent);
 	SphereComponent->SetCollisionProfileName(TEXT("BlockAll"));
 	SphereComponent->OnComponentHit.AddDynamic(this, &AProjectileActor::OnProjectileHit);
+	SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility,ECR_Ignore);
 	//스태틱 메시 설정 및 콜리전 해제
 	ProjectileStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	ProjectileStaticMesh->SetupAttachment(SphereComponent);
 	ProjectileStaticMesh->SetCollisionProfileName(TEXT("NoCollision"));
+	ProjectileStaticMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility,ECR_Ignore);
 	//PMC 컴포넌트 생성
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->SetUpdatedComponent(SphereComponent);
