@@ -22,6 +22,17 @@ class THESEVENTHBULLET_API UWeaponDataAsset : public UPrimaryDataAsset
 	GENERATED_BODY()
 	
 public:
+	virtual FPrimaryAssetId GetPrimaryAssetId() const override
+	{
+		return FPrimaryAssetId(GetPrimaryAssetType(), GetFName());
+	}
+	
+	virtual FPrimaryAssetType GetPrimaryAssetType() const
+	{
+		return FPrimaryAssetType("Weapon");
+	}
+	
+public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<AWeaponBase> WeaponBaseBPClass; // WeaponBase
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")

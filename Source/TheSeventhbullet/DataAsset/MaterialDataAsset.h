@@ -2,10 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "ItemDataAsset.h"
+#include "SoulGem/SoulGemProperties.h"
 #include "MaterialDataAsset.generated.h"
 
 UENUM(BlueprintType)
-enum class EMaterialType : uint8
+enum class EMaterialTypes : uint8
 {
 	A_Attack,
 	B_Utility,
@@ -13,16 +14,8 @@ enum class EMaterialType : uint8
 	D_Special
 };
 
-UENUM(BlueprintType)
-enum class ESpecialOption : uint8
-{
-	None,
-	ReloadSpeed,
-	DoubleShot
-};
-
 USTRUCT(BlueprintType)
-struct FGemNamingParts
+struct THESEVENTHBULLET_API FGemNamingParts
 {
 	GENERATED_BODY()
 	
@@ -41,15 +34,16 @@ class THESEVENTHBULLET_API UMaterialDataAsset : public UItemDataAsset
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MaterialData")
-	EMaterialType MaterialType;
+	EMaterialTypes MaterialType;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MaterialData")
 	FGemNamingParts NamingParts;
-		
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MaterialData")
-	ESpecialOption SpecialOption = ESpecialOption::None;
+	FStatusModifier StatusModifier;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MaterialData")
+	ESpecialOptions SpecialOption = ESpecialOptions::None;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MaterialData")
 	int32 Grade = 1;
-	
 	
 };
