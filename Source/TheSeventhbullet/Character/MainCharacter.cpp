@@ -8,7 +8,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "TheSeventhbullet/Weapon/WeaponBase.h"
+#include "Perception/AISense_Hearing.h"
+
 
 AMainCharacter::AMainCharacter()
 {
@@ -44,6 +47,9 @@ AMainCharacter::AMainCharacter()
 	
 	// 주현 : CombatComponent 초기화
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
+	//현석 : AI 퍼셉션 감지 대상 컴포넌트 추가, 태그 추가
+	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
+	Tags.Add(FName("Player"));
 }
 
 void AMainCharacter::BeginPlay()
@@ -299,6 +305,17 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 		return;
 	}
 	CombatComponent->StartFire();
+	CurrentWeapon->StartFire();
+	
+	//현석 : 청각 이벤트 발생
+	UAISense_Hearing::ReportNoiseEvent(
+		   GetWorld(),
+		   GetActorLocation(),  // 클릭한 위치
+		   1.0f,               // Loudness
+		  this,          // Instigator
+		   2000.0f             // MaxRange
+	   );
+	UE_LOG(LogTemp,Warning,TEXT("Hearing Event Accured!"));
 }
 
 void AMainCharacter::FinishFire(const FInputActionValue& value)

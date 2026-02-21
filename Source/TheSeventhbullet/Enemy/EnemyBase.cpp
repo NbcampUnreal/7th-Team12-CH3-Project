@@ -34,6 +34,7 @@ AEnemyBase::AEnemyBase()
 	AttackPoint = 10.0f;
 	KnockbackStrengh = 200.0f;
 	bIsDead = false;
+	
 }
 
 // Called when the game starts or when spawned
@@ -232,7 +233,7 @@ void AEnemyBase::SetHealth(float NewHealth)
 
 void AEnemyBase::DisplayParticle(FVector HitLocation, UParticleSystem* InParticle)
 {
-	TObjectPtr<UParticleSystemComponent> Particle = UGameplayStatics::SpawnEmitterAtLocation(
+	UParticleSystemComponent* Particle = UGameplayStatics::SpawnEmitterAtLocation(
 		GetWorld(),
 		InParticle,
 		HitLocation,
