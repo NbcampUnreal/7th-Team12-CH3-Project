@@ -7,6 +7,8 @@
 #include "MainCharacter.generated.h"
 
 class UCombatComponent; // CombatComponent 전방선언
+class UEquipmentComponent; // EquipmentComponent 전방선언
+class UStatusComponent; // StatusComponent 전방선언
 class AWeaponBase; // WeaponBase 전방선언
 class UInputAction;
 class USpringArmComponent;
@@ -50,6 +52,20 @@ public:
 	float MaxSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	float SprintMultifier;
+	
+#pragma endregion
+
+#pragma region Components
+	
+	// 주현 : CombatComponent
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
+	TObjectPtr<UCombatComponent> CombatComponent;
+	// 주현 : EquipmentComponent
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
+	TObjectPtr<UEquipmentComponent> EquipmentComponent;
+	// 주현 : StatusComponent
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
+	TObjectPtr<UStatusComponent> StatusComponent;
 	
 #pragma endregion
 	
@@ -125,7 +141,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Weapon")
 	TObjectPtr<AWeaponBase> CurrentWeapon;
 	
-	// 주현 : CombatComponent
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
-	TObjectPtr<UCombatComponent> CombatComponent;
+	// 주현 : SoulGem 장착할 때마다 SoulGem의 스탯들을 모아서 StatusComponent에 재적용.
+	UFUNCTION(BlueprintCallable)
+	void HandleEquipmentChanged();
 };

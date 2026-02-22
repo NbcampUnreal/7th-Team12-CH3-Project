@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "ItemDataAsset.h"
-#include "SoulGem/SoulGemProperties.h"
+#include "SoulGem/SoulGemInstance.h"
 #include "MaterialDataAsset.generated.h"
 
 UENUM(BlueprintType)
@@ -45,5 +45,4 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MaterialData")
 	int32 Grade = 1;
-	
 };

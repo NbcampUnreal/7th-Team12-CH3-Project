@@ -18,9 +18,14 @@ struct FDamageContext
 	TObjectPtr<AWeaponBase> Weapon = nullptr;
 	UPROPERTY()
 	FHitResult HitResult;
+
+	UPROPERTY()
+	float CurrentDamage = 0.0f; // 현재 실제 공격력.
 	
 	UPROPERTY()
-	float BaseDamage = 0.0f;
+	float WeaponDamage = 0.0f; // 무기 공격력	
 	UPROPERTY()
-	float CurrentDamage = 0.0f;
+	float StatusDamage = 0.0f; // 스탯에 기반한 캐릭터 공격력
+	UPROPERTY()
+	float DamageMultiplier = 1.0f; // 밸런싱 계수 : 기본 1.0
 };

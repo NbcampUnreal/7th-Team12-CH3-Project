@@ -3,11 +3,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "DataAsset/MaterialDataAsset.h"
-#include "SoulGem/SoulGemProperties.h"
+#include "SoulGem/SoulGemInstance.h"
 #include "CraftingTableActor.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCraftMaterialsChanged, const TArray<UMaterialDataAsset*>&, Materials);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSoulGemCrafted, const FSoulGemProperties&, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSoulGemCrafted, const FSoulGemInstance&, Result);
 
 UCLASS()
 class THESEVENTHBULLET_API ACraftingTableActor : public AActor
@@ -37,7 +37,7 @@ public:
 	void ClearMaterials();
 	
 	UFUNCTION(BlueprintCallable, Category = "Crafting")
-	bool CraftSoulGem(FSoulGemProperties& ResultSoulGem);
+	bool CraftSoulGem(FSoulGemInstance& ResultSoulGem);
 	
 	const TArray<UMaterialDataAsset*>& GetSourceMaterials() const { return SourceMaterials; }
 	

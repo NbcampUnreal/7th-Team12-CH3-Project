@@ -41,7 +41,7 @@ void ACraftingTableActor::ClearMaterials()
 	BroadcastChanged();
 }
 
-bool ACraftingTableActor::CraftSoulGem(FSoulGemProperties& ResultSoulGem)
+bool ACraftingTableActor::CraftSoulGem(FSoulGemInstance& ResultSoulGem)
 {
 	TArray<UMaterialDataAsset*> Materials;
 	for (UMaterialDataAsset* Mat : SourceMaterials)

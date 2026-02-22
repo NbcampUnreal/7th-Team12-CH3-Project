@@ -1,14 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "CraftingFunctionLibrary.h"
 
-#include "ViewportInteractionTypes.h"
-
 bool UCraftingFunctionLibrary::CraftSoulGemFromMaterial(const TArray<UMaterialDataAsset*>& Materials,
-                                                        FSoulGemProperties& ResultSoulGem)
+                                                        FSoulGemInstance& ResultSoulGem)
 {
-	ResultSoulGem = FSoulGemProperties();
+	ResultSoulGem = FSoulGemInstance();
 	
 	ResultSoulGem.GemName = CraftSoulGemName(Materials);
 	MergeEffects(Materials, ResultSoulGem);
@@ -45,13 +40,16 @@ FText UCraftingFunctionLibrary::CraftSoulGemName(const TArray<UMaterialDataAsset
 }
 
 void UCraftingFunctionLibrary::MergeEffects(const TArray<UMaterialDataAsset*>& Materials,
-	FSoulGemProperties& ResultSoulGem)
+	FSoulGemInstance& ResultSoulGem)
 {
+	int32 TempGrade = 0;
+	
 	for (UMaterialDataAsset* Mat : Materials)
 	{
 		if (!Mat) continue;
 		
 		ResultSoulGem.StatusModifiers.Add(Mat->StatusModifier);
+		TempGrade += Mat->Grade;
 		
 		if (Mat->SpecialOption != ESpecialOptions::None)
 		{
@@ -60,7 +58,9 @@ void UCraftingFunctionLibrary::MergeEffects(const TArray<UMaterialDataAsset*>& M
 		
 		// 디버깅용 합성한 재료 이름 저장.
 		ResultSoulGem.SourceMaterialNames.Add(Mat->GetFName());
-	}
+	}	
+	
+	ResultSoulGem.Grade = TempGrade / Materials.Num();
 }
 
 

@@ -9,6 +9,9 @@ enum class EStatusType : uint8
 	Stamina,
 	ATK,
 	DEF,
+	DodgeCost,
+	MaxSpeed,
+	SprintMultiplier,
 	CritChance,
 	CritDamage
 };
