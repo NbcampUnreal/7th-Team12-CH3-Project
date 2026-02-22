@@ -12,7 +12,9 @@
 
 namespace UITags
 {
-	const FName Inventory = FName(TEXT("Inventory"));
-	const FName HUD       = FName(TEXT("HUD"));
-	const FName MainMenu  = FName(TEXT("MainMenu"));
+	const FName Inventory  = FName(TEXT("Inventory"));
+	const FName HUD        = FName(TEXT("HUD"));
+	const FName Crosshair  = FName(TEXT("Crosshair"));
+	const FName EscMenu    = FName(TEXT("EscMenu"));
+	const FName MainMenu   = FName(TEXT("MainMenu"));
 }

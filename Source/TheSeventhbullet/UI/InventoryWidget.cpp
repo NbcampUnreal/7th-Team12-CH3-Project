@@ -6,8 +6,6 @@
 void UInventoryWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
-	InitializeSlots();
 
 	if (!InventoryComp)
 	{
@@ -15,13 +13,22 @@ void UInventoryWidget::NativeConstruct()
 		if (PC && PC->GetPawn())
 		{
 			InventoryComp = PC->GetPawn()->FindComponentByClass<UInventoryComponent>();
-			if (InventoryComp)
-			{
-				InventoryComp->OnItemAdded.AddDynamic(this, &UInventoryWidget::OnItemChanged);
-				InventoryComp->OnItemRemoved.AddDynamic(this, &UInventoryWidget::OnItemChanged);
-				RefreshAllSlots();
-			}
 		}
+	}
+
+	InitializeSlots();
+
+	if (InventoryComp)
+	{
+		if (!InventoryComp->OnItemAdded.IsAlreadyBound(this, &UInventoryWidget::OnItemChanged))
+		{
+			InventoryComp->OnItemAdded.AddDynamic(this, &UInventoryWidget::OnItemChanged);
+		}
+		if (!InventoryComp->OnItemRemoved.IsAlreadyBound(this, &UInventoryWidget::OnItemChanged))
+		{
+			InventoryComp->OnItemRemoved.AddDynamic(this, &UInventoryWidget::OnItemChanged);
+		}
+		RefreshAllSlots();
 	}
 }
 
@@ -40,6 +47,7 @@ void UInventoryWidget::InitializeSlots()
 		UInventorySlotWidget* SlotWidget = CreateWidget<UInventorySlotWidget>(this, SlotWidgetClass);
 		if (SlotWidget)
 		{
+			SlotWidget->InitSlotInfo(InventoryComp, i);
 			SlotWrapBox->AddChild(SlotWidget);
 			SlotWidgets.Add(SlotWidget);
 		}

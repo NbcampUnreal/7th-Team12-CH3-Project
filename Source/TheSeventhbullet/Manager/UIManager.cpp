@@ -1,5 +1,6 @@
 #include "UIManager.h"
 #include "DataAsset/UIDataAsset.h"
+#include "TheSeventhbullet/UI/UITags.h"
 #include "Kismet/GameplayStatics.h"
 
 void UUIManager::Initialize(FSubsystemCollectionBase& Collection)
@@ -241,4 +242,19 @@ void UUIManager::UpdateInputModeForStack()
 		PC->SetShowMouseCursor(false);
 		PC->SetInputMode(FInputModeGameOnly());
 	}
+	
+	bool bShouldPause = false;
+	TSubclassOf<UUserWidget> EscMenuClass = FindWidget(UITags::EscMenu);
+	if (EscMenuClass)
+	{
+		for (const TObjectPtr<UUserWidget>& Widget : WidgetStack)
+		{
+			if (Widget && Widget->GetClass() == EscMenuClass)
+			{
+				bShouldPause = true;
+				break;
+			}
+		}
+	}
+	UGameplayStatics::SetGamePaused(World, bShouldPause);
 }

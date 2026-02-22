@@ -6,11 +6,11 @@
 #include "InventorySlotWidget.generated.h"
 
 class USizeBox;
-class UButton;
 class UImage;
 class UTextBlock;
 class UTexture2D;
 class UItemTooltipWidget;
+class UInventoryComponent;
 
 UCLASS()
 class THESEVENTHBULLET_API UInventorySlotWidget : public UUserWidget
@@ -26,15 +26,23 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "UI|Inventory")
 	FPrimaryAssetId GetItemID() const { return CachedItemID; }
+	
+	void InitSlotInfo(UInventoryComponent* InInventory, int32 InSlotIndex);
+
+	int32 GetSlotIndex() const { return SlotIndex; }
+	UInventoryComponent* GetOwningInventory() const { return OwningInventory; }
 
 protected:
 	virtual void NativeConstruct() override;
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<USizeBox> SlotSizeBox;
+	// Drag & Drop
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
+	virtual bool NativeOnDragOver(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> SlotButton;
+	TObjectPtr<USizeBox> SlotSizeBox;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> IconImage;
@@ -46,10 +54,12 @@ protected:
 	TSubclassOf<UItemTooltipWidget> TooltipWidgetClass;
 
 private:
-	UFUNCTION()
-	void OnSlotClicked();
-
 	void SetIcon(UTexture2D* Texture);
 
 	FPrimaryAssetId CachedItemID;
+
+	UPROPERTY()
+	TObjectPtr<UInventoryComponent> OwningInventory;
+
+	int32 SlotIndex = INDEX_NONE;
 };

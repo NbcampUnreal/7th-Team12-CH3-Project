@@ -1,20 +1,99 @@
 #include "InventorySlotWidget.h"
+#include "InventoryDragDropOperation.h"
 #include "Components/SizeBox.h"
-#include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Manager/AsyncDataManager.h"
 #include "DataAsset/ItemDataAsset.h"
 #include "ItemTooltipWidget.h"
+#include "Inventory/InventoryComponent.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Engine/StreamableManager.h"
 #include "Engine/AssetManager.h"
 
 void UInventorySlotWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	if (SlotButton && !SlotButton->OnClicked.IsAlreadyBound(this, &UInventorySlotWidget::OnSlotClicked))
+}
+
+void UInventorySlotWidget::InitSlotInfo(UInventoryComponent* InInventory, int32 InSlotIndex)
+{
+	OwningInventory = InInventory;
+	SlotIndex = InSlotIndex;
+}
+
+FReply UInventorySlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton && CachedItemID.IsValid())
 	{
-		SlotButton->OnClicked.AddDynamic(this, &UInventorySlotWidget::OnSlotClicked);
+		return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
+	}
+	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+}
+
+void UInventorySlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[Drag] 3. DragDetected - Slot:%d, Inv:%d"),
+		SlotIndex, OwningInventory != nullptr);
+
+	if (!OwningInventory || SlotIndex == INDEX_NONE || !CachedItemID.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Drag] 3. BLOCKED - Inv:%d, Slot:%d, Item:%d"),
+			OwningInventory != nullptr, SlotIndex, CachedItemID.IsValid());
+		return;
+	}
+
+	UInventoryDragDropOperation* DragOp = NewObject<UInventoryDragDropOperation>();
+	DragOp->SourceInventory = OwningInventory;
+	DragOp->SourceSlotIndex = SlotIndex;
+	DragOp->DraggedItem = OwningInventory->GetItemAt(SlotIndex);
+	
+	if (IconImage && IconImage->GetVisibility() != ESlateVisibility::Collapsed)
+	{
+		USizeBox* DragSizeBox = NewObject<USizeBox>(this);
+		DragSizeBox->SetWidthOverride(80.f);
+		DragSizeBox->SetHeightOverride(80.f);
+
+		UImage* DragImage = NewObject<UImage>(DragSizeBox);
+		DragImage->SetBrush(IconImage->GetBrush());
+		DragImage->SetRenderOpacity(0.7f);
+		DragSizeBox->AddChild(DragImage);
+
+		DragOp->DefaultDragVisual = DragSizeBox;
+		DragOp->Pivot = EDragPivot::CenterCenter;
+		DragOp->Offset = FVector2D::ZeroVector;
+	}
+
+	OutOperation = DragOp;
+}
+
+bool UInventorySlotWidget::NativeOnDragOver(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	bool bAccept = Cast<UInventoryDragDropOperation>(InOperation) != nullptr;
+	return bAccept;
+}
+
+bool UInventorySlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	
+	UInventoryDragDropOperation* DragOp = Cast<UInventoryDragDropOperation>(InOperation);
+	if (!DragOp || !DragOp->SourceInventory || !OwningInventory)
+	{
+		return false;
+	}
+	
+	if (DragOp->SourceInventory == OwningInventory && DragOp->SourceSlotIndex == SlotIndex)
+	{
+		return false;
+	}
+	
+	if (DragOp->SourceInventory == OwningInventory)
+	{
+		return OwningInventory->SwapSlots(DragOp->SourceSlotIndex, SlotIndex);
+	}
+	else
+	{
+		return DragOp->SourceInventory->MoveItemTo(DragOp->SourceSlotIndex, OwningInventory, SlotIndex);
 	}
 }
 
@@ -102,9 +181,4 @@ void UInventorySlotWidget::SetIcon(UTexture2D* Texture)
 	{
 		IconImage->SetVisibility(ESlateVisibility::Collapsed);
 	}
-}
-
-void UInventorySlotWidget::OnSlotClicked()
-{
-	
 }
