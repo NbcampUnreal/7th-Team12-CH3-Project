@@ -13,6 +13,45 @@ class UCameraComponent;
 
 struct FInputActionValue;
 
+USTRUCT(BlueprintType)
+struct FCharacterStat
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 HP;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 Stamina;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 Attack;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 Defence;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 CriticalChance;//크리 확률
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 CriticalHitChance;//크피 확률
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 Speed;
+	
+	//기본 생성자 (초기값 세팅)
+	FCharacterStat()
+	{
+		HP = 100;
+		Stamina = 100;
+		Attack = 100;
+		Defence = 100;
+		CriticalChance = 30;
+		CriticalHitChance = 30;
+		Speed = 600;
+	}
+};
+
 UCLASS()
 class THESEVENTHBULLET_API AMainCharacter : public ACharacter
 {
