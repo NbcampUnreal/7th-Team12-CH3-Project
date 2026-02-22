@@ -41,6 +41,9 @@ public:
 	
 	const TArray<UMaterialDataAsset*>& GetSourceMaterials() const { return SourceMaterials; }
 	
+	UFUNCTION(BlueprintCallable, Category = "Crafting")
+	const FText GetGemName(const FSoulGemInstance& ResultSoulGem) const { return ResultSoulGem.GemName; }
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crafting")
 	TArray<TObjectPtr<UMaterialDataAsset>> SourceMaterials;

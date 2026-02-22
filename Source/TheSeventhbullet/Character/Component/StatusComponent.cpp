@@ -33,6 +33,7 @@ void UStatusComponent::CalculateStatusFromModifiers(const TArray<FStatusModifier
 		{
 			GetStatusRef(FinalStatus, Mod.Status) *= Mod.Value;
 		}
+		UE_LOG(LogTemp, Warning, TEXT("CalculateStatusFromModifiers"));
 	}
 	
 	FinalStatus.Dynamic_CritChance = FMath::Clamp(FinalStatus.Dynamic_CritChance, 0.0f, 1.0f); // 최소 0.0f(0%), 최대 1.0f(100%)로 제한

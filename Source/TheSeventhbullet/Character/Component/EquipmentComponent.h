@@ -23,5 +23,4 @@ public:
 	void EquipSoulGem(const FSoulGemInstance& SoulGem, int32 SlotIndex);
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void CollectStatusModifiers(TArray<FStatusModifier>& Mod) const;
-	
 };

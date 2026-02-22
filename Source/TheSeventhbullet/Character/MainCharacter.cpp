@@ -375,6 +375,9 @@ void AMainCharacter::PlayerOpenInventory(const FInputActionValue& value)
 void AMainCharacter::HandleEquipmentChanged()
 {
 	TArray<FStatusModifier> Modifiers;
+	
+	UE_LOG(LogTemp, Warning, TEXT("Equipment Changed"));
+	
 	EquipmentComponent->CollectStatusModifiers(Modifiers);
 	StatusComponent->CalculateStatusFromModifiers(Modifiers);
 }
