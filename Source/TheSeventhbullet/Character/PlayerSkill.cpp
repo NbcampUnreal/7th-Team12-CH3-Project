@@ -35,13 +35,12 @@ void APlayerSkill::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	// 충돌 무시 설정
 	AActor* Player = GetOwner();
-	
-	UPrimitiveComponent* CollisionComp = Cast<UPrimitiveComponent>(RootComponent);
-	
-	if (CollisionComp && Player)
+	//UPrimitiveComponent* CollisionComp = Cast<UPrimitiveComponent>(RootComponent);	
+	if (Collision && Player)
 	{
-		CollisionComp->IgnoreActorWhenMoving(Player, true);
+		Collision->IgnoreActorWhenMoving(Player, true);
 	}
 }
 
@@ -109,10 +108,11 @@ void APlayerSkill::Explode()
 			{
 				// 방향 계산
 				FVector KnockbackDir = HitCharacter->GetActorLocation() - GetActorLocation();
+				KnockbackDir.Z = 0.0f;
 				KnockbackDir.Normalize();
 				
 				// Z축 보정
-				FVector KnockbackVelocity = (KnockbackDir * KnockBackAmount);
+				FVector KnockbackVelocity = (KnockbackDir * KnockBackAmount) + FVector(0.0f, 0.0f, KnockBackAmount * 0.5f);
 				
 				HitCharacter->LaunchCharacter(KnockbackVelocity, true, true);
 			}

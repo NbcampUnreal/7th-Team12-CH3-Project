@@ -17,6 +17,29 @@ class UCameraComponent;
 
 struct FInputActionValue;
 
+UENUM(BlueprintType)
+enum class EAnimState : uint8
+{
+	None,
+	Skill,				
+	Aim_Rifle,
+	Aim_Shotun,
+	Aim_Pistol,
+	Fire_Rifle,  
+	Fire_ShotGun,
+	Fire_Pistol,
+	Fire_Aim_Rifle,  
+	Fire_Aim_ShotGun,
+	Fire_Aim_Pistol, 
+	Reload_Rifle,  
+	Reload_ShotGun,
+	Reload_Pistol, 
+	DodgeFwd,
+	DodgeBwd,
+	DodgeRight,
+	DodgeLeft
+};
+
 USTRUCT(BlueprintType)
 struct FCharacterStat
 {
@@ -72,6 +95,12 @@ protected:
 		class AController* EventInstigator,
 		AActor* DamageCauser
 		) override;*/
+	
+	EAnimState CurrentState = EAnimState::None;	// 애니메이션 상태별 출력을 위한 Enum
+	
+	UPROPERTY(EditDefaultsOnly, Category="Animation|Montage")
+	TMap<EAnimState, TObjectPtr<UAnimMontage>> MontagesMap;	// 애니메이션 몽타주 저장 변수
+
 public:	
 	
 #pragma region Status
@@ -138,11 +167,11 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
 	float CameraInterpSpeed;
-	
-	
+
 #pragma endregion
 
 #pragma region Actions
+	
 	void PlayerMove(const FInputActionValue& value);
 	void PlayerLook(const FInputActionValue& value);
 	void PlayerStartSprint(const FInputActionValue& value);
@@ -157,6 +186,7 @@ public:
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
 	void PlayerReload(const FInputActionValue& value);
+	
 #pragma endregion
 
 #pragma region Skill
@@ -180,7 +210,8 @@ public:
 	
 #pragma endregion
 	
-#pragma region Animation
+	void PlayAnimMotageByState(EAnimState AnimState);
+	void EndedAnimMontage(UAnimMontage* Montage, bool Interrupted);
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<class UAnimMontage> SkillMontage;
@@ -197,10 +228,7 @@ public:
 	// 주현 : SoulGem 장착할 때마다 SoulGem의 스탯들을 모아서 StatusComponent에 재적용.
 	UFUNCTION(BlueprintCallable)
 	void HandleEquipmentChanged();
-	// 주현 : CombatComponent
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
-	TObjectPtr<UCombatComponent> CombatComponent;
-	
+		
 	// Inventory
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Inventory")
 	TObjectPtr<UInventoryComponent> InventoryComponent;
