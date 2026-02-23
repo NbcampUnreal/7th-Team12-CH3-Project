@@ -90,6 +90,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Data|Async")
 	TArray<FPrimaryAssetId> GetAllAssetIDs(FPrimaryAssetType AssetType) const;
 
+	// 현재 진행 중인 모든 핸들의 평균 로딩 진행률 (0~1), 로딩 없으면 1.0 반환
+	UFUNCTION(BlueprintPure, Category = "Data|Async")
+	float GetLoadingProgress() const;
+
 private:
 	UPROPERTY()
 	TMap<FPrimaryAssetId, TObjectPtr<UPrimaryDataAsset>> LoadedAssets;

@@ -2,6 +2,7 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/PanelWidget.h"
+#include "Manager/LevelTransitionManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -98,7 +99,11 @@ void UMainMenuWidget::OnContinueClicked()
 
 void UMainMenuWidget::OnNewGameClicked()
 {
-	
+	ULevelTransitionManager* LTM = ULevelTransitionManager::Get(this);
+	if (LTM)
+	{
+		LTM->LoadLevel(GameMapName);
+	}
 }
 
 void UMainMenuWidget::OnSettingsClicked()

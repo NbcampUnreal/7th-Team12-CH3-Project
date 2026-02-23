@@ -4,6 +4,7 @@
 #include "Components/TextBlock.h"
 #include "Components/PanelWidget.h"
 #include "Manager/UIManager.h"
+#include "Manager/LevelTransitionManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -115,7 +116,12 @@ void UEscMenuWidget::OnBackToMenuClicked()
 	{
 		UIMgr->PopAll();
 	}
-	UGameplayStatics::OpenLevel(this, MainMenuMapName);
+
+	ULevelTransitionManager* LTM = ULevelTransitionManager::Get(this);
+	if (LTM)
+	{
+		LTM->LoadLevel(MainMenuMapName);
+	}
 }
 
 void UEscMenuWidget::OnQuitGameClicked()

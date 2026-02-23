@@ -17,4 +17,5 @@ namespace UITags
 	const FName Crosshair  = FName(TEXT("Crosshair"));
 	const FName EscMenu    = FName(TEXT("EscMenu"));
 	const FName MainMenu   = FName(TEXT("MainMenu"));
+	const FName LoadingScreen    = FName(TEXT("LoadingScreen"));
 }

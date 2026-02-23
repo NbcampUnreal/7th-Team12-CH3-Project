@@ -21,6 +21,7 @@ void AMainMenuGameMode::BeginPlay()
 	UUIManager* UIManager = UUIManager::Get(this);
 	if (UIManager)
 	{
+		UIManager->HideByTag(UITags::LoadingScreen);
 		UIManager->ShowByTag(UITags::MainMenu);
 	}
 }
