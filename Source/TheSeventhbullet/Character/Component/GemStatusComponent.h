@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "StatusComponent.generated.h"
+#include "GemStatusComponent.generated.h"
 
 struct FStatusModifier;
 
@@ -12,32 +12,32 @@ struct THESEVENTHBULLET_API FDynamicStatusValue
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Dynamic_HP = 100;
+	float Dynamic_HP = 0.f; // 추가 HP
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Dynamic_Stamina = 100;
+	float Dynamic_Stamina = 0.f; // 추가 Stamina
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Dynamic_ATK = 10.f;
+	float Dynamic_ATK = 0.f; // 추가 ATK
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Dynamic_DEF = 0.f;
+	float Dynamic_DEF = 0.f; // 추가 DEF
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Dynamic_DodgeCost = 20;
+	float Dynamic_DodgeCost = 0.f; // 추가 DodgeCost
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Dynamic_MaxSpeed = 600.0f;
+	float Dynamic_MaxSpeed = 0.f; // 추가 MaxSpeed
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Dynamic_SprintMultiplier = 1.5f;
+	float Dynamic_SprintMultiplier = 0.f; // 추가 SprintMultiplier
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Dynamic_CritChance = 0.f; // 크리티컬 확률. 최소 0.f(0%), 최대 1.f(100%)
+	float Dynamic_CritChance = 0.f; // 추가 크리티컬 확률. 최소 0.f(0%), 최대 0.85f(85%)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Dynamic_CritDamage = 1.5f; // 크리티컬 데미지. 기본값 1.5f(1.5배) 
+	float Dynamic_CritDamage = 0.f; // 추가 크리티컬 데미지. 기본값 0.f 
 	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float Nothing = 0.0f; // 예외처리용 스탯.
 };
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class THESEVENTHBULLET_API UStatusComponent : public UActorComponent
+class THESEVENTHBULLET_API UGemStatusComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -49,6 +49,7 @@ public:
 	
 	void CalculateStatusFromModifiers(const TArray<FStatusModifier>& Modifiers);
 	
+	// Get
 	UFUNCTION(BlueprintCallable, Category = "Status|DamageMod")
 	float GetFinalATK() const { return FinalStatus.Dynamic_ATK; }
 	UFUNCTION(BlueprintCallable, Category = "Status|DamageMod")

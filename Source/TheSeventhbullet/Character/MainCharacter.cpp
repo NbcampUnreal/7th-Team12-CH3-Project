@@ -6,7 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "Component/CombatComponent.h" // 주현 : CombatComponent
 #include "Component/EquipmentComponent.h" // 주현 : EquipmentComponent
-#include "Component/StatusComponent.h" // 주현 : StatusComponent
+#include "Component/GemStatusComponent.h" // 주현 : StatusComponent
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -46,7 +46,7 @@ AMainCharacter::AMainCharacter()
 	// 주현 : Component 초기화
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("Equipment"));
-	StatusComponent = CreateDefaultSubobject<UStatusComponent>(TEXT("Status"));
+	StatusComponent = CreateDefaultSubobject<UGemStatusComponent>(TEXT("Status"));
 }
 
 void AMainCharacter::BeginPlay()

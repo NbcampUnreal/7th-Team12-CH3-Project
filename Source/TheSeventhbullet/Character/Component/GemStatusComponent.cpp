@@ -1,7 +1,8 @@
-#include "StatusComponent.h"
+#include "GemStatusComponent.h"
 #include "Data/StatusTypes.h"
 #include "DSP/AudioDebuggingUtilities.h"
 
+// 장착된 소울젬에서 수집된 값들이 어떤 타입이냐에 따라 추가할 스탯이 어떤 스탯인지 판별하는 과정.
 static float& GetStatusRef(FDynamicStatusValue& Status, EStatusType Type)
 {
 	switch (Type)
@@ -19,7 +20,8 @@ static float& GetStatusRef(FDynamicStatusValue& Status, EStatusType Type)
 	}
 }
 
-void UStatusComponent::CalculateStatusFromModifiers(const TArray<FStatusModifier>& Modifiers)
+// 실제 스탯을 추가하는 부분.
+void UGemStatusComponent::CalculateStatusFromModifiers(const TArray<FStatusModifier>& Modifiers)
 {
 	FinalStatus = BaseStatus;
 	
@@ -36,6 +38,7 @@ void UStatusComponent::CalculateStatusFromModifiers(const TArray<FStatusModifier
 		UE_LOG(LogTemp, Warning, TEXT("CalculateStatusFromModifiers"));
 	}
 	
-	FinalStatus.Dynamic_CritChance = FMath::Clamp(FinalStatus.Dynamic_CritChance, 0.0f, 1.0f); // 최소 0.0f(0%), 최대 1.0f(100%)로 제한
+	// 크리티컬 관련 제한
+	FinalStatus.Dynamic_CritChance = FMath::Clamp(FinalStatus.Dynamic_CritChance, 0.0f, 0.85f); // 최소 0.0f(0%), 최대 1.0f(100%)로 제한
 	FinalStatus.Dynamic_CritDamage = FMath::Max(1.0f, FinalStatus.Dynamic_CritDamage); // 1.0f(100%)로 최솟값 제한
 }

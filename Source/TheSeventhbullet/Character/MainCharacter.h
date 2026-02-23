@@ -8,7 +8,7 @@
 
 class UCombatComponent; // CombatComponent 전방선언
 class UEquipmentComponent; // EquipmentComponent 전방선언
-class UStatusComponent; // StatusComponent 전방선언
+class UGemStatusComponent; // StatusComponent 전방선언
 class AWeaponBase; // WeaponBase 전방선언
 class UInputAction;
 class USpringArmComponent;
@@ -65,7 +65,7 @@ public:
 	TObjectPtr<UEquipmentComponent> EquipmentComponent;
 	// 주현 : StatusComponent
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
-	TObjectPtr<UStatusComponent> StatusComponent;
+	TObjectPtr<UGemStatusComponent> StatusComponent;
 	
 #pragma endregion
 	

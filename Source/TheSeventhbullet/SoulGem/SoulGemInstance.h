@@ -16,6 +16,7 @@ struct THESEVENTHBULLET_API FSoulGemInstance
 {
 	GENERATED_BODY()
 	
+	// GemName
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SoulGem")
 	FText GemName;
 	
