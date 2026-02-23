@@ -1,4 +1,4 @@
-﻿#include "MainCharacter.h"
+#include "MainCharacter.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "MainPlayerController.h"
@@ -7,10 +7,16 @@
 #include "Component/CombatComponent.h" // 주현 : CombatComponent
 #include "Component/EquipmentComponent.h" // 주현 : EquipmentComponent
 #include "Component/GemStatusComponent.h" // 주현 : StatusComponent
+#include "Inventory/InventoryComponent.h" // Inventory
+#include "UI/UITags.h"
+#include "Manager/UIManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "TheSeventhbullet/Weapon/WeaponBase.h"
+#include "Perception/AISense_Hearing.h"
+
 
 AMainCharacter::AMainCharacter()
 {
@@ -47,12 +53,19 @@ AMainCharacter::AMainCharacter()
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("Equipment"));
 	StatusComponent = CreateDefaultSubobject<UGemStatusComponent>(TEXT("Status"));
+	
+  InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComp"));
+
+	//현석 : AI 퍼셉션 감지 대상 컴포넌트 추가, 태그 추가
+	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
+	Tags.Add(FName("Player"));
 }
 
 void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	UE_LOG(LogTemp, Warning, TEXT("[MainCharacter] BeginPlay - World: %s, Name: %s"), GetWorld() ? *GetWorld()->GetName() : TEXT("NULL"), *GetName());
+
 	if (AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
@@ -175,7 +188,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			// OpenInventory 바인딩
 			InputComponents->BindAction(
 				PC->OpenInventoryAction,
-				ETriggerEvent::Triggered,
+				ETriggerEvent::Started,
 				this,
 				&AMainCharacter::PlayerOpenInventory
 			);
@@ -309,6 +322,17 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 		return;
 	}
 	CombatComponent->StartFire();
+	CurrentWeapon->StartFire();
+	
+	//현석 : 청각 이벤트 발생
+	UAISense_Hearing::ReportNoiseEvent(
+		   GetWorld(),
+		   GetActorLocation(),  // 클릭한 위치
+		   1.0f,               // Loudness
+		  this,          // Instigator
+		   2000.0f             // MaxRange
+	   );
+	UE_LOG(LogTemp,Warning,TEXT("Hearing Event Accured!"));
 }
 
 void AMainCharacter::FinishFire(const FInputActionValue& value)
@@ -369,6 +393,11 @@ void AMainCharacter::PlayerInteract(const FInputActionValue& value)
 
 void AMainCharacter::PlayerOpenInventory(const FInputActionValue& value)
 {
+	if (UUIManager* UIMgr = UUIManager::Get(this))
+	{
+		UIMgr->Toggle(UITags::Inventory);
+	}
+	
 }
 
 // 주현 : SoulGem 장착할 때마다 SoulGem의 스탯들을 모아서 StatusComponent에 재적용.

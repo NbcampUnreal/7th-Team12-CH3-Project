@@ -1,9 +1,20 @@
 #include "UIManager.h"
+#include "DataAsset/UIDataAsset.h"
+#include "TheSeventhbullet/UI/UITags.h"
 #include "Kismet/GameplayStatics.h"
 
 void UUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+	
+	const TCHAR* AssetPath = TEXT("/Game/TheSeventhBullet/Blueprints/UI/UIConfig/DA_UIConfig.DA_UIConfig");
+	
+	UIDataAsset = Cast<UUIDataAsset>(StaticLoadObject(UUIDataAsset::StaticClass(), nullptr, AssetPath));
+
+	if (!UIDataAsset)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UIManager: DA_UIConfig not found"));
+	}
 }
 
 void UUIManager::Deinitialize()
@@ -127,13 +138,13 @@ void UUIManager::Pop()
 	{
 		return;
 	}
-	
+
 	UUserWidget* Top = WidgetStack.Pop();
 	if (Top)
 	{
 		Top->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	
+
 	if (WidgetStack.Num() > 0)
 	{
 		UUserWidget* NewTop = WidgetStack.Last();
@@ -142,6 +153,8 @@ void UUIManager::Pop()
 			NewTop->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
+
+	UpdateInputModeForStack();
 }
 
 void UUIManager::PopAll()
@@ -154,13 +167,94 @@ void UUIManager::PopAll()
 			Top->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
+
+	UpdateInputModeForStack();
 }
 
-bool UUIManager::IsTopOfStack(TSubclassOf<UUserWidget> WidgetClass) const
+// ──────────────────────────────────────────────
+// Tag 기반 API
+// ──────────────────────────────────────────────
+
+TSubclassOf<UUserWidget> UUIManager::FindWidget(FName Tag) const
 {
-	if (WidgetStack.Num() == 0 || !WidgetClass)
+	if (!UIDataAsset)
 	{
-		return false;
+		return nullptr;
 	}
-	return WidgetStack.Last()->IsA(WidgetClass);
+	TSubclassOf<UUserWidget> WidgetClass = UIDataAsset->FindWidget(Tag);
+	if (!WidgetClass)
+	{	
+		return nullptr;
+	}
+	return WidgetClass;
+}
+
+UUserWidget* UUIManager::ShowByTag(FName Tag, int32 ZOrder)
+{
+	return Show(FindWidget(Tag), ZOrder);
+}
+
+void UUIManager::HideByTag(FName Tag)
+{
+	Hide(FindWidget(Tag));
+}
+
+void UUIManager::Toggle(FName Tag, int32 ZOrder)
+{
+	TSubclassOf<UUserWidget> WidgetClass = FindWidget(Tag);
+	if (!WidgetClass)
+	{
+		return;
+	}
+
+	if (IsVisible(WidgetClass))
+	{
+		Pop();
+	}
+	else
+	{
+		Push(WidgetClass, ZOrder);
+		UpdateInputModeForStack();
+	}
+}
+
+void UUIManager::UpdateInputModeForStack()
+{
+	UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+	if (!World)
+	{
+		return;
+	}
+
+	APlayerController* PC = World->GetFirstPlayerController();
+	if (!PC)
+	{
+		return;
+	}
+
+	if (WidgetStack.Num() > 0)
+	{
+		PC->SetShowMouseCursor(true);
+		PC->SetInputMode(FInputModeGameAndUI());
+	}
+	else
+	{
+		PC->SetShowMouseCursor(false);
+		PC->SetInputMode(FInputModeGameOnly());
+	}
+	
+	bool bShouldPause = false;
+	TSubclassOf<UUserWidget> EscMenuClass = FindWidget(UITags::EscMenu);
+	if (EscMenuClass)
+	{
+		for (const TObjectPtr<UUserWidget>& Widget : WidgetStack)
+		{
+			if (Widget && Widget->GetClass() == EscMenuClass)
+			{
+				bShouldPause = true;
+				break;
+			}
+		}
+	}
+	UGameplayStatics::SetGamePaused(World, bShouldPause);
 }

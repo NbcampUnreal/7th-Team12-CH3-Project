@@ -12,14 +12,16 @@
  *   UUIManager* UIMgr = UUIManager::Get(this);
  *
  *   // 1. HUD (항상 표시)
- *   UIMgr->Show(UHUDWidget::StaticClass());
- *   UIMgr->Hide(UHUDWidget::StaticClass());
+ *   UIMgr->ShowByTag(UITags::HUD);
+ *   UIMgr->HideByTag(UITags::HUD);
  *
- *   // 2. 메뉴 (스택 기반)
+ *   // 2. 메뉴 (Tag 기반 토글)
+ *   UIMgr->Toggle(UITags::Inventory);  // 열기/닫기 + 커서/입력모드 자동 처리
+ *
+ *   // 3. 기존 Class 기반 API도 그대로 사용 가능
  *   UIMgr->Push(UInventoryWidget::StaticClass());
- *   UIMgr->Push(UShopWidget::StaticClass());
- *   UIMgr->Pop();      // 상점 닫기 -> 인벤토리 복귀
- *   UIMgr->PopAll();   // 전부 닫기
+ *   UIMgr->Pop();
+ *   UIMgr->PopAll();
  */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -29,6 +31,8 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Blueprint/UserWidget.h"
 #include "UIManager.generated.h"
+
+class UUIDataAsset;
 
 UCLASS()
 class THESEVENTHBULLET_API UUIManager : public UGameInstanceSubsystem
@@ -43,7 +47,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	UUserWidget* GetWidget(TSubclassOf<UUserWidget> WidgetClass);
-	
+
 	// HUD (non-stack)
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	UUserWidget* Show(TSubclassOf<UUserWidget> WidgetClass, int32 ZOrder = 0);
@@ -53,7 +57,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	bool IsVisible(TSubclassOf<UUserWidget> WidgetClass) const;
-	
+
 	// Menu UI (stack) - Visibility 기반
 	UFUNCTION(BlueprintCallable, Category = "UI|Stack")
 	UUserWidget* Push(TSubclassOf<UUserWidget> WidgetClass, int32 ZOrder = 0);
@@ -64,13 +68,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|Stack")
 	void PopAll();
 
-	UFUNCTION(BlueprintCallable, Category = "UI|Stack")
-	bool IsTopOfStack(TSubclassOf<UUserWidget> WidgetClass) const;
+	// Tag 기반 API — UIDataAsset에서 FName → WidgetClass 자동 매핑
+	UFUNCTION(BlueprintCallable, Category = "UI|Tag")
+	UUserWidget* ShowByTag(FName Tag, int32 ZOrder = 0);
 
-	UFUNCTION(BlueprintPure, Category = "UI|Stack")
-	bool IsStackEmpty() const { return WidgetStack.Num() == 0; }
+	UFUNCTION(BlueprintCallable, Category = "UI|Tag")
+	void HideByTag(FName Tag);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Tag")
+	void Toggle(FName Tag, int32 ZOrder = 0);
 
 private:
+	TSubclassOf<UUserWidget> FindWidget(FName Tag) const;
+	void UpdateInputModeForStack();
+
+	UPROPERTY()
+	TObjectPtr<UUIDataAsset> UIDataAsset;
+
 	UPROPERTY()
 	TMap<TSubclassOf<UUserWidget>, TObjectPtr<UUserWidget>> WidgetCache;
 
