@@ -13,7 +13,7 @@ UBTTask_MakeFalseBBKey::UBTTask_MakeFalseBBKey()
 
 EBTNodeResult::Type UBTTask_MakeFalseBBKey::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {	
-	TObjectPtr<UBlackboardComponent> BBComp= OwnerComp.GetBlackboardComponent();;
+	UBlackboardComponent* BBComp= OwnerComp.GetBlackboardComponent();;
 	
 	if (BBComp!=nullptr)
 	{

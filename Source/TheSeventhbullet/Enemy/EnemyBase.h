@@ -6,13 +6,19 @@
 #include "GameFramework/Character.h"
 #include "EnemyBase.generated.h"
 
+#pragma region DELEGATE
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterEventSignnature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterSetAISignnature,
+											UBehaviorTree*,ParamBT,
+											float,AttackRadius);
+#pragma endregion
+
 
 /**
  * PDA를 통해 로드 완료된 데이터를 가져와서 적 캐릭터 정보를 들고 있고, 피격 등의 이벤트를 진행합니다.
  */
 class UBehaviorTree;
-class UBlackboardComponent;
+struct FProjectileStatus;
 UCLASS()
 class THESEVENTHBULLET_API AEnemyBase : public ACharacter
 {
@@ -29,13 +35,23 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	
+#pragma region DELEGATE METHOD
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnCharacterHit;
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnCharacterEventSignnature OnCharacterHeadHit;
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnCharacterDead;
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnCharacterReset;
 	
+	//비헤이비어 트리 초기 세팅을 위한 델리게이트
+	UPROPERTY(BlueprintAssignable, Category="Settings")
+	FOnCharacterSetAISignnature OnCharacterSetAI;
+
+	
+#pragma endregion
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -45,15 +61,20 @@ public:
 	//공격력을 반환합니다.
 	float GetAttackPoint();
 	
+	
+	//발사체의 정보를 담고 있습니다.
+	TSharedPtr<FProjectileStatus>  PStatus;	
+	//발사체의 정보를 반환합니다.
+	TSharedPtr<FProjectileStatus>  GetProjectileStatus();
+	
+	
 	//오브젝트 풀에서 캐릭터를 생성할때 리셋해줍니다.
 	UFUNCTION(BlueprintCallable,Category="Enemy|Status")
 	void ResetEnemy();
 	//PDA에서 받은 로딩된 애님몽타주를 실행합니다.
 	UFUNCTION(BlueprintCallable,Category="Enemy|Status")
 	UAnimMontage* ReturnthisMontage(FName AMName);
-	//PDA에서 받은 로딩된 발사체 애님몽타주를 실행합니다.
-	UFUNCTION(BlueprintCallable,Category="Enemy|Status")
-	UAnimMontage* ReturnthisProjectileMontage();
+
 	
 	UFUNCTION()
 	EMonsterType GetMonsterType();
@@ -75,25 +96,24 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
 	float KnockbackStrengh;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
-	bool bIsLongRange;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
 	float AttackRadius;
 #pragma endregion
 	
+#pragma  region EnemyData
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
 	UParticleSystem* HitParticle;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
     UParticleSystem* HeadShotParticle;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
-	UBehaviorTree* EnemyBehaviorTree;
-	
+	//가져온 PDA를 캐싱하기 위한 변수
 	TObjectPtr<UEnemyDataAsset> EnemyData;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy")
 	EMonsterType EnemyMonsterType;
+
 	
-	TObjectPtr<UBlackboardComponent> EnemyBBComp;
+#pragma endregion
+	
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void EnemyTakePointDamage(
@@ -107,7 +127,6 @@ protected:
 	const class UDamageType* DamageType, 
 	AActor* DamageCauser
 	);
-	
 	
 	
 	void SetHealth(float NewHealth);

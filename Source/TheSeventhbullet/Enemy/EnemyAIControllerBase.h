@@ -7,7 +7,9 @@
 #include "BehaviorTree/BehaviorTreeTypes.h"
 #include "EnemyAIControllerBase.generated.h"
 
-
+/**
+ * 적 AIController입니다.
+ */
 UCLASS()
 class THESEVENTHBULLET_API AEnemyAIControllerBase : public AAIController
 {
@@ -33,22 +35,36 @@ protected:
 	TObjectPtr<UBehaviorTree> EnemyBehaviorTree;
 	TObjectPtr<UBlackboardComponent> BBComp;
 	
+	//bool BB 키(FName)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
+	FName bIsDeadKey="bIsDead";
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
+	FName bIsHitKey="bIsHit";
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
+	FName bIsHeadHitKey="bIsHeadHit";
+	
+	
+	//AI퍼셉션
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	TObjectPtr<UAIPerceptionComponent> AIPerceptionComp;
+	
 	
 	virtual void OnPossess(APawn* InPawn) override;
+	
 	UFUNCTION()
 	void HitEvent();
 	UFUNCTION()
 	void DeadEvent();
 	UFUNCTION()
 	void ResetEvent();
+	UFUNCTION()
+	void HeadHitEvent();
+	UFUNCTION()
+	void SetAI(UBehaviorTree* ParamBT,float AttackRadius);
 	
-	//bool BB 키(FName)
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
-	FName bIsDeadKey="bIsDead";
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
-	FName bIsHitKey="bIsHit";
+	UFUNCTION()
+	void OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
+
 	
-	
-private:
-	FTimerHandle HitTimerHandle;
+	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const;
 };
