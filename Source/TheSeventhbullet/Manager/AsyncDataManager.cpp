@@ -19,7 +19,7 @@ void UAsyncDataManager::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 
 	LoadSingleBundle(FPrimaryAssetType("Item"), NAME_None, FOnBundleLoadComplete());
-	LoadSingleBundle(FPrimaryAssetType("Item"), FName("Lobby"), FOnBundleLoadComplete());
+	LoadSingleBundle(FPrimaryAssetType("Item"), FName("UI"), FOnBundleLoadComplete());
 }
 
 void UAsyncDataManager::Deinitialize()
@@ -249,4 +249,26 @@ TArray<FPrimaryAssetId> UAsyncDataManager::GetAllAssetIDs(FPrimaryAssetType Asse
 	TArray<FPrimaryAssetId> OutIDs;
 	UAssetManager::Get().GetPrimaryAssetIdList(AssetType, OutIDs);
 	return OutIDs;
+}
+
+float UAsyncDataManager::GetLoadingProgress() const
+{
+	int32 HandleCount = 0;
+	float TotalProgress = 0.0f;
+
+	for (const auto& TypePair : BundleHandles)
+	{
+		for (const auto& HandlePair : TypePair.Value)
+		{
+			if (HandlePair.Value.IsValid() && HandlePair.Value->IsLoadingInProgress())
+			{
+				TotalProgress += HandlePair.Value->GetProgress();
+				HandleCount++;
+			}
+		}
+	}
+
+	if (HandleCount == 0) return 1.0f;
+
+	return TotalProgress / static_cast<float>(HandleCount);
 }

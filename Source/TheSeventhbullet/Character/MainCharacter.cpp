@@ -1,10 +1,13 @@
-﻿#include "MainCharacter.h"
+#include "MainCharacter.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "MainPlayerController.h"
 #include "PlayerSkill.h"
 #include "Camera/CameraComponent.h"
 #include "Component/CombatComponent.h" // 주현 : CombatComponent
+#include "Inventory/InventoryComponent.h" // Inventory
+#include "UI/UITags.h"
+#include "Manager/UIManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -44,7 +47,7 @@ AMainCharacter::AMainCharacter()
 	
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
 	
-	
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComp"));
 	// 주현 : CombatComponent 초기화
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
 	//현석 : AI 퍼셉션 감지 대상 컴포넌트 추가, 태그 추가
@@ -55,7 +58,8 @@ AMainCharacter::AMainCharacter()
 void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	UE_LOG(LogTemp, Warning, TEXT("[MainCharacter] BeginPlay - World: %s, Name: %s"), GetWorld() ? *GetWorld()->GetName() : TEXT("NULL"), *GetName());
+
 	if (AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
@@ -171,7 +175,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			// OpenInventory 바인딩
 			InputComponents->BindAction(
 				PC->OpenInventoryAction,
-				ETriggerEvent::Triggered,
+				ETriggerEvent::Started,
 				this,
 				&AMainCharacter::PlayerOpenInventory
 			);
@@ -376,5 +380,10 @@ void AMainCharacter::PlayerInteract(const FInputActionValue& value)
 
 void AMainCharacter::PlayerOpenInventory(const FInputActionValue& value)
 {
+	if (UUIManager* UIMgr = UUIManager::Get(this))
+	{
+		UIMgr->Toggle(UITags::Inventory);
+	}
+	
 }
 
