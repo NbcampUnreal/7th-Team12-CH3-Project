@@ -2,8 +2,8 @@
 
 
 #include "GambleComponent.h"
-
-#include "Kismet/GameplayStatics.h"
+#include "Character/MainCharacter.h"
+#include "Character/Component/EquipmentComponent.h"
 
 UGambleComponent::UGambleComponent()
 {
@@ -14,29 +14,48 @@ UGambleComponent::UGambleComponent()
 void UGambleComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	// AActor* TestPlayer = UGameplayStatics::GetPlayerPawn(this, 0);
-	//
-	// if (TestPlayer)
-	// {
-	// 	UE_LOG(LogTemp, Warning, TEXT("테스트: BeginPlay에서 도박을 강제 실행합니다."));
-	// 	BeginInteract(TestPlayer);
-	// 	EndInteract(TestPlayer);
-	// }
 }
 
 void UGambleComponent::BeginInteract(AActor* Interactor)
 {
 	Super::BeginInteract(Interactor);
-	
 }
 
 void UGambleComponent::ProgressInteract(AActor* Interactor)
 {
 	Super::ProgressInteract(Interactor);
-	bool bWin = true;
-	//TODO : 도박장 로직 구현
+
+	AMainCharacter* MainCharacter = Cast<AMainCharacter>(Interactor);
+	if (!MainCharacter) return;
 	
-	OnInteractionResult.Broadcast(bWin);
+	UEquipmentComponent* EquipmentComponent = MainCharacter->FindComponentByClass<UEquipmentComponent>();
+	if (!EquipmentComponent) return;
+	
+	const TArray<FSoulGemInstance>& SoulGems = EquipmentComponent->EquippedSoulGems;
+	
+	FGambleResultData ResultData;
+	
+	for (auto& Gems : SoulGems)
+	{
+		ResultData.TotalGrade += Gems.Grade;
+		
+		int32 RandAdd = FMath::RandRange(0,1);
+		if (RandAdd == 1)
+		{
+			ResultData.PlayerFinalGrade += Gems.Grade;
+			ResultData.bGemSuccessList.Add(true);
+		}
+		else
+		{
+			ResultData.bGemSuccessList.Add(false);
+		}
+	}
+	
+	ResultData.TargetGrade = FMath::RandRange(ResultData.TotalGrade - 5, ResultData.TotalGrade + 5);
+	
+	ResultData.bIsWin = (ResultData.PlayerFinalGrade >= ResultData.TargetGrade);
+	
+	OnInteractionResult.Broadcast(ResultData);
 	
 }
 
