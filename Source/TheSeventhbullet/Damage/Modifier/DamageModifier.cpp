@@ -2,5 +2,4 @@
 
 void UDamageModifier::ModifyDamage(FDamageContext& Context)
 {
-	
 }

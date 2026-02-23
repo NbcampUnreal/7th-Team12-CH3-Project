@@ -11,6 +11,6 @@ void UWeaponDamageModifier::ModifyDamage(FDamageContext& Context)
 		return;
 	}
 	
-	Context.BaseDamage = Context.Weapon->GetBaseDamage();
-	Context.CurrentDamage = Context.BaseDamage;
+	Context.WeaponDamage = Context.Weapon->GetBaseDamage();
+	Context.CurrentDamage = Context.WeaponDamage;
 }

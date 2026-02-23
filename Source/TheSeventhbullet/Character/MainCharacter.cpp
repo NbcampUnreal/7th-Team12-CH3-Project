@@ -5,6 +5,8 @@
 #include "PlayerSkill.h"
 #include "Camera/CameraComponent.h"
 #include "Component/CombatComponent.h" // 주현 : CombatComponent
+#include "Component/EquipmentComponent.h" // 주현 : EquipmentComponent
+#include "Component/GemStatusComponent.h" // 주현 : StatusComponent
 #include "Inventory/InventoryComponent.h" // Inventory
 #include "UI/UITags.h"
 #include "Manager/UIManager.h"
@@ -47,9 +49,13 @@ AMainCharacter::AMainCharacter()
 	
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
 	
-	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComp"));
-	// 주현 : CombatComponent 초기화
+	// 주현 : Component 초기화
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
+	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("Equipment"));
+	StatusComponent = CreateDefaultSubobject<UGemStatusComponent>(TEXT("Status"));
+	
+  InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComp"));
+
 	//현석 : AI 퍼셉션 감지 대상 컴포넌트 추가, 태그 추가
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
 	Tags.Add(FName("Player"));
@@ -66,6 +72,13 @@ void AMainCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(PC->InputMappingContext, 0);
 		}
+	}
+	
+	// 주현 : EquipmentComponent의 OnEquipmentChanged.Broadcast()를 호출할 때, HandleEquipmentChanged()를 실행시키기 위한 코드
+	if (EquipmentComponent && StatusComponent)
+	{
+		EquipmentComponent->OnEquipmentChanged.AddDynamic(this, &AMainCharacter::HandleEquipmentChanged);
+		HandleEquipmentChanged();
 	}
 }
 
@@ -386,3 +399,13 @@ void AMainCharacter::PlayerOpenInventory(const FInputActionValue& value)
 	
 }
 
+// 주현 : SoulGem 장착할 때마다 SoulGem의 스탯들을 모아서 StatusComponent에 재적용.
+void AMainCharacter::HandleEquipmentChanged()
+{
+	TArray<FStatusModifier> Modifiers;
+	
+	UE_LOG(LogTemp, Warning, TEXT("Equipment Changed"));
+	
+	EquipmentComponent->CollectStatusModifiers(Modifiers);
+	StatusComponent->CalculateStatusFromModifiers(Modifiers);
+}

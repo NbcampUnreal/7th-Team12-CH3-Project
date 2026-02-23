@@ -2,10 +2,11 @@
 
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
-#include "Damage/Modifier/WeaponDamageModifier.h"
 #include "DataAsset/WeaponDataAsset.h"
 #include "Damage/DamageContext.h"
 #include "Damage/Modifier/DamageModifier.h"
+#include "Damage/Modifier/WeaponDamageModifier.h"
+#include "Damage/Modifier/StatusDamageModifier.h"
 #include "Kismet/GameplayStatics.h"
 #include "Weapon/WeaponBase.h"
 
@@ -34,6 +35,7 @@ void UCombatComponent::BeginPlay()
 	Super::BeginPlay();
 	
 	DamageModifiersPipeline.Add(NewObject<UWeaponDamageModifier>(this));
+	DamageModifiersPipeline.Add(NewObject<UStatusDamageModifier>(this));
 }
 
 void UCombatComponent::StartFire()

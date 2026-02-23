@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "DamageModifier.h"
-#include "SoulGemDamageModifier.generated.h"
+#include "StatusDamageModifier.generated.h"
 
 UCLASS()
-class THESEVENTHBULLET_API USoulGemDamageModifier : public UDamageModifier
+class THESEVENTHBULLET_API UStatusDamageModifier : public UDamageModifier
 {
 	GENERATED_BODY()
 	
