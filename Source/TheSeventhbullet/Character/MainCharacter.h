@@ -213,10 +213,6 @@ public:
 	void PlayAnimMotageByState(EAnimState AnimState);
 	void EndedAnimMontage(UAnimMontage* Montage, bool Interrupted);
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Animation")
-	TObjectPtr<class UAnimMontage> SkillMontage;
-	
-#pragma endregion
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void Tick(float DeltaTime) override;
