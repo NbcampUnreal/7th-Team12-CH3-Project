@@ -322,7 +322,6 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 		return;
 	}
 	CombatComponent->StartFire();
-	CurrentWeapon->StartFire();
 	
 	//현석 : 청각 이벤트 발생
 	UAISense_Hearing::ReportNoiseEvent(

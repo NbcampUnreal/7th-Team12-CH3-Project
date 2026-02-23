@@ -46,7 +46,7 @@ void AChestActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 	{
 		bPlayerInRange = true;
 		InteractionWidget->SetVisibility(true);
-		Character->SetCurrentInteractable(this);
+		//Character->SetCurrentInteractable(this);
 	}
 }
 
@@ -58,6 +58,6 @@ void AChestActor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Othe
 	{
 		bPlayerInRange = false;
 		InteractionWidget->SetVisibility(false);
-		Character->SetCurrentInteractable(nullptr);
+		//Character->SetCurrentInteractable(nullptr);
 	}
 }
