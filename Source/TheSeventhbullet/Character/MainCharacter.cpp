@@ -145,6 +145,30 @@ bool AMainCharacter::IsAiming()
 	return bIsAiming;
 }
 
+void AMainCharacter::PlayAnimMotageByState(EAnimState AnimState)
+{
+	if (TObjectPtr<UAnimMontage>* FoundMontage = MontagesMap.Find(AnimState))
+	{
+		UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+		
+		if (AnimInstance && *FoundMontage)
+		{
+			AnimInstance->Montage_Play(*FoundMontage);
+			
+			CurrentState = AnimState;
+			
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AMainCharacter::EndedAnimMontage);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, *FoundMontage);
+		}
+	}
+}
+
+void AMainCharacter::EndedAnimMontage(UAnimMontage* Montage, bool Interrupted)
+{
+	CurrentState = EAnimState::None;
+}
+
 void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -187,12 +211,12 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			// Dodge 바인딩
 			InputComponents->BindAction(
 				PC->DodgeAction,
-				ETriggerEvent::Triggered,
+				ETriggerEvent::Started,
 				this,
 				&AMainCharacter::PlayerDodge
 			);
 			
-			// Dodge 바인딩
+			// Finish Dodge 바인딩
 			InputComponents->BindAction(
 				PC->DodgeAction,
 				ETriggerEvent::Completed,
@@ -255,6 +279,15 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 				this,
 				&AMainCharacter::PlayerOpenInventory
 			);
+			
+			// Reload 바인딩
+			InputComponents->BindAction(
+				PC->ReloadAction,
+				ETriggerEvent::Started,
+				this,
+				&AMainCharacter::PlayerReload
+			);
+		
 		}
 	}
 }
@@ -369,6 +402,15 @@ void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 		DodgeDirection = InputDirection.GetSafeNormal();
 	}
 	
+	if (CurrentState != EAnimState::None) return;
+	
+	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
+		
+	if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
+	{
+		PlayAnimMotageByState(EAnimState::DodgeFwd);
+	}
+	
 	LaunchCharacter(DodgeDirection*DodgeDistance, true, false);
 }
 
@@ -412,6 +454,19 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 	{
 		return;
 	}
+	
+	if (CurrentState != EAnimState::None) return;
+	
+	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
+		
+	if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
+	{
+		PlayAnimMotageByState(EAnimState::Fire_Rifle);
+	}
+	
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	bUseControllerRotationYaw = true;		// 카메라와 캐릭터 방향 분리 
+	
 	CombatComponent->StartFire();
 }
 
@@ -421,21 +476,22 @@ void AMainCharacter::FinishFire(const FInputActionValue& value)
 	{
 		return;
 	}
+	
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 
+	
 	CombatComponent->StopFire();
 }
 
 void AMainCharacter::PlayerSkill(const FInputActionValue& value)
 {
-	if (SkillMontage == nullptr) return;
+	if (CurrentState != EAnimState::None) return;
 	
 	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
-	
-	if (CharacterAnimInstance)
+		
+	if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
 	{
-		if (!CharacterAnimInstance->Montage_IsPlaying(SkillMontage))
-		{
-			CharacterAnimInstance->Montage_Play(SkillMontage, 1.0f);
-		}
+		PlayAnimMotageByState(EAnimState::Skill);
 	}
 	
 }
@@ -446,5 +502,17 @@ void AMainCharacter::PlayerInteract(const FInputActionValue& value)
 
 void AMainCharacter::PlayerOpenInventory(const FInputActionValue& value)
 {
+}
+
+void AMainCharacter::PlayerReload(const FInputActionValue& value)
+{
+	if (CurrentState != EAnimState::None) return;
+	
+	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
+		
+	if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
+	{
+		PlayAnimMotageByState(EAnimState::Reload_Rifle);
+	}
 }
 
