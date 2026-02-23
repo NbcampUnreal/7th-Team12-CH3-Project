@@ -134,4 +134,7 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Inventory")
 	TObjectPtr<UInventoryComponent> InventoryComponent;
 
+	//현석 : AI 퍼셉션 감지 대상용 컴포넌트
+	UPROPERTY(VisibleAnywhere, Category = "AI")
+	class UAIPerceptionStimuliSourceComponent* StimuliSource;
 };
