@@ -37,5 +37,6 @@ public:
 	TObjectPtr<UInputAction> FireAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	TObjectPtr<UInputAction> SkillAction;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	TObjectPtr<UInputAction> ReloadAction;
 };

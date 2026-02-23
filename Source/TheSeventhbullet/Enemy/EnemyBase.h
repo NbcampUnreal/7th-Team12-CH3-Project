@@ -6,9 +6,19 @@
 #include "GameFramework/Character.h"
 #include "EnemyBase.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterHitSignnature);
+#pragma region DELEGATE
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterEventSignnature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterSetAISignnature,
+											UBehaviorTree*,ParamBT,
+											float,AttackRadius);
+#pragma endregion
 
 
+/**
+ * PDA를 통해 로드 완료된 데이터를 가져와서 적 캐릭터 정보를 들고 있고, 피격 등의 이벤트를 진행합니다.
+ */
+class UBehaviorTree;
+struct FProjectileStatus;
 UCLASS()
 class THESEVENTHBULLET_API AEnemyBase : public ACharacter
 {
@@ -25,21 +35,56 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	UPROPERTY(BlueprintAssignable, Category="Events")
-	FOnCharacterHitSignnature OnCharacterHit;
 	
+#pragma region DELEGATE METHOD
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnCharacterEventSignnature OnCharacterHit;
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnCharacterEventSignnature OnCharacterHeadHit;
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnCharacterEventSignnature OnCharacterDead;
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnCharacterEventSignnature OnCharacterReset;
+	
+	//비헤이비어 트리 초기 세팅을 위한 델리게이트
+	UPROPERTY(BlueprintAssignable, Category="Settings")
+	FOnCharacterSetAISignnature OnCharacterSetAI;
+
+	
+#pragma endregion
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
+	//몬스터를 해당 값으로 초기화합니다.
 	UFUNCTION(BlueprintCallable,Category="Enemy|Status")
-	void SetupEnemy(float InMaxHealth=100.0f, float InArmorPoint=0.0f,float InAttackPoint=10.0f, float InKnockbackStrengh=200.0f);
+	void SetupEnemy(UEnemyDataAsset* LoadedData);
+	//공격력을 반환합니다.
+	float GetAttackPoint();
+	
+	
+	//발사체의 정보를 담고 있습니다.
+	TSharedPtr<FProjectileStatus>  PStatus;	
+	//발사체의 정보를 반환합니다.
+	TSharedPtr<FProjectileStatus>  GetProjectileStatus();
+	
+	
+	//오브젝트 풀에서 캐릭터를 생성할때 리셋해줍니다.
+	UFUNCTION(BlueprintCallable,Category="Enemy|Status")
+	void ResetEnemy();
+	//PDA에서 받은 로딩된 애님몽타주를 실행합니다.
+	UFUNCTION(BlueprintCallable,Category="Enemy|Status")
+	UAnimMontage* ReturnthisMontage(FName AMName);
 
 	
-
-
+	UFUNCTION()
+	EMonsterType GetMonsterType();
+	
+	UFUNCTION()
+	void SetMonsterType(EMonsterType InEnemyMonsterType);
+	
 
 protected:
+#pragma region EnemyStatus
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
 	float NowHealth;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
@@ -50,13 +95,24 @@ protected:
 	float AttackPoint;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
 	float KnockbackStrengh;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
-	TObjectPtr<UAnimMontage> HitAnimMontage;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Status")
+	float AttackRadius;
+#pragma endregion
+	
+#pragma  region EnemyData
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
 	UParticleSystem* HitParticle;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
     UParticleSystem* HeadShotParticle;
 	
+	//가져온 PDA를 캐싱하기 위한 변수
+	TObjectPtr<UEnemyDataAsset> EnemyData;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy")
+	EMonsterType EnemyMonsterType;
+
+	
+#pragma endregion
 	
 	
 	UFUNCTION(BlueprintCallable)
@@ -72,9 +128,12 @@ protected:
 	AActor* DamageCauser
 	);
 	
+	
 	void SetHealth(float NewHealth);
 	void DisplayParticle(FVector HitLocation, UParticleSystem* InParticle);
-	
+	void ReturnToPool();
 
+private:
+	bool bIsDead;
 	
 };

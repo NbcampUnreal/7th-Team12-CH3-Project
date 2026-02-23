@@ -10,15 +10,21 @@ void UBeginWaveState::Enter()
 	AMainGameMode* GM = AMainGameMode::Get(this);
 	if (GM)
 	{
-		GM->PrepareNextWave();
+		GM->SetupCurrentWaveData();
 	}
-	
+	DelayTimer = 3.0f;
 }
 
 void UBeginWaveState::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	ChangeState(EWaveState::Progress);
+	
+	DelayTimer -= DeltaTime;
+	
+	if (DelayTimer <= 0.0f)
+	{
+		ChangeState(EWaveState::Progress);
+	}
 }
 
 void UBeginWaveState::Exit()

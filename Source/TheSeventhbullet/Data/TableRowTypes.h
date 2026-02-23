@@ -9,8 +9,20 @@
 /**
  * DataTable용 RowData 모음
  */
-USTRUCT(BlueprintType)
-struct FSpawnRowData : public FTableRowBase
+
+UENUM(BlueprintType)
+enum class EMonsterType : uint8
+{
+	None,
+	WereWolf,
+	Sparrow,
+	Kwang,
+	Rampage,
+	Sevarog // Boss
+};
+
+USTRUCT()
+struct FWaveMonsterRowData : public FTableRowBase
 {
 	GENERATED_BODY()
 	
@@ -18,14 +30,23 @@ struct FSpawnRowData : public FTableRowBase
 	int32 EnemyCount = 5;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<FName> EnemyTypes;
+	EMonsterType EnemyTypes;
+};
+
+USTRUCT(BlueprintType)
+struct FWaveRowData : public FTableRowBase
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FWaveMonsterRowData> Monster;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DifficultyMultiplier = 1.f;
 };
 
 USTRUCT(BlueprintType)
-struct FWaveRowData : public FTableRowBase
+struct FStageRowData : public FTableRowBase
 {
 	GENERATED_BODY()
 	
@@ -39,7 +60,7 @@ struct FWaveRowData : public FTableRowBase
 	int32 SpawnNumber = 0;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<FSpawnRowData> SpawnList;
+	TArray<FWaveRowData> Waves;
 };
 
 USTRUCT(BlueprintType)
@@ -48,10 +69,10 @@ struct FMonsterRowData : public FTableRowBase
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FName EnemyType;
+	EMonsterType EnemyType;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSubclassOf<AActor> Monster;
+	FName MonsterPDAId;
 	
 };
 

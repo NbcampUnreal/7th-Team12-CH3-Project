@@ -27,8 +27,7 @@ public:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FPrimaryAssetId ItemID;
-
-	// 수량
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 StackCount = 0;
 };

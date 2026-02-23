@@ -47,7 +47,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool HasEmptySlot() const { return Items.Num() < MaxSlots; }
 
-public: 
+	// Drag & Drop
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	bool SwapSlots(int32 FromIndex, int32 ToIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	bool MoveItemTo(int32 FromIndex, UInventoryComponent* TargetInventory, int32 ToIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	FItemInstance GetItemAt(int32 SlotIndex) const;
+
+	int32 GetMaxSlots() const { return MaxSlots; }
+
+public:
 	//Delegate Instance
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryChanged OnItemAdded;
@@ -57,11 +69,11 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FItemInstance> Items;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 	int32 MaxSlots = 30;
 
 private:
+	bool AddItemInternal(FPrimaryAssetId ItemID, int32 Count);
 	int32 FindStackableSlot(FPrimaryAssetId ItemID, int32 MaxStack) const;
 };
 

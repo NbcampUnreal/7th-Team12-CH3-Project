@@ -17,39 +17,30 @@ void USyncDataManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	
-	LoadAndCacheTable<FWaveRowData, int32>(
+	LoadAndCacheTable<FStageRowData, int32>(
 		TEXT("/Game/TheSeventhBullet/DataTable/DT_Wave"),
-		WaveCache,
-		[](const FWaveRowData* Row) { return Row->WaveNumber;}
+		StageCache,
+		[](const FStageRowData* Row) { return Row->WaveNumber;}
 	);
 	
-	LoadAndCacheTable<FMonsterRowData, FName>(
+	LoadAndCacheTable<FMonsterRowData, EMonsterType>(
 		TEXT("/Game/TheSeventhBullet/DataTable/DT_Monster"),
 		MonsterCache,
 		[](const FMonsterRowData* Row) {return Row->EnemyType;}
 		);
-	
-	
 }
 
-FWaveRowData USyncDataManager::GetWaveData(int32 WaveNumber) const
+FStageRowData USyncDataManager::GetStageData(int32 StageIndex) const
 {
-	const FWaveRowData* Found = WaveCache.Find(WaveNumber);
-	if (!Found)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Wave %d not found"),WaveNumber);
-		return FWaveRowData();
-	}
-	
-	return *Found;
+	return StageCache[StageIndex];
 }
 
 int32 USyncDataManager::GetTotalWaveCount() const
 {
-	return WaveCache.Num();
+	return StageCache.Num();
 }
 
-FMonsterRowData USyncDataManager::GetMonsterData(FName Tag) const
+FMonsterRowData USyncDataManager::GetMonsterData(const EMonsterType Tag) const
 {
 	const FMonsterRowData* Found = MonsterCache.Find(Tag);
 	if (!Found)
@@ -57,5 +48,10 @@ FMonsterRowData USyncDataManager::GetMonsterData(FName Tag) const
 		return FMonsterRowData();
 	}
 	return *Found;
+}
+
+FWaveRowData USyncDataManager::GetWaveData(int32 StageIndex, int32 WaveIndex)
+{
+	return StageCache[StageIndex].Waves[WaveIndex];
 }
 
