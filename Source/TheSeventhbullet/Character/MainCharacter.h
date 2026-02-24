@@ -3,14 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Data/StatusTypes.h"
 #include "GameFramework/Character.h"
 #include "MainCharacter.generated.h"
 
 class UInventoryComponent;
 class UCombatComponent; // 주현 : CombatComponent 전방선언
 class UEquipmentComponent; // 주현 : EquipmentComponent 전방선언
-class UGemStatusComponent; // 주현 : StatusComponent 전방선언
 class UWeaponDataAsset; // 주현 : WeaponDataAsset 전방선언
+class UCombatComponent; // CombatComponent 전방선언
+class UEquipmentComponent; // EquipmentComponent 전방선언
+class UStatusComponent; // StatusComponent 전방선언
+class AWeaponBase; // WeaponBase 전방선언
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
@@ -40,44 +44,6 @@ enum class EAnimState : uint8
 	DodgeLeft
 };
 
-USTRUCT(BlueprintType)
-struct FCharacterStat
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	int32 HP;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	int32 Stamina;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	int32 Attack;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	int32 Defence;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	int32 CriticalChance;//크리 확률
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	int32 CriticalHitChance;//크피 확률
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	int32 Speed;
-	
-	//기본 생성자 (초기값 세팅)
-	FCharacterStat()
-	{
-		HP = 100;
-		Stamina = 100;
-		Attack = 100;
-		Defence = 100;
-		CriticalChance = 30;
-		CriticalHitChance = 30;
-		Speed = 600;
-	}
-};
 
 UCLASS()
 class THESEVENTHBULLET_API AMainCharacter : public ACharacter
@@ -100,29 +66,21 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Animation|Montage")
 	TMap<EAnimState, TObjectPtr<UAnimMontage>> MontagesMap;	// 애니메이션 몽타주 저장 변수
-
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status", meta = (AllowPrivateAccess = "true"))
+	FCharacterStat TotalStatus;
+	
+	UPROPERTY()
+	int32 Gold = 0;
+	
 public:	
 	
 #pragma region Status
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
+	float SprintMultiplier;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
-	int32 MaxHP;	// 최대 체력
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character")
-	int32 CurrentHP;	// 현재 체력
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
-	int32 MaxStamina;	// 최대 스테미나
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character")
-	int32 CurrentStamina;	// 현재 스테미나
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character")
-	int32 DodgeCost;	// 회피 소모 스테미나
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character")
-	float DodgeDistance;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
-	float MaxSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
-	float SprintMultifier;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
-	float AimSpeed;
+	float AimMultiplier;
 	
 #pragma endregion
 
@@ -136,7 +94,7 @@ public:
 	TObjectPtr<UEquipmentComponent> EquipmentComponent;
 	// 주현 : StatusComponent
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
-	TObjectPtr<UGemStatusComponent> StatusComponent;
+	TObjectPtr<UStatusComponent> StatusComponent;
 	
 #pragma endregion
 	
@@ -232,4 +190,15 @@ public:
 	//현석 : AI 퍼셉션 감지 대상용 컴포넌트
 	UPROPERTY(VisibleAnywhere, Category = "AI")
 	class UAIPerceptionStimuliSourceComponent* StimuliSource;
+	
+	UFUNCTION(BlueprintPure, Category = "Status")
+	const FCharacterStat& GetTotalStatus() const;
+	
+	void SetTotalStatus(const FCharacterStat& NewStatus);
+	
+public:
+	UFUNCTION()
+	int32 GetGold();
+	UFUNCTION()
+	void AddGold(int32 Amount);
 };
