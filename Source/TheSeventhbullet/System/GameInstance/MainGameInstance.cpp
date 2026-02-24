@@ -1,10 +1,16 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "MainGameInstance.h"
 
 #include "Data/SaveAndLoadGame.h"
 #include "Kismet/GameplayStatics.h"
+#include "Manager/UIManager.h"
+#include "UI/UITags.h"
+#include "UI/LoadingScreenWidget.h"
+#include "TheSeventhbullet/System/MainGameMode.h"
+
+const FString UMainGameInstance::SaveSlotName = TEXT("TheSeventhBullet");
+const FName UMainGameInstance::StartLevelName = FName(TEXT("L_Town"));
 
 UMainGameInstance* UMainGameInstance::Get(const UObject* WorldContext)
 {
@@ -13,56 +19,62 @@ UMainGameInstance* UMainGameInstance::Get(const UObject* WorldContext)
 
 void UMainGameInstance::SaveGameData()
 {
-	FString SaveSlotName = TEXT("TheSeventhBullet");
 	int32 UserIndex = 0;
-	
+
 	USaveAndLoadGame* SaveObj = Cast<USaveAndLoadGame>(UGameplayStatics::CreateSaveGameObject(USaveAndLoadGame::StaticClass()));
-	
+
 	if (SaveObj)
 	{
-		//현재 게임의 데이터를 SaveObj에 기록
-		//SaveObj->CharacterSaveData.TotalGold = 
-		//TODO : 데이터 세이브 적용
-		bool bIsSaved = UGameplayStatics::SaveGameToSlot(SaveObj,SaveSlotName, UserIndex);
+		bool bIsSaved = UGameplayStatics::SaveGameToSlot(SaveObj, SaveSlotName, UserIndex);
 		if (bIsSaved)
 		{
-			UE_LOG(LogTemp,Log, TEXT("Game Data Save Complete"));
+			UE_LOG(LogTemp, Log, TEXT("Game Data Save Complete"));
 		}
 	}
 }
 
-void UMainGameInstance::StartAsyncLoad()
+void UMainGameInstance::LoadAsyncSaveData()
 {
-	FString SaveSlotName = TEXT("TheSeventhBullet");
 	int32 UserIndex = 0;
-	
-	//callback 
+
 	FAsyncLoadGameFromSlotDelegate LoadedDelegate;
-	
-	//로드가 끝나면 OnAsyncLoadFinished 함수를 실행하도록 연결
-	LoadedDelegate.BindUObject(this, &UMainGameInstance::OnAsyncLoadFinished);
-	
-	UE_LOG(LogTemp, Log, TEXT("Send Async load"));
-	
-	//백그라운드 스레드에 로드 작업 지시
+	LoadedDelegate.BindUObject(this, &UMainGameInstance::OnSaveDataLoadFinished);
 	UGameplayStatics::AsyncLoadGameFromSlot(SaveSlotName, UserIndex, LoadedDelegate);
+}
+
+void UMainGameInstance::StartNewGame()
+{
+	bIsDataLoaded = true;
+	GameStartMapLoad();
+}
+
+void UMainGameInstance::ReturnToMainMenu()
+{
+	SaveGameData();
+
+	UGameplayStatics::SetGamePaused(GetWorld(), false);
+
+	AMainGameMode* GM = AMainGameMode::Get(this);
+	if (GM)
+	{
+		GM->ReturnToMainMenu();
+	}
 }
 
 void UMainGameInstance::GameStartMapLoad()
 {
-	FLatentActionInfo LatentInfo;//비동기 작업의 진행 상태를 추적하기 위해 필요한 구조체
+	FLatentActionInfo LatentInfo;
 	LatentInfo.CallbackTarget = this;
-		
-	//로드가 끝나면 호출된 함수의 이름
 	LatentInfo.ExecutionFunction = FName("OnMapLoadFinished");
 	LatentInfo.Linkage = 0;
 	LatentInfo.UUID = GetUniqueID();
-	
-	UGameplayStatics::LoadStreamLevel(this, TEXT("L_Dungeon"), true, false, LatentInfo);
+
+	ShowLoadingScreen();
+
+	UGameplayStatics::LoadStreamLevel(this, StartLevelName, true, false, LatentInfo);
 }
 
-//백그라운드 로드 작업이 끝나면 자동으로 실행되는 콜백 함수
-void UMainGameInstance::OnAsyncLoadFinished(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData)
+void UMainGameInstance::OnSaveDataLoadFinished(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData)
 {
 	USaveAndLoadGame* LoadedObj = Cast<USaveAndLoadGame>(LoadedGameData);
 	if (!LoadedObj)
@@ -70,8 +82,7 @@ void UMainGameInstance::OnAsyncLoadFinished(const FString& SlotName, const int32
 		UE_LOG(LogTemp, Error, TEXT("Load failed"));
 		return;
 	}
-	//TODO : 로드된 데이터를 적용
-	
+
 	bIsDataLoaded = true;
 	CheckAndStartGame();
 }
@@ -86,16 +97,92 @@ void UMainGameInstance::CheckAndStartGame()
 {
 	if (bIsDataLoaded && bIsMapLoaded)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Map and Data Load finish"));
-		
+		TargetProgress = 1.0f;
+
 		bIsMapLoaded = false;
 		bIsDataLoaded = false;
-		
-		//TODO : Send To UI
-		//OnAllLoadingFinishedEvent.Broadcast();
 	}
-	else
+}
+
+void UMainGameInstance::ShowLoadingScreen()
+{
+	DisplayProgress = 0.0f;
+	TargetProgress = 0.0f;
+
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Something.. doing"));
+		UUserWidget* Widget = UIMgr->ShowByTag(UITags::LoadingScreen);
+		CachedLoadingWidget = Cast<ULoadingScreenWidget>(Widget);
+		if (CachedLoadingWidget)
+		{
+			CachedLoadingWidget->SetProgress(0.0f);
+		}
+	}
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			ProgressTimerHandle, this,
+			&UMainGameInstance::PollLoadingProgress, 0.03f, true
+		);
+	}
+}
+
+void UMainGameInstance::HideLoadingScreen()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(ProgressTimerHandle);
+	}
+
+	CachedLoadingWidget = nullptr;
+
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->HideByTag(UITags::LoadingScreen);
+	}
+}
+
+bool UMainGameInstance::DoesSaveExist() const
+{
+	return UGameplayStatics::DoesSaveGameExist(SaveSlotName, 0);
+}
+
+void UMainGameInstance::PollLoadingProgress()
+{
+	if (!CachedLoadingWidget)
+	{
+		return;
+	}
+	
+	float RealTarget = 0.0f;
+	if (bIsDataLoaded) RealTarget += 0.5f;
+	if (bIsMapLoaded) RealTarget += 0.5f;
+	if (RealTarget > TargetProgress)
+	{
+		TargetProgress = RealTarget;
+	}
+	
+	const float InterpSpeed = 2.0f;
+	DisplayProgress = FMath::FInterpTo(DisplayProgress, TargetProgress, 0.03f, InterpSpeed);
+	
+	if (FMath::IsNearlyEqual(DisplayProgress, TargetProgress, 0.005f))
+	{
+		DisplayProgress = TargetProgress;
+	}
+
+	CachedLoadingWidget->SetProgress(DisplayProgress);
+	
+	if (DisplayProgress >= 1.0f)
+	{
+		HideLoadingScreen();
+
+		AMainGameMode* GM = AMainGameMode::Get(this);
+		if (GM)
+		{
+			GM->StartGamePlay();
+		}
 	}
 }

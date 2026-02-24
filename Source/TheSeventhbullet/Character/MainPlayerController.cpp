@@ -10,6 +10,7 @@ AMainPlayerController::AMainPlayerController()
 	OpenInventoryAction(nullptr),
 	AimAction(nullptr),
 	FireAction(nullptr),
-	SkillAction(nullptr)
+	SkillAction(nullptr),
+	EscMenuAction(nullptr)
 {
 }

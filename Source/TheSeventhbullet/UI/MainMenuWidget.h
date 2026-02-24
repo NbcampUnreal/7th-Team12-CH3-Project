@@ -14,6 +14,7 @@ class THESEVENTHBULLET_API UMainMenuWidget : public UUserWidget
 
 protected:
 	virtual void NativeConstruct() override;
+	virtual void SetVisibility(ESlateVisibility InVisibility) override;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ContinueButton;
@@ -28,7 +29,7 @@ protected:
 	TObjectPtr<UButton> QuitButton;
 
 	UPROPERTY(EditDefaultsOnly, Category = "MainMenu")
-	FName GameMapName = TEXT("GameLevel");
+	FName GameMapName = TEXT("L_Main");
 
 	UPROPERTY(EditDefaultsOnly, Category = "MainMenu")
 	FSlateColor NormalTextColor = FSlateColor(FLinearColor::White);

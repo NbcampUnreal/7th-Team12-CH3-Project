@@ -2,8 +2,7 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/PanelWidget.h"
-#include "Manager/LevelTransitionManager.h"
-#include "Kismet/GameplayStatics.h"
+#include "System/GameInstance/MainGameInstance.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 void UMainMenuWidget::NativeConstruct()
@@ -12,7 +11,8 @@ void UMainMenuWidget::NativeConstruct()
 
 	if (ContinueButton)
 	{
-		ContinueButton->SetIsEnabled(false);
+		UMainGameInstance* GI = UMainGameInstance::Get(this);
+		ContinueButton->SetIsEnabled(GI && GI->DoesSaveExist());
 		ContinueButton->OnClicked.AddDynamic(this, &UMainMenuWidget::OnContinueClicked);
 		SetupButtonHover(ContinueButton);
 	}
@@ -33,6 +33,17 @@ void UMainMenuWidget::NativeConstruct()
 	{
 		QuitButton->OnClicked.AddDynamic(this, &UMainMenuWidget::OnQuitClicked);
 		SetupButtonHover(QuitButton);
+	}
+}
+
+void UMainMenuWidget::SetVisibility(ESlateVisibility InVisibility)
+{
+	Super::SetVisibility(InVisibility);
+
+	if (InVisibility == ESlateVisibility::Visible && ContinueButton)
+	{
+		UMainGameInstance* GI = UMainGameInstance::Get(this);
+		ContinueButton->SetIsEnabled(GI && GI->DoesSaveExist());
 	}
 }
 
@@ -94,15 +105,20 @@ void UMainMenuWidget::OnAnyButtonUnhovered()
 
 void UMainMenuWidget::OnContinueClicked()
 {
-
+	UMainGameInstance* GI = UMainGameInstance::Get(this);
+	if (GI)
+	{
+		GI->LoadAsyncSaveData();
+		GI->GameStartMapLoad();
+	}
 }
 
 void UMainMenuWidget::OnNewGameClicked()
 {
-	ULevelTransitionManager* LTM = ULevelTransitionManager::Get(this);
-	if (LTM)
+	UMainGameInstance* GI = UMainGameInstance::Get(this);
+	if (GI)
 	{
-		LTM->LoadLevel(GameMapName);
+		GI->StartNewGame();
 	}
 }
 

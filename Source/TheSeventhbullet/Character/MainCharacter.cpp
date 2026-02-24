@@ -311,7 +311,15 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 				this,
 				&AMainCharacter::PlayerReload
 			);
-		
+
+			// EscMenu 바인딩
+			InputComponents->BindAction(
+				PC->EscMenuAction,
+				ETriggerEvent::Started,
+				this,
+				&AMainCharacter::ToggleEscMenu
+			);
+
 		}
 	}
 }
@@ -552,6 +560,15 @@ void AMainCharacter::PlayerReload(const FInputActionValue& value)
 	if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
 	{
 		PlayAnimMotageByState(EAnimState::Reload_Rifle);
+	}
+}
+
+void AMainCharacter::ToggleEscMenu(const FInputActionValue& value)
+{
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->Toggle(UITags::EscMenu);
 	}
 }
 

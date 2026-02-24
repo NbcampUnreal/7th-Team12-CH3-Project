@@ -186,7 +186,8 @@ public:
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
 	void PlayerReload(const FInputActionValue& value);
-	
+	void ToggleEscMenu(const FInputActionValue& value);
+
 #pragma endregion
 
 #pragma region Skill

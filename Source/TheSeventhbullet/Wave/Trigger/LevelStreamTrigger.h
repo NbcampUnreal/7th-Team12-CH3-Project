@@ -7,6 +7,7 @@
 #include "LevelStreamTrigger.generated.h"
 
 class UBoxComponent;
+class ULoadingScreenWidget;
 
 UCLASS()
 class THESEVENTHBULLET_API ALevelStreamTrigger : public AActor
@@ -20,13 +21,28 @@ protected:
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trigger")
 	UBoxComponent* OverlapVolume;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LevelStream")
 	FName LevelToLoad;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LevelStream")
 	FName LevelToUnload;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LevelStream")
+	bool bShowLoadingScreen = true;
+
 	UFUNCTION()
-	void OnOverlapBegin(UPrimitiveComponent* OverlapComponent,AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnOverlapBegin(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+private:
+	UFUNCTION()
+	void OnLevelLoaded();
+
+	void ShowLoadingScreen();
+	void HideLoadingScreen();
+
+	UPROPERTY()
+	TObjectPtr<ULoadingScreenWidget> CachedLoadingWidget;
+
+	bool bIsTriggered = false;
 };
