@@ -7,7 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "Component/CombatComponent.h" // 주현 : CombatComponent
 #include "Component/EquipmentComponent.h" // 주현 : EquipmentComponent
-#include "Component/GemStatusComponent.h" // 주현 : StatusComponent
+#include "Component/StatusComponent.h" // StatusComponent
 #include "DataAsset/WeaponDataAsset.h"
 #include "Inventory/InventoryComponent.h" // Inventory
 #include "UI/UITags.h"
@@ -23,15 +23,15 @@ AMainCharacter::AMainCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	
-	MaxHP = 100;
-	CurrentHP = MaxHP;
-	MaxStamina = 100;	
-	CurrentStamina = MaxStamina;
-	DodgeCost = 20;
-	DodgeDistance = 3000.0f;
-	MaxSpeed = 600.0f;
-	SprintMultifier = 1.5f;
-	AimSpeed = 400.0f;
+	TotalStatus.Speed = 600.0f;
+	TotalStatus.HP = 100;
+	TotalStatus.Attack = 100;
+	TotalStatus.Defence = 10;
+	TotalStatus.CriticalChance = 15;
+	TotalStatus.CriticalHitChance = 150;
+	
+	SprintMultiplier = 1.5f;
+	AimMultiplier = 0.8f;
 	NormalArmLength = 300.0f; 
 	AimingArmLength = 0.0f;
 	NormalSpringArm = FVector(0.0f, 25.0f, 0.0f);
@@ -49,14 +49,14 @@ AMainCharacter::AMainCharacter()
 	Camera->SetupAttachment(SpringArm);
 	Camera->bUsePawnControlRotation = false;
 	
-	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = TotalStatus.Speed;
 	
 	bIsDodge = false;
 	
 	// 주현 : CombatComponent 초기화
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("Equipment"));
-	StatusComponent = CreateDefaultSubobject<UGemStatusComponent>(TEXT("Status"));
+	StatusComponent = CreateDefaultSubobject<UStatusComponent>(TEXT("Status"));
 	
   InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComp"));
 
@@ -396,7 +396,7 @@ void AMainCharacter::PlayerStartSprint(const FInputActionValue& value)
 {
 	if (GetCharacterMovement())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = MaxSpeed * SprintMultifier;
+		GetCharacterMovement()->MaxWalkSpeed = TotalStatus.Speed * SprintMultiplier;
 	}
 }
 
@@ -404,13 +404,13 @@ void AMainCharacter::PlayerStopSprint(const FInputActionValue& value)
 {
 	if (GetCharacterMovement())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
+		GetCharacterMovement()->MaxWalkSpeed = TotalStatus.Speed;
 	}
 }
 
 void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 {
-	if (bIsDodge || CurrentStamina < DodgeCost)
+	if (bIsDodge)
 	{
 		return;
 	}
@@ -438,7 +438,6 @@ void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 		PlayAnimMotageByState(EAnimState::DodgeFwd);
 	}
 	
-	LaunchCharacter(DodgeDirection*DodgeDistance, true, false);
 }
 
 void AMainCharacter::PlayerDodgeFinished(const FInputActionValue& value)
@@ -454,7 +453,7 @@ void AMainCharacter::PlayerAim(const FInputActionValue& value)
 	
 	if (GetCharacterMovement())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = AimSpeed;	// 줌 하는 동안 이동속도 감소
+		GetCharacterMovement()->MaxWalkSpeed = TotalStatus.Speed * AimMultiplier;	// 줌 하는 동안 이동속도 감소
 	}
 	
 	bIsAiming = true;
@@ -469,7 +468,7 @@ void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 	
 	if (GetCharacterMovement())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;	
+		GetCharacterMovement()->MaxWalkSpeed = TotalStatus.Speed;	
 	}
 	
 	bIsAiming = false;
@@ -560,5 +559,29 @@ void AMainCharacter::HandleEquipmentChanged()
 	UE_LOG(LogTemp, Warning, TEXT("Equipment Changed"));
 	
 	EquipmentComponent->CollectStatusModifiers(Modifiers);
-	StatusComponent->CalculateStatusFromModifiers(Modifiers);
+	StatusComponent->UpdateTotalStat();
+	//StatusComponent->CalculateStatusFromModifiers(Modifiers);
+}
+
+const FCharacterStat& AMainCharacter::GetTotalStatus() const
+{
+	return TotalStatus;
+}
+
+void AMainCharacter::SetTotalStatus(const FCharacterStat& NewStatus)
+{
+	TotalStatus = NewStatus;
+	
+	//TODO : 만약 UI(체력바, 스탯창)를 업데이트해야 한다면 여기서 Delegate를 호출
+	//OnTotalStatChanged.Broadcast(TotalStatus);
+}
+
+int32 AMainCharacter::GetGold()
+{
+	return Gold;
+}
+
+void AMainCharacter::AddGold(int32 Amount)
+{
+	Gold += Amount;
 }

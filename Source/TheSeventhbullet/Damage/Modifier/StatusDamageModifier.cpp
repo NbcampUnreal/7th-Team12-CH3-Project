@@ -1,5 +1,5 @@
 #include "StatusDamageModifier.h"
-#include "Character/Component/GemStatusComponent.h"
+#include "Character/MainCharacter.h"
 
 void UStatusDamageModifier::ModifyDamage(FDamageContext& Context)
 {
@@ -7,14 +7,15 @@ void UStatusDamageModifier::ModifyDamage(FDamageContext& Context)
 	
 	if (!Context.Attacker) return;
 	
-	if (UGemStatusComponent* Status = Context.Attacker->FindComponentByClass<UGemStatusComponent>())
-	{
-		Context.StatusDamage = Status->GetFinalATK();
-		Context.StatusCritChance = Status->GetFinalCritChance();
-		Context.StatusCritDamage = Status->GetFinalCritDamage();
+	AMainCharacter* Character = Cast<AMainCharacter>(Context.Attacker);
+	if (!Character) return;
+	
+	Context.StatusDamage = Character->GetTotalStatus().Attack;
+	Context.StatusCritChance = Character->GetTotalStatus().CriticalChance;
+	Context.StatusCritDamage = Character->GetTotalStatus().CriticalHitChance;
 		
-		Context.CurrentDamage += Context.StatusDamage;
-		Context.CurrentCritChance += Context.StatusCritChance;
-		Context.CurrentCritDamage += Context.StatusDamage;
-	}
+	Context.CurrentDamage += Context.StatusDamage;
+	Context.CurrentCritChance += Context.StatusCritChance;
+	Context.CurrentCritDamage += Context.StatusDamage;
+	
 }

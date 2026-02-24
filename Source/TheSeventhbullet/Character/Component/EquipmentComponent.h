@@ -27,4 +27,6 @@ public:
 	// 스탯 모디파이어 수집
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void CollectStatusModifiers(TArray<FStatusModifier>& Mod) const;
+	
+	FCharacterStat GetTotalGemStats() const;
 };

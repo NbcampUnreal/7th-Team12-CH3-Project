@@ -19,6 +19,8 @@ void UGambleComponent::BeginPlay()
 void UGambleComponent::BeginInteract(AActor* Interactor)
 {
 	Super::BeginInteract(Interactor);
+
+	
 }
 
 void UGambleComponent::ProgressInteract(AActor* Interactor)

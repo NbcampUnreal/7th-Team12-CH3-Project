@@ -38,3 +38,97 @@ struct THESEVENTHBULLET_API FStatusModifier
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Value = 0.0f;
 };
+
+USTRUCT(BlueprintType)
+struct FEnhancerStatus
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 EnhanceHp;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 EnhanceDefense;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 EnhanceAttack;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 EnhanceStamina;
+	
+	FEnhancerStatus()
+	{
+		EnhanceHp = 0;
+		EnhanceDefense = 0;
+		EnhanceAttack = 0;
+		EnhanceStamina = 0;
+	}
+		
+};
+
+struct FEnhancerIncreaseStatus
+{
+	static constexpr int32 IncreaseHp = 100;
+	static constexpr int32 IncreaseDefense = 2;
+	static constexpr int32 IncreaseAttack = 5;
+	static constexpr int32 IncreaseStamina = 50;
+};
+
+USTRUCT(BlueprintType)
+struct FCharacterStat
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 HP;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 Stamina;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 Attack;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 Defence;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 CriticalChance;//크리 확률
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 CriticalHitChance;//크피 확률
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 Speed;
+	
+	//기본 생성자 (초기값 세팅)
+	FCharacterStat()
+	{
+		HP = 100;
+		Stamina = 100;
+		Attack = 100;
+		Defence = 10;
+		CriticalChance = 15;
+		CriticalHitChance = 150;
+		Speed = 600.0f;
+	}
+	
+	FCharacterStat operator+(const FCharacterStat& Other) const
+	{
+		FCharacterStat Result;
+		Result.HP = this->HP + Other.HP;
+		Result.Defence = this->Defence + Other.Defence;
+		Result.Attack = this->Attack + Other.Attack;
+		Result.Stamina = this->Stamina + Other.Stamina;
+		return Result;
+	}
+	
+	FCharacterStat& operator+=(const FCharacterStat& Other)
+	{
+		this->HP += Other.HP;
+		this->Defence += Other.Defence;
+		this->Attack += Other.Attack;
+		this->Stamina += Other.Stamina;
+		
+		return *this;
+	}
+};

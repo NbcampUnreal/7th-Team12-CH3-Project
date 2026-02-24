@@ -6,6 +6,7 @@
 #include "BaseInteractionComponent.h"
 #include "InteractableInterface.h"
 #include "GameFramework/Actor.h"
+#include "UI/UITags.h"
 #include "BaseInteractionActor.generated.h"
 
 class UBoxComponent;
