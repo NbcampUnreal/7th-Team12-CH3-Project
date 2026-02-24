@@ -8,6 +8,7 @@
 #include "Component/CombatComponent.h" // 주현 : CombatComponent
 #include "Component/EquipmentComponent.h" // 주현 : EquipmentComponent
 #include "Component/GemStatusComponent.h" // 주현 : StatusComponent
+#include "DataAsset/WeaponDataAsset.h"
 #include "Inventory/InventoryComponent.h" // Inventory
 #include "UI/UITags.h"
 #include "Manager/UIManager.h"
@@ -15,7 +16,6 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
-#include "TheSeventhbullet/Weapon/WeaponBase.h"
 #include "Perception/AISense_Hearing.h"
 
 
@@ -77,6 +77,9 @@ void AMainCharacter::BeginPlay()
 			Subsystem->AddMappingContext(PC->InputMappingContext, 0);
 		}
 	}
+	
+	// 주현 : 임시로 무기 장착.
+	CombatComponent->InitializeWeaponData(CurrentWeapon);
 	
 	// 주현 : EquipmentComponent의 OnEquipmentChanged.Broadcast()를 호출할 때, HandleEquipmentChanged()를 실행시키기 위한 코드
 	if (EquipmentComponent && StatusComponent)
@@ -474,10 +477,7 @@ void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 
 void AMainCharacter::PlayerFire(const FInputActionValue& value)
 {
-	if (!CurrentWeapon)
-	{
-		return;
-	}
+	if (!CurrentWeapon)	return;
 	
 	if (CurrentState != EAnimState::None) return;
 	
@@ -506,10 +506,7 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 
 void AMainCharacter::FinishFire(const FInputActionValue& value)
 {
-	if (!CurrentWeapon)
-	{
-		return;
-	}
+	if (!CurrentWeapon)	return;
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 

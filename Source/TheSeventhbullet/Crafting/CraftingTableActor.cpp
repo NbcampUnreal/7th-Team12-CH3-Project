@@ -1,5 +1,4 @@
 #include "CraftingTableActor.h"
-
 #include "CraftingFunctionLibrary.h"
 
 ACraftingTableActor::ACraftingTableActor()
@@ -71,5 +70,5 @@ void ACraftingTableActor::BroadcastChanged() const
 	{
 		Materials.Add(Mat);
 	}
-	OnMaterialsChanged.Broadcast(Materials);
+	OnCraftMaterialsChanged.Broadcast(Materials);
 }

@@ -7,10 +7,10 @@
 #include "MainCharacter.generated.h"
 
 class UInventoryComponent;
-class UCombatComponent; // CombatComponent 전방선언
-class UEquipmentComponent; // EquipmentComponent 전방선언
-class UGemStatusComponent; // StatusComponent 전방선언
-class AWeaponBase; // WeaponBase 전방선언
+class UCombatComponent; // 주현 : CombatComponent 전방선언
+class UEquipmentComponent; // 주현 : EquipmentComponent 전방선언
+class UGemStatusComponent; // 주현 : StatusComponent 전방선언
+class UWeaponDataAsset; // 주현 : WeaponDataAsset 전방선언
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
@@ -219,7 +219,7 @@ public:
 	
 	// 주현 : 테스트용 무기
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Weapon")
-	TObjectPtr<AWeaponBase> CurrentWeapon;
+	TObjectPtr<UWeaponDataAsset> CurrentWeapon;
 	
 	// 주현 : SoulGem 장착할 때마다 SoulGem의 스탯들을 모아서 StatusComponent에 재적용.
 	UFUNCTION(BlueprintCallable)

@@ -34,8 +34,6 @@ public:
 	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	TSubclassOf<AWeaponBase> WeaponBaseBPClass; // WeaponBase
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	EWeaponTypes WeaponType; // 무기타입
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float BaseDamage; // 기본 데미지
@@ -70,7 +68,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
 	TSoftObjectPtr<UParticleSystem> ImpactEffect; // Hit 이펙트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Animation")
-	TSoftObjectPtr<UAnimMontage> AttackMontage; // 공격 애니메이션
+	TSoftObjectPtr<UAnimMontage> AttackMontage;// 공격 애니메이션
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Animation")
+	TSoftObjectPtr<UAnimMontage> AimedAttackMontage;// 조준사격 애니메이션
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Animation")
 	TSoftObjectPtr<UAnimMontage> ReloadMontage; // 재장전 애니메이션
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Sound")
