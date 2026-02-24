@@ -32,8 +32,8 @@ AMainCharacter::AMainCharacter()
 	
 	SprintMultiplier = 1.5f;
 	AimMultiplier = 0.8f;
-	NormalArmLength = 300.0f; 
-	AimingArmLength = 0.0f;
+	NormalArmLength = 400.0f; 
+	AimingArmLength = 300.0f;
 	NormalSpringArm = FVector(0.0f, 25.0f, 0.0f);
 	AimingSpringArm = FVector(0.0f, 25.0f, 35.0f);
 	CameraInterpSpeed = 15.0f;
@@ -48,10 +48,12 @@ AMainCharacter::AMainCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 	Camera->bUsePawnControlRotation = false;
-	
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f);
 	GetCharacterMovement()->MaxWalkSpeed = TotalStatus.Speed;
 	
 	bIsDodge = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	bUseControllerRotationYaw = false;
 	
 	// 주현 : CombatComponent 초기화
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
@@ -194,6 +196,22 @@ void AMainCharacter::PlayAnimMotageByState(EAnimState AnimState)
 void AMainCharacter::EndedAnimMontage(UAnimMontage* Montage, bool Interrupted)
 {
 	CurrentState = EAnimState::None;
+	
+	bIsDodge = false;
+	bIsInvicible = false;
+	
+	if (bIsAiming)
+	{
+		// 조준시 카메라 정면을 바라보게 고정
+		bUseControllerRotationYaw = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
+	else
+	{
+		// 비조준시 카메라 고정 해제
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+	}
 }
 
 void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -254,7 +272,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			// Aim 바인딩
 			InputComponents->BindAction(
 				PC->AimAction,
-				ETriggerEvent::Triggered,
+				ETriggerEvent::Started,
 				this,
 				&AMainCharacter::PlayerAim
 			);
@@ -394,6 +412,8 @@ void AMainCharacter::PlayerLook(const FInputActionValue& value)
 
 void AMainCharacter::PlayerStartSprint(const FInputActionValue& value)
 {
+	if (bIsAiming) return;
+	
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = TotalStatus.Speed * SprintMultiplier;
@@ -410,39 +430,44 @@ void AMainCharacter::PlayerStopSprint(const FInputActionValue& value)
 
 void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 {
-	if (bIsDodge)
+	if (CurrentState != EAnimState::None|| bIsDodge || GetCharacterMovement()->IsFalling())
+	{
+		return;
+	}
+	
+	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+	if (CharacterAnimInstance && CharacterAnimInstance->IsAnyMontagePlaying())
 	{
 		return;
 	}
 	
 	//CurrentStamina -= DodgeCost;	// 소모 스테미나
 	bIsDodge = true;
-	
-	// 캐릭터 방향 가져오기
-	FVector DodgeDirection = GetActorForwardVector();
+	bIsInvicible = true;
 	
 	// 입력 방향 벡터 가져오기
 	FVector InputDirection = GetLastMovementInputVector();
 	
-	if (!InputDirection.IsNearlyZero())
+	if (bIsAiming && !InputDirection.IsNearlyZero())
 	{
-		DodgeDirection = InputDirection.GetSafeNormal();
-	}
-	
-	if (CurrentState != EAnimState::None) return;
-	
-	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
+		bUseControllerRotationYaw = false;	// 회피 중 카메라와 캐릭터 시점 고정 해제
+		GetCharacterMovement()->bOrientRotationToMovement = false;
 		
-	if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
-	{
-		PlayAnimMotageByState(EAnimState::DodgeFwd);
+		FRotator Direction = InputDirection.Rotation();
+		Direction.Pitch = 0.0f;
+		Direction.Roll = 0.0f;
+		
+		SetActorRotation(Direction);
 	}
-	
+		
+	// AnimMontage 재생
+	PlayAnimMotageByState(EAnimState::Dodge);
 }
 
 void AMainCharacter::PlayerDodgeFinished(const FInputActionValue& value)
 {
-	bIsDodge = false;
+	// bIsDodge = false;
+	// bIsInvicible = false;
 }
 
 void AMainCharacter::PlayerAim(const FInputActionValue& value)
@@ -486,9 +511,9 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 	{
 		PlayAnimMotageByState(EAnimState::Fire_Rifle);
 	}
-	
-	GetCharacterMovement()->bOrientRotationToMovement = false;
-	bUseControllerRotationYaw = true;		// 카메라와 캐릭터 방향 분리 
+
+	FRotator CharacterRotation = GetBaseAimRotation();
+	SetActorRotation(CharacterRotation);
 	
 	CombatComponent->StartFire();
 	
@@ -506,9 +531,6 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 void AMainCharacter::FinishFire(const FInputActionValue& value)
 {
 	if (!CurrentWeapon)	return;
-	
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 
 	
 	CombatComponent->StopFire();
 }
