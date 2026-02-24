@@ -10,6 +10,11 @@
 void UProjectilePoolManager::Initialize(FSubsystemCollectionBase& SubsystemCollectionBase)
 {
 	Super::Initialize(SubsystemCollectionBase);
+	if (GetWorld()==nullptr||!GetWorld()->IsGameWorld())
+	{
+		return;
+	}
+	
 	ProjectileTransform.SetLocation(FVector(-2000.0f, -2000.0f, 0.0f));
 	
 	for (int32 i=0;i<50;i++)

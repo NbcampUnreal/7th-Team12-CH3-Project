@@ -87,19 +87,33 @@ void AEnemyAIControllerBase::HeadHitEvent()
 	BBComp->SetValueAsBool(bIsHeadHitKey, true);
 }
 
-void AEnemyAIControllerBase::SetAI(UBehaviorTree* ParamBT, float AttackRadius)
+void AEnemyAIControllerBase::SetAI(UBehaviorTree* ParamBT, float AttackRadius, bool bIsLongRange, float Speed, float StrafeSpeed,float EnemyAttackDelay)
 {
 	UE_LOG(LogTemp, Warning, TEXT("SetAI"));
-	if (ParamBT == nullptr) return;
-	EnemyBehaviorTree = ParamBT;
-	RunBehaviorTree(EnemyBehaviorTree);
-	BBComp = GetBlackboardComponent();
-	
-	if (BBComp&&GetPawn())
+	if (ParamBT == nullptr||GetPawn()==nullptr)
 	{
+		return;
+	}
+	EnemyBehaviorTree = ParamBT;
+	
+	if (UseBlackboard(EnemyBehaviorTree->GetBlackboardAsset(), BBComp))
+	{
+		if (BBComp==nullptr)
+		{
+			return;
+		}
 		BBComp->SetValueAsObject(TEXT("SelfActor"), GetPawn());
 		BBComp->SetValueAsFloat(FName("AttackRadius"),AttackRadius);
+		BBComp->SetValueAsBool(FName("bIsLongRange"),bIsLongRange);
+		BBComp->SetValueAsFloat(FName("Speed"),Speed);
+		BBComp->SetValueAsFloat(FName("StrafeSpeed"),StrafeSpeed);
+		BBComp->SetValueAsFloat(FName("EnemyAttackDelayTime"),EnemyAttackDelay);
+		UE_LOG(LogTemp,Warning,TEXT("%f"),EnemyAttackDelay);
+		
+		RunBehaviorTree(EnemyBehaviorTree);
 	}
+	
+
 	if (AIPerceptionComp)
 	{
 		//공격 사거리가 시야보다 길다면, 시야를 사거리보다 크게 변경합니다.
@@ -138,7 +152,7 @@ void AEnemyAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulu
 		else
 		{
 			//Prediction 자극을 0.5초 뒤 예상 위치에 남김.
-			UAISense_Prediction::RequestPawnPredictionEvent(GetPawn(),Actor,0.5f);
+			UAISense_Prediction::RequestPawnPredictionEvent(GetPawn(),Actor,0.25f);
 			BBComp->ClearValue(TEXT("TargetActor"));
 			UE_LOG(LogTemp,Warning,TEXT("TargetLost"));
 		}
