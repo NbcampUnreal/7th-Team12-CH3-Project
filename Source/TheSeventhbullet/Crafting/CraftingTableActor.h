@@ -23,7 +23,7 @@ public:
 	int32 MinMaterialCount = 3;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Crafting")
-	FOnCraftMaterialsChanged OnMaterialsChanged;
+	FOnCraftMaterialsChanged OnCraftMaterialsChanged;
 	UPROPERTY(BlueprintAssignable, Category = "Crafting")
 	FOnSoulGemCrafted OnSoulGemCrafted;
 	

@@ -8,25 +8,32 @@
 #include "Damage/Modifier/WeaponDamageModifier.h"
 #include "Damage/Modifier/StatusDamageModifier.h"
 #include "Kismet/GameplayStatics.h"
-#include "Weapon/WeaponBase.h"
+#include "Kismet/KismetMathLibrary.h"
 
 UCombatComponent::UCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UCombatComponent::InitializeWeaponData(AWeaponBase* Weapon)
+void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
 {
 	if (!Weapon)
 	{
 		return;
 	}
 	
-	CurrentWeapon = Weapon;
-	WeaponData = Weapon->GetWeaponDataAsset();
+	WeaponData = Weapon;
 	
+	WeaponBaseDamage = WeaponData->BaseDamage;
+	Range = WeaponData->Range;
+	AmountOfPellets = WeaponData->PelletsCount;
+	PelletSpreadRadius = WeaponData->SpreadRadius;
+	IncreaseSpreadRadiusValue = WeaponData->IncreaseSpreadRadius;
 	FireInterval = WeaponData->FireInterval;
 	MaxAmmo = WeaponData->MaxAmmo;
+	ReloadTime = WeaponData->ReloadTime;
+	MaxAmmo = WeaponData->MaxAmmo;
+	
 	CurrentAmmo = MaxAmmo;
 }
 
@@ -40,7 +47,7 @@ void UCombatComponent::BeginPlay()
 
 void UCombatComponent::StartFire()
 {
-	if (!CurrentWeapon)
+	if (!WeaponData)
 	{
 		return;
 	}
@@ -64,12 +71,12 @@ void UCombatComponent::StopFire()
 	bIsFiring = false;
 	UE_LOG(LogTemp, Warning, TEXT("StopFire"));
 	GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
-	CurrentWeapon->ResetSpreadRadius();
+	ResetSpreadRadius();
 }
 
 void UCombatComponent::HitScanFire()
 {
-	if (!CurrentWeapon)
+	if (!WeaponData)
 	{
 		return;
 	}
@@ -91,11 +98,88 @@ void UCombatComponent::HitScanFire()
 	LastFireTime = Now;
 	
 	FHitResult Hit;
-	CurrentWeapon->PerformTrace(Hit);
-	CurrentWeapon->SpreadBullet();
-	ApplyDamageByHit(CurrentWeapon, Hit);
+	PerformTrace(Hit);
+	SpreadBullet();
+	ApplyDamageByHit(Hit);
 	SpawnFireParticles(Hit);
 	ConsumeAmmo();
+}
+
+void UCombatComponent::PerformTrace(FHitResult& OutHit)
+{
+	FVector CameraLocation;
+	FRotator CameraRotation;
+	GetOwner()->GetActorEyesViewPoint(CameraLocation, CameraRotation);
+	
+	FVector Start = CameraLocation;
+	FVector MaxTargetLocation = Start + (CameraRotation.Vector() * Range);
+	
+	const ETraceTypeQuery TraceType = UEngineTypes::ConvertToTraceType(ECC_Visibility);
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(GetOwner());
+
+	// 디버그 드로우 여부 판단
+	const EDrawDebugTrace::Type DebugType = bDrawFireDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+	
+	for (int32 i = 0; i < AmountOfPellets; i++)
+	{
+		FVector End = TraceRandShot(Start, MaxTargetLocation);
+		
+		// Start 지점에서 End 지점까지 Trace를 수행하고 Hit 여부를 return
+		bool bHit = UKismetSystemLibrary::LineTraceSingle(
+			GetWorld(),
+			Start,
+			End,
+			TraceType,
+			true,
+			ActorsToIgnore,
+			DebugType,
+			OutHit,
+			true,
+			FLinearColor::Red,
+			FLinearColor::Green,
+			FireDebugDuration
+		);
+	}
+}
+
+FVector UCombatComponent::TraceRandShot(const FVector& TraceStart, const FVector& MaxTargetLocation)
+{
+	// 시작점에서 목표지점까지의 벡터를 정규화(방향만 유지, 크기는 1)
+	FVector ToTargetNormalized = (MaxTargetLocation - TraceStart).GetSafeNormal();
+	// 사거리 끝 지점에 구체의 중심점을 찍음.
+	FVector SphereCenter = TraceStart + ToTargetNormalized * Range;
+	// 구체 중심을 기준으로 지정된 탄퍼짐 범위(PelletSpreadRadius)만큼의 범위 안에서 타겟 지점을 랜덤으로 정함.
+	FVector RandomTarget = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, PelletSpreadRadius);
+	// 실제 목표 지점.
+	FVector EndLocation = SphereCenter + RandomTarget;
+	
+	// 디버그 드로우
+	// 탄 퍼짐 범위
+	//DrawDebugSphere(GetWorld(), SphereCenter, PelletSpreadRadius, 15.f, FColor::Red, bDrawDebugInfinite,FireDebugDuration);
+	// 탄환 목표 지점
+	//DrawDebugSphere(GetWorld(), EndLocation, 2.f, 15.f, FColor::Emerald, bDrawDebugInfinite,FireDebugDuration);
+	// 탄환 경로
+	//DrawDebugLine(GetWorld(), TraceStart, EndLocation, FColor::Magenta, bDrawDebugInfinite,FireDebugDuration);
+	
+	return EndLocation;
+}
+
+void UCombatComponent::SpreadBullet()
+{
+	if (WeaponData->WeaponType != EWeaponTypes::ShotGun)
+	{
+		PelletSpreadRadius = FMath::Clamp(
+			PelletSpreadRadius+IncreaseSpreadRadiusValue, 
+			WeaponData->SpreadRadius,
+			WeaponData->MaxSpreadRadius);
+	}
+}
+
+void UCombatComponent::ResetSpreadRadius()
+{
+	PelletSpreadRadius = WeaponData->SpreadRadius;
 }
 
 void UCombatComponent::Reload()
@@ -130,13 +214,13 @@ void UCombatComponent::ConsumeAmmo()
 }
 
 
-void UCombatComponent::ApplyDamageByHit(AWeaponBase* Weapon, const FHitResult& Hit)
+void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 {
 	FDamageContext Context;
 	Context.Attacker = GetOwner();
 	Context.Target = Hit.GetActor();
-	Context.Weapon = Weapon;
 	Context.HitResult = Hit;
+	Context.CurrentDamage = WeaponBaseDamage;
 	
 	ExecutePipeline(Context);
 	

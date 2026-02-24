@@ -10,6 +10,11 @@ void UStatusDamageModifier::ModifyDamage(FDamageContext& Context)
 	if (UGemStatusComponent* Status = Context.Attacker->FindComponentByClass<UGemStatusComponent>())
 	{
 		Context.StatusDamage = Status->GetFinalATK();
+		Context.StatusCritChance = Status->GetFinalCritChance();
+		Context.StatusCritDamage = Status->GetFinalCritDamage();
+		
 		Context.CurrentDamage += Context.StatusDamage;
+		Context.CurrentCritChance += Context.StatusCritChance;
+		Context.CurrentCritDamage += Context.StatusDamage;
 	}
 }
