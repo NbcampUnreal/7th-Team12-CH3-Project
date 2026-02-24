@@ -38,10 +38,7 @@ enum class EAnimState : uint8
 	Reload_Rifle,  
 	Reload_ShotGun,
 	Reload_Pistol, 
-	DodgeFwd,
-	DodgeBwd,
-	DodgeRight,
-	DodgeLeft
+	Dodge
 };
 
 
