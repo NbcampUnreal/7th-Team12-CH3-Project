@@ -91,6 +91,8 @@ void AMainGameMode::OnStageReady()
 {
 	UE_LOG(LogTemp, Log, TEXT("Stage Preparation Complete!"));
 	
+	//TODO : LevelStreamTrigger쪽에있는 CachedLoadingWidget progress 처리부분 제외했음
+	
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
