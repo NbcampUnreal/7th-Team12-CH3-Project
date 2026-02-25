@@ -515,6 +515,7 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 	// }
 
 	
+	
 	UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 	
 	if (AnimInstance && EquipmentComponent->CurrentWeapon->AttackMontage)
@@ -525,7 +526,6 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 		EndDelegate.BindUObject(this, &AMainCharacter::EndedAnimMontage);
 		AnimInstance->Montage_SetEndDelegate(EndDelegate, EquipmentComponent->CurrentWeapon->AttackMontage.Get());
 	}
-	
 	FRotator CharacterRotation = GetBaseAimRotation();
 	CharacterRotation.Pitch = 0.0f;
 	CharacterRotation.Roll = 0.0f;
