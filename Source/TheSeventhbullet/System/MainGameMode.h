@@ -67,9 +67,13 @@ public:
 	void SetupCurrentWaveData();
 	void UpdateSpawnLogic(float DeltaTime);
 	bool IsWaveClear() const;
+	
 	UFUNCTION()
 	void OnMonsterKilled();
 	void LoadLevel(const FName OldLevel, const FName NewLevel);
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="PlayerSpawnPoint")
+	TArray<AActor*> PlayerSpawnPoint;
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
