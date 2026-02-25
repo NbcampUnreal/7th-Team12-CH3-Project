@@ -132,3 +132,39 @@ struct FCharacterStat
 		return *this;
 	}
 };
+
+USTRUCT(BlueprintType)
+struct FWeaponStat
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	float WeaponBaseDamage; // 무기 베이스 데미지.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	float Range; // 사거리
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	int32 AmountOfPellets; // 발사체 갯수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	float PelletSpreadRadius; // 탄 퍼짐 정도
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	float IncreaseSpreadRadiusValue; // 트리거 시 탄 퍼짐 증가폭(샷건이 아닌 경우)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	float FireInterval; // 발사 간격
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	int32 MaxAmmo; // 탄창 최대치
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	float ReloadTime; // 재장전 시간
+	
+	//기본 생성자 (초기값 세팅)
+	FWeaponStat()
+	{
+		WeaponBaseDamage = 0.f;
+		Range = 0.f;
+		AmountOfPellets = 0;
+		PelletSpreadRadius = 0.f;
+		IncreaseSpreadRadiusValue = 0.f;
+		FireInterval = 0.f;
+		MaxAmmo = 0;
+		ReloadTime = 0.f;
+	}
+};
