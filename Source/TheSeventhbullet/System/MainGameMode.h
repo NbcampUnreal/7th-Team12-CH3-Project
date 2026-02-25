@@ -57,7 +57,6 @@ class THESEVENTHBULLET_API AMainGameMode : public AGameMode
 	
 public:
 	AMainGameMode();
-public:
 	static AMainGameMode* Get(const UObject* WorldContext);
 	bool HasNextWave() const;
 	void PrepareStageAndPreLoad();
