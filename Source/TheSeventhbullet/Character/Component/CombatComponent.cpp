@@ -38,6 +38,7 @@ void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
 		return;
 	}
 	
+	WeaponOwner = Cast<AMainCharacter>(GetOwner());
 	WeaponDataView = Weapon;
 	CurrentWeaponStatus.WeaponBaseDamage = WeaponDataView->BaseDamage;
 	CurrentWeaponStatus.Range = WeaponDataView->Range;
@@ -107,9 +108,13 @@ void UCombatComponent::HitScanFire()
 	FHitResult Hit;
 	PerformTrace(Hit);
 	SpreadBullet();
-	ApplyDamageByHit(Hit);
 	SpawnFireParticles(Hit);
 	ConsumeAmmo();
+	
+	if (Hit.bBlockingHit && Hit.GetActor()->ActorHasTag("Enemy"))
+	{
+		ApplyDamageByHit(Hit);
+	}
 }
 
 void UCombatComponent::PerformTrace(FHitResult& OutHit)
@@ -286,24 +291,16 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 	Context.CurrentDamage = CurrentWeaponStatus.WeaponBaseDamage;
 	
 	ExecutePipeline(Context);
-	
-	if (!Context.Target)
-	{
-		return;
-	}
-	
-	if (Context.Target->ActorHasTag("Enemy"))
-	{
-		UGameplayStatics::ApplyPointDamage(
-			Context.Target,
-			Context.CurrentDamage,
-			Context.Attacker->GetActorForwardVector(),
-			Hit,
-			Hit.GetActor()->GetInstigatorController(),
-			Context.Attacker,
-			UDamageType::StaticClass()
-		);
-	}
+
+	UGameplayStatics::ApplyPointDamage(
+		Context.Target,
+		Context.CurrentDamage,
+		Context.Attacker->GetActorForwardVector(),
+		Hit,
+		Hit.GetActor()->GetInstigatorController(),
+		Context.Attacker,
+		UDamageType::StaticClass()
+	);
 }
 
 void UCombatComponent::ExecutePipeline(FDamageContext& Context)
@@ -321,17 +318,21 @@ void UCombatComponent::SpawnFireParticles(const FHitResult& Hit)
 {
 	if (WeaponDataView->MuzzleFlashEffect.ToSoftObjectPath().IsValid())
 	{
+		const FVector EffectDirection = (Hit.TraceStart - Hit.TraceEnd).GetSafeNormal();
+		const FRotator EffectRotation = EffectDirection.Rotation();
+		
 		UGameplayStatics::SpawnEmitterAtLocation(
 			GetWorld(),
 			WeaponDataView->MuzzleFlashEffect.LoadSynchronous(),
 			Hit.TraceStart,
-			FRotator::ZeroRotator,
+			EffectRotation,
+			FVector(0.3),
 			true
 		);
 	}
 	
 	if (WeaponDataView->ImpactEffect.ToSoftObjectPath().IsValid())
-	{
+	{		
 		UGameplayStatics::SpawnEmitterAtLocation(
 			GetWorld(),
 			WeaponDataView->ImpactEffect.LoadSynchronous(),
