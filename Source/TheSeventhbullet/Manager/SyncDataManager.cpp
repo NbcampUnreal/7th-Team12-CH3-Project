@@ -35,7 +35,7 @@ FRequestRowData USyncDataManager::GetStageData(int32 StageIndex) const
 	return StageCache[StageIndex];
 }
 
-int32 USyncDataManager::GetTotalWaveCount() const
+int32 USyncDataManager::GetTotalRequestCount() const
 {
 	return StageCache.Num();
 }

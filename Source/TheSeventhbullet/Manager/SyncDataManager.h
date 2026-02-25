@@ -43,7 +43,7 @@ public:
 	FRequestRowData GetStageData(int32 StageIndex) const;
 	
 	UFUNCTION(BlueprintPure, Category = "Data|Sync")
-	int32 GetTotalWaveCount() const;
+	int32 GetTotalRequestCount() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
 	FMonsterRowData GetMonsterData(const EMonsterType Tag) const;

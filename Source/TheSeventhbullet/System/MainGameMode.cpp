@@ -91,6 +91,12 @@ void AMainGameMode::OnStageReady()
 {
 	UE_LOG(LogTemp, Log, TEXT("Stage Preparation Complete!"));
 	
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->HideByTag(UITags::LoadingScreen);
+	}
+	
 	if (WaveStateMachine)
 	{
 		WaveStateMachine->ChangeState(EWaveState::Begin);
@@ -177,6 +183,11 @@ void AMainGameMode::SpawnOneMonster()
 	}
 }
 
+void AMainGameMode::SetTargetStageIndex(int32 InStageIndex)
+{
+	CurrentStageIndex = InStageIndex;
+}
+
 void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -208,7 +219,6 @@ void AMainGameMode::StartGamePlay()
 		UIMgr->HideByTag(UITags::MainMenu);
 	}
 
-	PrepareStageAndPreLoad();
 }
 
 void AMainGameMode::ReturnToMainMenu()
@@ -252,6 +262,19 @@ void AMainGameMode::ReturnToMainMenu()
 	if (UIMgr)
 	{
 		UIMgr->ShowByTag(UITags::MainMenu);
+	}
+}
+
+void AMainGameMode::ReturnToTown()
+{
+	CurrentWaveIndex = 0;
+	
+	SpawnQueue.Empty();
+	SpawnTimer = 0.0f;
+	AliveMonsterCount = 0;
+	if (WaveStateMachine)
+	{
+		WaveStateMachine->ChangeState(EWaveState::None);
 	}
 }
 
