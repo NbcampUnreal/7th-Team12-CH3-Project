@@ -8,9 +8,14 @@
 
 #pragma region DELEGATE
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterEventSignnature);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterSetAISignnature,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnCharacterSetAISignnature,
 											UBehaviorTree*,ParamBT,
-											float,AttackRadius);
+											float,AttackRadius,
+											bool,bIsLongRange,
+											float, Speed,
+											float, StrafeSpeed,
+											float, EnemyAttackDelay
+											);
 #pragma endregion
 
 

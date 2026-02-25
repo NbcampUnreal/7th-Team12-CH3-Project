@@ -66,6 +66,7 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 	ArmorPoint=EnemyData->ArmorPoint;
 	AttackPoint=EnemyData->AttackPoint;
 	AttackRadius=EnemyData->AttackRadius;
+	GetCharacterMovement()->MaxWalkSpeed=EnemyData->Speed;
 	HitParticle=EnemyData->HitParticle.Get();
 	HeadShotParticle=EnemyData->HeadShotParticle.Get();
 	USkeletalMeshComponent* EnemyMeshComp=this->GetMesh();
@@ -98,8 +99,10 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 		{
 			SpawnDefaultController();
 		}
-		//BehaviorTree 및 AttackRadius BB키 세팅
-		OnCharacterSetAI.Broadcast(EnemyData->EnemyBT.Get(),AttackRadius);
+		UE_LOG(LogTemp,Warning,TEXT("%f EnemyBase"),EnemyData->Speed);
+		//BehaviorTree 및 AttackRadius, bIsLongRange, Speed BB키 세팅
+		OnCharacterSetAI.Broadcast(EnemyData->EnemyBT.Get(),AttackRadius,EnemyData->bIsLongRange,EnemyData->Speed,EnemyData->StrafeSpeed,EnemyData->EnemyAttackDelay);
+		
 	}
 	PStatus=MakeShared<FProjectileStatus>();
 	PStatus->StaticMesh=EnemyData->ProjectileStaticMesh.Get();
