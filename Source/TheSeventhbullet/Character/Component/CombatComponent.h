@@ -6,8 +6,8 @@
 #include "DataAsset/WeaponDataAsset.h"
 #include "CombatComponent.generated.h"
 
-class AMainCharacter;
 struct FDamageContext;
+class AMainCharacter;
 class UDamageModifier;
 class AWeaponBase;
 
@@ -27,7 +27,7 @@ public:
 	void StopFire();
 	
 	void HitScanFire();
-	void PerformTrace(FHitResult& OutHit);
+	void PerformTrace(TArray<FHitResult>& OutHits);
 	FVector TraceRandShot(const FVector& TraceStart, const FVector& MaxTargetLocation);
 	void SpreadBullet();
 	void ResetSpreadRadius();
@@ -44,20 +44,25 @@ protected:
 	virtual void BeginPlay() override;
 	
 private:
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category ="Weapon", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<AMainCharacter> WeaponOwner = nullptr;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<const UWeaponDataAsset> WeaponDataView = nullptr;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category ="Weapon", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	FWeaponStat CurrentWeaponStatus;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TArray<TObjectPtr<UDamageModifier>> DamageModifiersPipeline; // 데미지 계산 파이프라인
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	FTimerHandle FireTimerHandle;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	FTimerHandle ReloadTimerHandle;
+	
 	int32 CurrentAmmo = 0;
 	
-	FTimerHandle FireTimerHandle;
-	FTimerHandle ReloadTimerHandle;
 	bool bIsFiring = false;
 	bool bIsReloading = false;
 	float LastFireTime = -1.f;
-	bool bDrawFireDebug = true; // 발사 디버그 표시 여부
-	float FireDebugDuration = 5.f; // 발사 디버그 지속 시간
-	bool bDrawDebugInfinite = true; // 발사 디버그 드로우를 영구지속할지 여부
-	
-	TArray<TObjectPtr<UDamageModifier>> DamageModifiersPipeline; // 데미지 계산 파이프라인
+	bool bDrawFireDebug = false; // 발사 디버그 표시 여부
+	float FireDebugDuration = 0.f; // 발사 디버그 지속 시간
+	bool bDrawDebugInfinite = false; // 발사 디버그 드로우를 영구지속할지 여부
 };

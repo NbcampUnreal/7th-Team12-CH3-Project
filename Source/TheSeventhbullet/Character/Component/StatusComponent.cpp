@@ -8,15 +8,16 @@ UStatusComponent::UStatusComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	CharacterStatus.Speed = 600.0f;
 	CharacterStatus.HP = 100;
-	CharacterStatus.Attack = 100;
+	CharacterStatus.Attack = 10;
 	CharacterStatus.Defence = 10;
 	CharacterStatus.CriticalChance = 15;
-	CharacterStatus.CriticalHitChance = 150;
-	
+	CharacterStatus.CriticalDamage = 150;
 }
 
 void UStatusComponent::UpdateTotalStat()
-{
+{	
+	UE_LOG(LogTemp, Warning, TEXT("Total Stat Updated"));
+	
 	FCharacterStat FinalStat;
 	const FCharacterStat EnhanceStat = EnhanceStatToCharacterStat();
 	FinalStat = EnhanceStat + CharacterStatus;
@@ -56,12 +57,12 @@ FCharacterStat UStatusComponent::GetCharacterStatus() const
 
 void UStatusComponent::SetCharacterStatus(FCharacterStat& Status)
 {
-	this->CharacterStatus = CharacterStatus;
+	this->CharacterStatus = Status;
 }
 
 void UStatusComponent::SetCharacterEnhanceStatus(FEnhancerStatus& Status)
 {
-	this->CharacterEnhanceStatus = CharacterEnhanceStatus;
+	this->CharacterEnhanceStatus = Status;
 }
 
 FEnhancerStatus UStatusComponent::GetCharacterEnhanceStatus() const
