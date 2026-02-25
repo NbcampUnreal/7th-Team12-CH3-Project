@@ -45,7 +45,7 @@ void AMainGameMode::PrepareStageAndPreLoad()
 {
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	
-	FStageRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
 	
 	TMap<EMonsterType, int32> MaxMonsterRequirements;
 	
@@ -91,6 +91,14 @@ void AMainGameMode::OnStageReady()
 {
 	UE_LOG(LogTemp, Log, TEXT("Stage Preparation Complete!"));
 	
+	//TODO : LevelStreamTrigger쪽에있는 CachedLoadingWidget progress 처리부분 제외했음
+	
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->HideByTag(UITags::LoadingScreen);
+	}
+	
 	if (WaveStateMachine)
 	{
 		WaveStateMachine->ChangeState(EWaveState::Begin);
@@ -103,7 +111,7 @@ void AMainGameMode::SetupCurrentWaveData()
 	if (!DataManager) return;
 	
 	FWaveRowData WaveData = DataManager->GetWaveData(CurrentStageIndex, CurrentWaveIndex);
-	const FStageRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
 	SpawnInterval = StageData.SpawnInterval;
 	SpawnTimer = 0.0f;
 	
@@ -177,6 +185,11 @@ void AMainGameMode::SpawnOneMonster()
 	}
 }
 
+void AMainGameMode::SetTargetStageIndex(int32 InStageIndex)
+{
+	CurrentStageIndex = InStageIndex;
+}
+
 void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -207,6 +220,7 @@ void AMainGameMode::StartGamePlay()
 	{
 		UIMgr->HideByTag(UITags::MainMenu);
 	}
+
 }
 
 void AMainGameMode::ReturnToMainMenu()
@@ -250,6 +264,19 @@ void AMainGameMode::ReturnToMainMenu()
 	if (UIMgr)
 	{
 		UIMgr->ShowByTag(UITags::MainMenu);
+	}
+}
+
+void AMainGameMode::ReturnToTown()
+{
+	CurrentWaveIndex = 0;
+	
+	SpawnQueue.Empty();
+	SpawnTimer = 0.0f;
+	AliveMonsterCount = 0;
+	if (WaveStateMachine)
+	{
+		WaveStateMachine->ChangeState(EWaveState::None);
 	}
 }
 

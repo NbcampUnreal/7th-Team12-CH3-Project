@@ -58,7 +58,7 @@ class THESEVENTHBULLET_API UMainGameInstance : public UGameInstance
 	GENERATED_BODY()
 public:
 	static UMainGameInstance* Get(const UObject* WorldContext);
-
+	int32 CurrentDay = 1;
 	void SaveGameData();
 	void LoadAsyncSaveData();
 	void GameStartMapLoad();

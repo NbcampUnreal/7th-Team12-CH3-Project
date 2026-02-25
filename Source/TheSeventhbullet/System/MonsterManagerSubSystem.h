@@ -81,7 +81,7 @@ public:
 	 * 풀에서 몬스터를 하나 꺼내(Pop) 지정된 스포너 위치에 배치하고 활성화합니다.
 	 * 만약 풀이 비어있다면(예외 상황), 새로 생성하여 배치합니다.
 	 *
-	 * @param MonsterAssetType 스폰할 몬스터의 클래스 정보
+	 * @param MonsterType 스폰할 몬스터 타입
 	 * @param SpawnPointIndex 배치할 스포너의 인덱스
 	 */
 	void SpawnMonster(EMonsterType MonsterType, int32 SpawnPointIndex);

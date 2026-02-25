@@ -40,10 +40,10 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
-	FStageRowData GetStageData(int32 StageIndex) const;
+	FRequestRowData GetStageData(int32 StageIndex) const;
 	
 	UFUNCTION(BlueprintPure, Category = "Data|Sync")
-	int32 GetTotalWaveCount() const;
+	int32 GetTotalRequestCount() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
 	FMonsterRowData GetMonsterData(const EMonsterType Tag) const;
@@ -57,7 +57,7 @@ public:
 	
 private:
 	UPROPERTY()
-	TMap<int32, FStageRowData> StageCache;
+	TMap<int32, FRequestRowData> StageCache;
 	
 	UPROPERTY()
 	TMap<EMonsterType, FMonsterRowData> MonsterCache;

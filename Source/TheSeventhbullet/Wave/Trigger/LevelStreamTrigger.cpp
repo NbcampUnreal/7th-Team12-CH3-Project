@@ -1,12 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "LevelStreamTrigger.h"
 
 #include "Character/MainCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Manager/UIManager.h"
+#include "System/MainGameMode.h"
+#include "System/MonsterManagerSubSystem.h"
 #include "UI/UITags.h"
 #include "UI/LoadingScreenWidget.h"
 
@@ -60,7 +59,10 @@ void ALevelStreamTrigger::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, 
 	{
 		ShowLoadingScreen();
 	}
-
+	
+	if (LevelToLoad == FName("L_Dungeon"))
+		bIsDungeonEntrance = true;
+	
 	if (LevelToLoad != NAME_None)
 	{
 		FLatentActionInfo LatentInfo;
@@ -86,8 +88,24 @@ void ALevelStreamTrigger::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, 
 
 void ALevelStreamTrigger::OnLevelLoaded()
 {
-	HideLoadingScreen();
 	bIsTriggered = false;
+	
+	if (bIsDungeonEntrance)
+	{
+		bIsDungeonEntrance = false;
+		UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
+		if (!SubSystem) return;
+		SubSystem->CacheSpawners();
+		
+		AMainGameMode* GM = AMainGameMode::Get(this);
+		if (!GM) return;
+		
+		GM->PrepareStageAndPreLoad();
+	}
+	else
+	{
+		HideLoadingScreen();
+	}
 }
 
 void ALevelStreamTrigger::ShowLoadingScreen()

@@ -285,7 +285,7 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 	Context.HitResult = Hit;
 	Context.CurrentDamage = CurrentWeaponStatus.WeaponBaseDamage;
 	
-	ExecutePipeline(Context);
+	//ExecutePipeline(Context);
 	
 	if (!Context.Target)
 	{
