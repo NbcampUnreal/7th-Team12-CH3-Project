@@ -16,6 +16,6 @@ void UStatusDamageModifier::ModifyDamage(FDamageContext& Context)
 		
 	Context.CurrentDamage += Context.StatusDamage;
 	Context.CurrentCritChance += Context.StatusCritChance;
-	Context.CurrentCritDamage += Context.StatusDamage;
+	Context.CurrentCritDamage += Context.StatusCritDamage;
 	
 }

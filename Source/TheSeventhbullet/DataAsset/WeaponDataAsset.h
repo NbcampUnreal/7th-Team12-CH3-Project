@@ -38,6 +38,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float BaseDamage; // 기본 데미지
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	float WeaponDamageMultiplier; // 무기별 데미지 밸런싱 계수
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float FireInterval; // 발사간격(발사속도)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float Range; // 사거리
@@ -62,7 +64,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Mesh")
 	TObjectPtr<UStaticMesh> Mesh; // 메쉬
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
-	TSoftObjectPtr<UParticleSystem> MuzzleFlashEffect; // 발사 이펙트(총구)
+	TSoftObjectPtr<UNiagaraSystem> MuzzleFlashEffect; // 발사 이펙트(총구)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
 	TSoftObjectPtr<UNiagaraSystem> ProjectileEffect; // 발사체 이펙트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")

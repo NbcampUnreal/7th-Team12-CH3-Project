@@ -141,6 +141,8 @@ struct FWeaponStat
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
 	float WeaponBaseDamage; // 무기 베이스 데미지.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	float WeaponDamageMultiplier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
 	float Range; // 사거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
 	int32 AmountOfPellets; // 발사체 갯수
@@ -159,6 +161,7 @@ struct FWeaponStat
 	FWeaponStat()
 	{
 		WeaponBaseDamage = 0.f;
+		WeaponDamageMultiplier = 1.0f;
 		Range = 0.f;
 		AmountOfPellets = 0;
 		PelletSpreadRadius = 0.f;
