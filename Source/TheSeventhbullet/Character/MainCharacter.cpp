@@ -512,15 +512,7 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 {
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 	
-	// if (CurrentState != EAnimState::None) return;
-	//
-	// UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
-	// 	
-	// if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
-	// {
-	// 	PlayAnimMotageByState(EAnimState::Fire_Rifle);
-	// }
-
+	if (CurrentState != EAnimState::None) return;
 	
 	UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 	
