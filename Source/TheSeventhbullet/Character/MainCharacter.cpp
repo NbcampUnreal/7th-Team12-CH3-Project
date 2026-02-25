@@ -96,6 +96,13 @@ void AMainCharacter::BeginPlay()
 		EquipmentComponent->OnGemEquipmentChanged.AddDynamic(this, &AMainCharacter::HandleEquipmentChanged);
 		HandleEquipmentChanged();
 	}
+
+	// TODO: 테스트용 - 나중에 제거
+	if (InventoryComponent)
+	{
+		FPrimaryAssetId PotionID(FPrimaryAssetType("Item"), FName("DA_HealthPotion"));
+		InventoryComponent->AddItem(PotionID, 3);
+	}
 }
 
 void AMainCharacter::ThrowGrenade()

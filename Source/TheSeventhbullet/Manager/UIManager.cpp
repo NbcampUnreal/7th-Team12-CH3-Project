@@ -116,6 +116,13 @@ UUserWidget* UUIManager::Push(TSubclassOf<UUserWidget> WidgetClass, int32 ZOrder
 		return nullptr;
 	}
 
+	// 이미 스택에 있으면 중복 Push 방지
+	if (WidgetStack.Contains(Widget))
+	{
+		Widget->SetVisibility(ESlateVisibility::Visible);
+		return Widget;
+	}
+
 	// 기존 Top 숨기기
 	if (WidgetStack.Num() > 0)
 	{
@@ -197,6 +204,13 @@ UUserWidget* UUIManager::ShowByTag(FName Tag, int32 ZOrder)
 void UUIManager::HideByTag(FName Tag)
 {
 	Hide(FindWidget(Tag));
+}
+
+UUserWidget* UUIManager::PushByTag(FName Tag, int32 ZOrder)
+{
+	UUserWidget* Widget = Push(FindWidget(Tag), ZOrder);
+	UpdateInputModeForStack();
+	return Widget;
 }
 
 void UUIManager::Toggle(FName Tag, int32 ZOrder)

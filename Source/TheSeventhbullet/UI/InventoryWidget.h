@@ -16,6 +16,9 @@ class THESEVENTHBULLET_API UInventoryWidget : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "UI|Inventory")
+	void SetInventoryComponent(UInventoryComponent* InComp);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Inventory")
 	void RefreshAllSlots();
 
 protected:
@@ -24,11 +27,11 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UWrapBox> SlotWrapBox;
 
-	UPROPERTY(EditDefaultsOnly, Category = "UI|Inventory")
+	UPROPERTY(EditAnywhere, Category = "UI|Inventory")
 	TSubclassOf<UInventorySlotWidget> SlotWidgetClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "UI|Inventory")
-	int32 SlotCount = 30;
+	UPROPERTY(EditAnywhere, Category = "UI|Inventory")
+	int32 SlotCount = 35;
 
 private:
 	void InitializeSlots();

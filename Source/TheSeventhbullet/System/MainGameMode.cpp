@@ -207,8 +207,6 @@ void AMainGameMode::StartGamePlay()
 	{
 		UIMgr->HideByTag(UITags::MainMenu);
 	}
-
-	PrepareStageAndPreLoad();
 }
 
 void AMainGameMode::ReturnToMainMenu()

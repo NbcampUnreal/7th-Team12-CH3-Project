@@ -32,6 +32,27 @@ void UInventoryWidget::NativeConstruct()
 	}
 }
 
+void UInventoryWidget::SetInventoryComponent(UInventoryComponent* InComp)
+{
+	if (InventoryComp)
+	{
+		InventoryComp->OnItemAdded.RemoveDynamic(this, &UInventoryWidget::OnItemChanged);
+		InventoryComp->OnItemRemoved.RemoveDynamic(this, &UInventoryWidget::OnItemChanged);
+	}
+
+	InventoryComp = InComp;
+	bSlotsInitialized = false;
+
+	InitializeSlots();
+
+	if (InventoryComp)
+	{
+		InventoryComp->OnItemAdded.AddDynamic(this, &UInventoryWidget::OnItemChanged);
+		InventoryComp->OnItemRemoved.AddDynamic(this, &UInventoryWidget::OnItemChanged);
+		RefreshAllSlots();
+	}
+}
+
 void UInventoryWidget::InitializeSlots()
 {
 	if (bSlotsInitialized || !SlotWrapBox || !SlotWidgetClass)

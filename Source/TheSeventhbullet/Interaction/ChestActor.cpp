@@ -1,5 +1,9 @@
 #include "ChestActor.h"
 #include "Inventory/InventoryComponent.h"
+#include "Character/MainCharacter.h"
+#include "Manager/UIManager.h"
+#include "UI/StorageWidget.h"
+#include "UI/UITags.h"
 
 AChestActor::AChestActor()
 {
@@ -14,7 +18,22 @@ AChestActor::AChestActor()
 
 void AChestActor::Interact(AActor* Interactor)
 {
-	// 카메라 전환 불필요 → Super::Interact 호출하지 않음
-	// TODO: StorageWidget Push
-	UE_LOG(LogTemp, Log, TEXT("ChestActor::Interact called by %s"), *Interactor->GetName());
+	AMainCharacter* Player = Cast<AMainCharacter>(Interactor);
+	if (!Player)
+	{
+		return;
+	}
+
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (!UIMgr)
+	{
+		return;
+	}
+
+	UUserWidget* Widget = UIMgr->PushByTag(UITags::Storage);
+	UStorageWidget* StorageWidget = Cast<UStorageWidget>(Widget);
+	if (StorageWidget)
+	{
+		StorageWidget->OpenStorage(InventoryComp, Player->InventoryComponent);
+	}
 }
