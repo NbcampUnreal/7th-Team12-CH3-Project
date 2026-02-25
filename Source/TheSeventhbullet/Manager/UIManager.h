@@ -76,6 +76,9 @@ public:
 	void HideByTag(FName Tag);
 
 	UFUNCTION(BlueprintCallable, Category = "UI|Tag")
+	UUserWidget* PushByTag(FName Tag, int32 ZOrder = 0);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Tag")
 	void Toggle(FName Tag, int32 ZOrder = 0);
 
 private:
