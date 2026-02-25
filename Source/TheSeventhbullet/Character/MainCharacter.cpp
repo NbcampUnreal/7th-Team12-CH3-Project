@@ -275,14 +275,6 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 				&AMainCharacter::PlayerDodge
 			);
 			
-			// Finish Dodge 바인딩
-			InputComponents->BindAction(
-				PC->DodgeAction,
-				ETriggerEvent::Completed,
-				this,
-				&AMainCharacter::PlayerDodgeFinished
-			);
-			
 			// Aim 바인딩
 			InputComponents->BindAction(
 				PC->AimAction,
@@ -486,11 +478,6 @@ void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 	PlayAnimMotageByState(EAnimState::Dodge);
 }
 
-void AMainCharacter::PlayerDodgeFinished(const FInputActionValue& value)
-{
-	// bIsDodge = false;
-	// bIsInvicible = false;
-}
 
 void AMainCharacter::PlayerAim(const FInputActionValue& value)
 {
@@ -525,16 +512,30 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 {
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 	
-	if (CurrentState != EAnimState::None) return;
-	
-	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
-		
-	if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
-	{
-		PlayAnimMotageByState(EAnimState::Fire_Rifle);
-	}
+	// if (CurrentState != EAnimState::None) return;
+	//
+	// UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
+	// 	
+	// if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
+	// {
+	// 	PlayAnimMotageByState(EAnimState::Fire_Rifle);
+	// }
 
+	
+	UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+	
+	if (AnimInstance && EquipmentComponent->CurrentWeapon->AttackMontage)
+	{
+		AnimInstance->Montage_Play(EquipmentComponent->CurrentWeapon->AttackMontage.Get());
+		
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &AMainCharacter::EndedAnimMontage);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, EquipmentComponent->CurrentWeapon->AttackMontage.Get());
+	}
+	
 	FRotator CharacterRotation = GetBaseAimRotation();
+	CharacterRotation.Pitch = 0.0f;
+	CharacterRotation.Roll = 0.0f;
 	SetActorRotation(CharacterRotation);
 	
 	CombatComponent->StartFire(); // 발사 시작
