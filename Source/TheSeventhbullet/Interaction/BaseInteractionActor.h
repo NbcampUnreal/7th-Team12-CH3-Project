@@ -10,6 +10,8 @@
 
 class UBoxComponent;
 class UCameraComponent;
+class UWidgetComponent;
+
 UCLASS()
 class THESEVENTHBULLET_API ABaseInteractionActor : public AActor, public IInteractableInterface
 {
@@ -46,5 +48,16 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera")
 	TObjectPtr<UCameraComponent> InteractCamera;
-	
+
+	UPROPERTY(VisibleAnywhere, Category = "Interaction|UI")
+	TObjectPtr<UWidgetComponent> InteractionWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Interaction|UI")
+	TSubclassOf<UUserWidget> PromptWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Interaction|UI")
+	FText PromptText = FText::FromString(TEXT("F키를 눌러 상호작용"));
+
+	UPROPERTY(EditDefaultsOnly, Category = "Interaction|UI")
+	FVector PromptOffset = FVector(0.0f, 0.0f, 100.0f);
 };

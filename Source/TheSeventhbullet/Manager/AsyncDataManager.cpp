@@ -250,25 +250,3 @@ TArray<FPrimaryAssetId> UAsyncDataManager::GetAllAssetIDs(FPrimaryAssetType Asse
 	UAssetManager::Get().GetPrimaryAssetIdList(AssetType, OutIDs);
 	return OutIDs;
 }
-
-float UAsyncDataManager::GetLoadingProgress() const
-{
-	int32 HandleCount = 0;
-	float TotalProgress = 0.0f;
-
-	for (const auto& TypePair : BundleHandles)
-	{
-		for (const auto& HandlePair : TypePair.Value)
-		{
-			if (HandlePair.Value.IsValid() && HandlePair.Value->IsLoadingInProgress())
-			{
-				TotalProgress += HandlePair.Value->GetProgress();
-				HandleCount++;
-			}
-		}
-	}
-
-	if (HandleCount == 0) return 1.0f;
-
-	return TotalProgress / static_cast<float>(HandleCount);
-}

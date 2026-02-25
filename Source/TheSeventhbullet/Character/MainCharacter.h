@@ -14,6 +14,7 @@ class AWeaponBase; // WeaponBase 전방선언
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
+class IInteractableInterface;
 
 struct FInputActionValue;
 
@@ -226,6 +227,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void HandleEquipmentChanged();
 		
+#pragma region Interaction
+	void SetCurrentInteractable(IInteractableInterface* Interactable);
+	IInteractableInterface* GetCurrentInteractable() const;
+private:
+	IInteractableInterface* CurrentInteractable = nullptr;
+public:
+#pragma endregion
+
 	// Inventory
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Inventory")
 	TObjectPtr<UInventoryComponent> InventoryComponent;

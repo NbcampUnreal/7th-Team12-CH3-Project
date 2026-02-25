@@ -6,6 +6,8 @@
 #include "Camera/CameraComponent.h"
 #include "Character/MainCharacter.h"
 #include "Components/BoxComponent.h"
+#include "Components/WidgetComponent.h"
+#include "UI/InteractionPromptWidget.h"
 
 ABaseInteractionActor::ABaseInteractionActor()
 {
@@ -27,6 +29,13 @@ ABaseInteractionActor::ABaseInteractionActor()
 	
 	InteractCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("InteractCamera"));
 	InteractCamera->SetupAttachment(Scene);
+
+	InteractionWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionWidget"));
+	InteractionWidget->SetupAttachment(Scene);
+	InteractionWidget->SetRelativeLocation(PromptOffset);
+	InteractionWidget->SetWidgetSpace(EWidgetSpace::Screen);
+	InteractionWidget->SetDrawAtDesiredSize(true);
+	InteractionWidget->SetVisibility(false);
 }
 
 void ABaseInteractionActor::Interact(AActor* Interactor)
@@ -47,16 +56,29 @@ void ABaseInteractionActor::BeginPlay()
 		TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &ABaseInteractionActor::OnOverlapBegin);
 		TriggerBox->OnComponentEndOverlap.AddDynamic(this, &ABaseInteractionActor::OnOverlapEnd);
 	}
+
+	if (InteractionWidget && PromptWidgetClass)
+	{
+		InteractionWidget->SetWidgetClass(PromptWidgetClass);
+
+		if (UInteractionPromptWidget* PromptWidget = Cast<UInteractionPromptWidget>(InteractionWidget->GetUserWidgetObject()))
+		{
+			PromptWidget->SetPromptText(PromptText);
+		}
+	}
 }
 
 void ABaseInteractionActor::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AMainCharacter* Player = Cast<AMainCharacter>(OtherActor);
-	if(Player)
+	if (Player)
 	{
-		//TODO : 플레이어의 CurrentInteractableTarget(임시로 만든 변수명) 변수에 자기 자신(this),즉 이 BaseInterationActor 등록
-		//TODO : 플레이어 화면에 "F키를 눌러 상호작용" UI를 띄움
+		Player->SetCurrentInteractable(this);
+		if (InteractionWidget)
+		{
+			InteractionWidget->SetVisibility(true);
+		}
 	}
 }
 
@@ -64,10 +86,13 @@ void ABaseInteractionActor::OnOverlapEnd(UPrimitiveComponent* OverlapComponent, 
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	AMainCharacter* Player = Cast<AMainCharacter>(OtherActor);
-	if(Player)
+	if (Player)
 	{
-		//TODO : 플레이어의 CurrentInteractableTarget(임시로 만든 변수명) 변수를 nullptr로 비워줌
-		//TODO : 플레이어 화면에 "F키를 눌러 상호작용" UI를 숨김
+		Player->SetCurrentInteractable(nullptr);
+		if (InteractionWidget)
+		{
+			InteractionWidget->SetVisibility(false);
+		}
 	}
 }
 
