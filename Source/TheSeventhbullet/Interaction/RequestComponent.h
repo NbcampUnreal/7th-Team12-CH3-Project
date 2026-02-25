@@ -11,11 +11,16 @@ class THESEVENTHBULLET_API URequestComponent : public UBaseInteractionComponent
 
 public:
 	URequestComponent();
-public:
+	
+	UFUNCTION(BlueprintCallable, Category = "Interaction|Request")
+	void SelectRequest(int32 SelectedStageIndex);
+	
 	virtual void BeginInteract(AActor* Interactor);
 	virtual void ProgressInteract(AActor* Interactor);
 	virtual void EndInteract(AActor* Interactor);
 protected:
 	virtual void BeginPlay() override;
+	//날짜별 등장 가능한 레벨 하드 코딩
+	TArray<int32> DayAvailableLevel = {1,2,2,3,3,3};
 
 };

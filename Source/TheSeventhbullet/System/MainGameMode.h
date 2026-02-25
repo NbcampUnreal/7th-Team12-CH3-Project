@@ -61,7 +61,10 @@ public:
 	bool HasNextWave() const;
 	void PrepareStageAndPreLoad();
 	void StartGamePlay();
+	//메인메뉴로 돌아가는 함수
 	void ReturnToMainMenu();
+	//결산, 혹은 죽음 이후 마을로 돌아가는 함수
+	void ReturnToTown();
 	void OnStageReady();
 	void SetupCurrentWaveData();
 	void UpdateSpawnLogic(float DeltaTime);
@@ -69,10 +72,13 @@ public:
 	
 	UFUNCTION()
 	void OnMonsterKilled();
-	void LoadLevel(const FName OldLevel, const FName NewLevel);
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="PlayerSpawnPoint")
 	TArray<AActor*> PlayerSpawnPoint;
+	
+	UFUNCTION(BlueprintCallable, Category = "WaveSystem")
+	void SetTargetStageIndex(int32 InStageIndex);
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -80,16 +86,18 @@ protected:
 private:
 	UPROPERTY()
 	TObjectPtr<UWaveStateMachine> WaveStateMachine;
+	
 	UPROPERTY()
 	int32 CurrentWaveIndex=0; // SpawnList의 인덱스 번호
+	
 	UPROPERTY()
 	int32 CurrentStageIndex=0; // WaveData의 인덱스 번호
+	
 	UPROPERTY()
 	TArray<EMonsterType> SpawnQueue;
 	
 	float SpawnTimer = 0.0f;
 	float SpawnInterval = 0.0f;
-	
 	int32 AliveMonsterCount = 0;
 	
 public:
