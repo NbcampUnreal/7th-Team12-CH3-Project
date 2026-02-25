@@ -7,31 +7,49 @@
 
 class ASpawner;
 class UWaveStateMachine;
-/**
- * @brief 웨이브 시스템의 총괄 지휘관(Brain) 역할을 수행하는 게임 모드 클래스
- * * @details
- * <b>1. 설계 의도 및 특징</b>
- * - <b>Centralized Control (중앙 제어)</b>:
- * - 웨이브 데이터 분석, 스폰 스케줄링, 상태 전이(FSM)를 전담합니다.
- * - 실제 리소스 로딩과 객체 생성은 Subsystem에 위임하여 역할(Concerns)을 분리했습니다.<br>
- * * <b>Performance Aware (성능 고려)</b>:
- * - 스테이지 시작 전 `PrepareStageAndPreLoad()`를 통해 필요한 몬스터의 최대 수량을 미리 계산합니다.
- * - 이를 기반으로 Object Pool(MonsterManagerSubSystem)을 예열(Warm-Up)하여 런타임 프레임 드랍을 방지합니다.<br><br>
- * * <b>2. 주요 흐름 (Workflow)</b>
- * - <b>준비 (Preparation)</b>: Level Load -> Max Count 계산 -> Pool 초기화 요청
- * - <b>진행 (Execution)</b>: WaveStateMachine 가동 (Begin -> Progress -> End)
- * - <b>스폰 (Spawning)</b>: SpawnQueue에서 몬스터 추출 -> 랜덤 Spawner 선정 -> Subsystem에 배치 명령
- * - <b>관리 (Management)</b>: 몬스터 사망 이벤트 수신 -> 남은 몬스터 0일 시 웨이브 클리어<br><br>
- * * <b>3. 사용 예시 (Usage)</b>
- * @code
- * AMainGameMode* GM = AMainGameMode::Get(GetWorld());
- * if (GM)
- * {
- * // 현재 웨이브 상태 확인 혹은 강제 클리어 등의 디버깅
- * if (GM->IsWaveClear()) { ... }
- * }
- * @endcode
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/* [MainGameMode Guide]
+ *
+ * Persistent Level(L_Main)의 GameMode — 웨이브 시스템 + 게임 상태 전환을 총괄
+ * L_Main 하나에 GameMode가 하나이므로, 메뉴 → 게임 → 메뉴 전환을 모두 이 클래스에서 처리
+ *
+ * [맵 구조]
+ *   L_Main (Persistent)  ← GameMode, PlayerStart 존재. 항상 로드됨
+ *     ├─ L_Town (Sub)    ← 초기 맵. NewGame/Continue 시 스트리밍 로드
+ *     └─ L_Dungeon (Sub) ← 전투 맵. LevelStreamTrigger로 전환
+ *
+ * [게임 상태 전환 흐름]
+ *   BeginPlay()
+ *     ├─ WaveStateMachine 생성 (None 상태)
+ *     ├─ OnMonsterKilled 바인딩
+ *     └─ MainMenu 표시 (UIManager)
+ *
+ *   StartGamePlay()  ← GameInstance에서 로딩 완료 후 호출
+ *     ├─ MainMenu 숨김
+ *     └─ PrepareStageAndPreLoad() → 몬스터 풀 초기화 → 웨이브 시작
+ *
+ *   ReturnToMainMenu()  ← EscMenu에서 BackToMenu 시 호출
+ *     ├─ 웨이브 상태 리셋 (None)
+ *     ├─ 스폰 데이터 초기화
+ *     ├─ L_Town 제외 모든 서브레벨 언로드
+ *     └─ MainMenu 표시
+ *
+ * [웨이브 시스템]
+ *   PrepareStageAndPreLoad()  ← 스테이지 몬스터 최대 수량 계산 → Pool 예열
+ *   OnStageReady()            ← Pool 준비 완료 → WaveStateMachine Begin
+ *   SetupCurrentWaveData()    ← 현재 웨이브 스폰 큐 구성
+ *   UpdateSpawnLogic()        ← Tick에서 SpawnInterval마다 몬스터 스폰
+ *   OnMonsterKilled()         ← 남은 몬스터 카운트 감소
+ *   IsWaveClear()             ← 스폰 큐 비었고 생존 몬스터 0이면 true
+ *
+ * [사용 예시]
+ *   AMainGameMode* GM = AMainGameMode::Get(this);
+ *   GM->StartGamePlay();       // 게임 시작 (GameInstance에서 호출)
+ *   GM->ReturnToMainMenu();    // 메뉴 복귀 (GameInstance에서 호출)
+ *   GM->IsWaveClear();         // 웨이브 클리어 확인
  */
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 UCLASS()
 class THESEVENTHBULLET_API AMainGameMode : public AGameMode
 {
@@ -43,6 +61,8 @@ public:
 	static AMainGameMode* Get(const UObject* WorldContext);
 	bool HasNextWave() const;
 	void PrepareStageAndPreLoad();
+	void StartGamePlay();
+	void ReturnToMainMenu();
 	void OnStageReady();
 	void SetupCurrentWaveData();
 	void UpdateSpawnLogic(float DeltaTime);
@@ -50,8 +70,6 @@ public:
 	UFUNCTION()
 	void OnMonsterKilled();
 	void LoadLevel(const FName OldLevel, const FName NewLevel);
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="PlayerSpawnPoint")
-	TArray<AActor*> PlayerSpawnPoint;
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;

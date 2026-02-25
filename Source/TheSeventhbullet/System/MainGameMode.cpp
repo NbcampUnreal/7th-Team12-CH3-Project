@@ -4,8 +4,11 @@
 #include "TheSeventhbullet/Character/MainCharacter.h"
 #include "TheSeventhbullet/Character/MainPlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/LevelStreaming.h"
 #include "TheSeventhbullet/Manager/SyncDataManager.h"
 #include "TheSeventhbullet/Wave/WaveStateMachine.h"
+#include "TheSeventhbullet/Manager/UIManager.h"
+#include "TheSeventhbullet/UI/UITags.h"
 
 AMainGameMode::AMainGameMode()
 {
@@ -154,14 +157,6 @@ void AMainGameMode::OnMonsterKilled()
 	AliveMonsterCount--;
 }
 
-void AMainGameMode::LoadLevel(FName OldLevel, FName NewLevel)
-{
-	FLatentActionInfo LatentInfo;
-	//UGameplayStatics::UnloadStreamLevel(this,OldLevel,  LatentInfo,true);
-	UGameplayStatics::LoadStreamLevel(this, NewLevel,true,true, LatentInfo);
-	PrepareStageAndPreLoad();
-}
-
 void AMainGameMode::SpawnOneMonster()
 {
 	if (SpawnQueue.IsEmpty()) return;
@@ -185,10 +180,10 @@ void AMainGameMode::SpawnOneMonster()
 void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	WaveStateMachine = NewObject<UWaveStateMachine>(this);
 	WaveStateMachine->Initialize(this);
-	
+
 	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
 	if (SubSystem)
 	{
@@ -197,7 +192,67 @@ void AMainGameMode::BeginPlay()
 			SubSystem->OnMonsterKilled.AddDynamic(this, &AMainGameMode::OnMonsterKilled);
 		}
 	}
+
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->ShowByTag(UITags::MainMenu);
+	}
+}
+
+void AMainGameMode::StartGamePlay()
+{
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->HideByTag(UITags::MainMenu);
+	}
+
 	PrepareStageAndPreLoad();
+}
+
+void AMainGameMode::ReturnToMainMenu()
+{
+	// 웨이브 상태 리셋
+	if (WaveStateMachine)
+	{
+		WaveStateMachine->ChangeState(EWaveState::None);
+	}
+
+	CurrentWaveIndex = 0;
+	CurrentStageIndex = 0;
+	SpawnQueue.Empty();
+	AliveMonsterCount = 0;
+	SpawnTimer = 0.0f;
+
+	// L_Town을 제외한 모든 서브레벨 언로드
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		const FName TownName = FName(TEXT("L_Town"));
+		const TArray<ULevelStreaming*>& StreamingLevels = World->GetStreamingLevels();
+
+		for (ULevelStreaming* StreamingLevel : StreamingLevels)
+		{
+			if (!StreamingLevel) continue;
+
+			FString ShortName = FPackageName::GetShortName(StreamingLevel->GetWorldAssetPackageName());
+			if (FName(*ShortName) == TownName) continue;
+
+			if (StreamingLevel->IsLevelLoaded())
+			{
+				FLatentActionInfo LatentInfo;
+				UGameplayStatics::UnloadStreamLevel(this, FName(*ShortName), LatentInfo, false);
+			}
+		}
+	}
+
+	// 메인 메뉴 표시
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->ShowByTag(UITags::MainMenu);
+	}
 }
 
 void AMainGameMode::Tick(float DeltaSeconds)

@@ -3,6 +3,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "MainPlayerController.h"
 #include "PlayerSkill.h"
+#include "TheSeventhbullet/Interaction/InteractableInterface.h"
 #include "Animation/CharacterAnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Component/CombatComponent.h" // 주현 : CombatComponent
@@ -332,7 +333,15 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 				this,
 				&AMainCharacter::PlayerReload
 			);
-		
+
+			// EscMenu 바인딩
+			InputComponents->BindAction(
+				PC->EscMenuAction,
+				ETriggerEvent::Started,
+				this,
+				&AMainCharacter::ToggleEscMenu
+			);
+
 		}
 	}
 }
@@ -550,6 +559,20 @@ void AMainCharacter::PlayerSkill(const FInputActionValue& value)
 
 void AMainCharacter::PlayerInteract(const FInputActionValue& value)
 {
+	if (CurrentInteractable)
+	{
+		CurrentInteractable->Interact(this);
+	}
+}
+
+void AMainCharacter::SetCurrentInteractable(IInteractableInterface* Interactable)
+{
+	CurrentInteractable = Interactable;
+}
+
+IInteractableInterface* AMainCharacter::GetCurrentInteractable() const
+{
+	return CurrentInteractable;
 }
 
 void AMainCharacter::PlayerOpenInventory(const FInputActionValue& value)
@@ -570,6 +593,15 @@ void AMainCharacter::PlayerReload(const FInputActionValue& value)
 	if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
 	{
 		PlayAnimMotageByState(EAnimState::Reload_Rifle);
+	}
+}
+
+void AMainCharacter::ToggleEscMenu(const FInputActionValue& value)
+{
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->Toggle(UITags::EscMenu);
 	}
 }
 

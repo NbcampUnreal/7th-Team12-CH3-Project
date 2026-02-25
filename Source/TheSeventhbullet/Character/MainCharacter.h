@@ -18,6 +18,7 @@ class AWeaponBase; // WeaponBase 전방선언
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
+class IInteractableInterface;
 
 struct FInputActionValue;
 
@@ -141,7 +142,8 @@ public:
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
 	void PlayerReload(const FInputActionValue& value);
-	
+	void ToggleEscMenu(const FInputActionValue& value);
+
 #pragma endregion
 
 #pragma region Skill
@@ -180,6 +182,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void HandleEquipmentChanged();
 		
+#pragma region Interaction
+	void SetCurrentInteractable(IInteractableInterface* Interactable);
+	IInteractableInterface* GetCurrentInteractable() const;
+private:
+	IInteractableInterface* CurrentInteractable = nullptr;
+public:
+#pragma endregion
+
 	// Inventory
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Inventory")
 	TObjectPtr<UInventoryComponent> InventoryComponent;

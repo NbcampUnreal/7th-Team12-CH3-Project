@@ -13,10 +13,10 @@ UCLASS()
 class THESEVENTHBULLET_API AMainPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+
 public:
 	AMainPlayerController();
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
@@ -39,4 +39,6 @@ public:
 	TObjectPtr<UInputAction> SkillAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	TObjectPtr<UInputAction> ReloadAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	TObjectPtr<UInputAction> EscMenuAction;
 };

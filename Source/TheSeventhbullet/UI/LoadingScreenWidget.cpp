@@ -21,6 +21,6 @@ void ULoadingScreenWidget::SetProgress(float Percent)
 	if (LoadingText)
 	{
 		int32 DisplayPercent = FMath::RoundToInt(Percent * 100.0f);
-		LoadingText->SetText(FText::FromString(FString::Printf(TEXT("Loading... %d%%"), DisplayPercent)));
+		LoadingText->SetText(FText::FromString(FString::Printf(TEXT("Loading... %d %%"), DisplayPercent)));
 	}
 }
