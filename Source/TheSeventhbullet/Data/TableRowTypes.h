@@ -46,9 +46,17 @@ struct FWaveRowData : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
-struct FStageRowData : public FTableRowBase
+struct FRequestRowData : public FTableRowBase
 {
 	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName RequestName = "None";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 RequestGold = 0;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 RequestLevel = 1;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 WaveNumber = 0;
