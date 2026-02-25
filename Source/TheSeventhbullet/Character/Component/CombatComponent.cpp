@@ -38,6 +38,7 @@ void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
 		return;
 	}
 	
+	WeaponOwner = Cast<AMainCharacter>(GetOwner());
 	WeaponDataView = Weapon;
 	CurrentWeaponStatus.WeaponBaseDamage = WeaponDataView->BaseDamage;
 	CurrentWeaponStatus.WeaponDamageMultiplier = WeaponDataView->WeaponDamageMultiplier;
