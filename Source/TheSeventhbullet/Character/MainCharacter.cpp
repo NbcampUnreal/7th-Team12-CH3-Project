@@ -56,9 +56,15 @@ AMainCharacter::AMainCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;
 	
+	// 주현 : WeaponMeshComponent 초기화
+	WeaponMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMeshComp"));
+	WeaponMeshComponent->SetupAttachment(GetMesh(), TEXT("weapon_r"));
+	WeaponMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 무기가 캐릭터나 카메라랑 충돌나서 끔
 	// 주현 : CombatComponent 초기화
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
+	// 주현 : EquipmentComponent 초기화
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("Equipment"));
+	// 주현 : StatusComponent 초기화
 	StatusComponent = CreateDefaultSubobject<UStatusComponent>(TEXT("Status"));
 	
   InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComp"));
@@ -81,13 +87,13 @@ void AMainCharacter::BeginPlay()
 		}
 	}
 	
-	// 주현 : 임시로 무기 장착.
-	CombatComponent->InitializeWeaponData(CurrentWeapon);
+	// 주현 : 테스트용 무기 장착
+	EquipmentComponent->EquipWeaponData(TestWeapon);
 	
 	// 주현 : EquipmentComponent의 OnEquipmentChanged.Broadcast()를 호출할 때, HandleEquipmentChanged()를 실행시키기 위한 코드
 	if (EquipmentComponent && StatusComponent)
 	{
-		EquipmentComponent->OnEquipmentChanged.AddDynamic(this, &AMainCharacter::HandleEquipmentChanged);
+		EquipmentComponent->OnGemEquipmentChanged.AddDynamic(this, &AMainCharacter::HandleEquipmentChanged);
 		HandleEquipmentChanged();
 	}
 }
@@ -510,7 +516,7 @@ void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 
 void AMainCharacter::PlayerFire(const FInputActionValue& value)
 {
-	if (!CurrentWeapon)	return;
+	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 	
 	if (CurrentState != EAnimState::None) return;
 	
@@ -524,7 +530,7 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 	FRotator CharacterRotation = GetBaseAimRotation();
 	SetActorRotation(CharacterRotation);
 	
-	CombatComponent->StartFire();
+	CombatComponent->StartFire(); // 발사 시작
 	
 	//현석 : 청각 이벤트 발생
 	UAISense_Hearing::ReportNoiseEvent(
@@ -539,7 +545,7 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 
 void AMainCharacter::FinishFire(const FInputActionValue& value)
 {
-	if (!CurrentWeapon)	return;
+	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 	
 	CombatComponent->StopFire();
 }

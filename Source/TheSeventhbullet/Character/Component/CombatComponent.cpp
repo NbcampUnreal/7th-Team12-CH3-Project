@@ -1,7 +1,9 @@
 #include "CombatComponent.h"
 
+#include "EquipmentComponent.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Character/MainCharacter.h"
 #include "DataAsset/WeaponDataAsset.h"
 #include "Damage/DamageContext.h"
 #include "Damage/Modifier/DamageModifier.h"
@@ -15,6 +17,20 @@ UCombatComponent::UCombatComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UCombatComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	UEquipmentComponent* EC = GetOwner()->FindComponentByClass<UEquipmentComponent>();
+	if (EC)
+	{
+		EC->OnWeaponEquipmentChanged.AddDynamic(this, &UCombatComponent::UCombatComponent::HandleWeaponEquipmentChanged);
+	}
+	
+	DamageModifiersPipeline.Add(NewObject<UWeaponDamageModifier>(this));
+	DamageModifiersPipeline.Add(NewObject<UStatusDamageModifier>(this));
+}
+
 void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
 {
 	if (!Weapon)
@@ -22,32 +38,28 @@ void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
 		return;
 	}
 	
-	WeaponData = Weapon;
+	WeaponDataView = Weapon;
+	CurrentWeaponStatus.WeaponBaseDamage = WeaponDataView->BaseDamage;
+	CurrentWeaponStatus.Range = WeaponDataView->Range;
+	CurrentWeaponStatus.AmountOfPellets = WeaponDataView->PelletsCount;
+	CurrentWeaponStatus.PelletSpreadRadius = WeaponDataView->SpreadRadius;
+	CurrentWeaponStatus.IncreaseSpreadRadiusValue = WeaponDataView->IncreaseSpreadRadius;
+	CurrentWeaponStatus.FireInterval = WeaponDataView->FireInterval;
+	CurrentWeaponStatus.MaxAmmo = WeaponDataView->MaxAmmo;
+	CurrentWeaponStatus.ReloadTime = WeaponDataView->ReloadTime;
+	CurrentWeaponStatus.MaxAmmo = WeaponDataView->MaxAmmo;
 	
-	WeaponBaseDamage = WeaponData->BaseDamage;
-	Range = WeaponData->Range;
-	AmountOfPellets = WeaponData->PelletsCount;
-	PelletSpreadRadius = WeaponData->SpreadRadius;
-	IncreaseSpreadRadiusValue = WeaponData->IncreaseSpreadRadius;
-	FireInterval = WeaponData->FireInterval;
-	MaxAmmo = WeaponData->MaxAmmo;
-	ReloadTime = WeaponData->ReloadTime;
-	MaxAmmo = WeaponData->MaxAmmo;
-	
-	CurrentAmmo = MaxAmmo;
+	CurrentAmmo = CurrentWeaponStatus.MaxAmmo;
 }
 
-void UCombatComponent::BeginPlay()
+void UCombatComponent::HandleWeaponEquipmentChanged(UWeaponDataAsset* NewWeaponData)
 {
-	Super::BeginPlay();
-	
-	DamageModifiersPipeline.Add(NewObject<UWeaponDamageModifier>(this));
-	DamageModifiersPipeline.Add(NewObject<UStatusDamageModifier>(this));
+	InitializeWeaponData(NewWeaponData);
 }
 
 void UCombatComponent::StartFire()
 {
-	if (!WeaponData)
+	if (!WeaponDataView)
 	{
 		return;
 	}
@@ -60,7 +72,7 @@ void UCombatComponent::StartFire()
 		FireTimerHandle,
 		this,
 		&UCombatComponent::HitScanFire,
-		FireInterval,
+		CurrentWeaponStatus.FireInterval,
 		true,
 		0.02
 	);
@@ -75,12 +87,7 @@ void UCombatComponent::StopFire()
 }
 
 void UCombatComponent::HitScanFire()
-{
-	if (!WeaponData)
-	{
-		return;
-	}
-	
+{	
 	// 총알이 0발 이하로 남았다면 재장전을 자동으로 수행 + 발사하지 않음
 	if (CurrentAmmo <= 0)
 	{
@@ -91,7 +98,7 @@ void UCombatComponent::HitScanFire()
 	// 현재시간 - 마지막 발사시간 < 발사간격인 경우 발사가 불가능
 	// 연사가 아닌 단발사격인 경우에도 무기마다 발사간격(발사속도)을 구현하기 위한 로직.
 	const float Now = GetWorld()->GetTimeSeconds();
-	if (Now - LastFireTime < FireInterval)
+	if (Now - LastFireTime < CurrentWeaponStatus.FireInterval)
 	{
 		return;
 	}
@@ -107,51 +114,107 @@ void UCombatComponent::HitScanFire()
 
 void UCombatComponent::PerformTrace(FHitResult& OutHit)
 {
+	// 1) 카메라를 기준으로 타겟지점을 정함.
 	FVector CameraLocation;
 	FRotator CameraRotation;
 	GetOwner()->GetActorEyesViewPoint(CameraLocation, CameraRotation);
 	
-	FVector Start = CameraLocation;
-	FVector MaxTargetLocation = Start + (CameraRotation.Vector() * Range);
+	FVector AimStart = CameraLocation;
+	FVector AimEnd = AimStart + (CameraRotation.Vector() * CurrentWeaponStatus.Range);
 	
 	const ETraceTypeQuery TraceType = UEngineTypes::ConvertToTraceType(ECC_Visibility);
 
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(GetOwner());
-
+	
 	// 디버그 드로우 여부 판단
 	const EDrawDebugTrace::Type DebugType = bDrawFireDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
 	
-	for (int32 i = 0; i < AmountOfPellets; i++)
+	// 타겟지점을 정하는 라인트레이스 : 카메라 -> 타겟지점
+	FHitResult AimHit;
+	UKismetSystemLibrary::LineTraceSingle(
+		GetWorld(),
+		AimStart,
+		AimEnd,
+		TraceType,
+		true,
+		ActorsToIgnore,
+		DebugType,
+		AimHit,
+		true
+	);
+	// 타겟지점
+	const FVector AimPoint = AimHit.bBlockingHit ? AimHit.ImpactPoint : AimEnd;
+	
+	
+	// 2) 총구에서 실제로 발사하는 트레이스
+	FVector MuzzleLoc;
+	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(GetOwner()))
 	{
-		FVector End = TraceRandShot(Start, MaxTargetLocation);
-		
-		// Start 지점에서 End 지점까지 Trace를 수행하고 Hit 여부를 return
+		if (MainCharacter->WeaponMeshComponent->DoesSocketExist(TEXT("WeaponMuzzle")))
+		{
+			// 소켓이 있으면 소켓 위치로
+			MuzzleLoc = MainCharacter->WeaponMeshComponent->GetSocketLocation(TEXT("WeaponMuzzle"));
+		}
+		else
+		{
+			// 없으면 일단 무기 위치로
+			MuzzleLoc = MainCharacter->WeaponMeshComponent->GetComponentLocation();
+		}
+	}
+	
+	bool bHasBestHit = false;
+	FHitResult BestHit;
+	FHitResult LastHit;
+	
+	// 펠릿 수 만큼 트레이스
+	for (int32 i = 0; i < CurrentWeaponStatus.AmountOfPellets; i++)
+	{
+		// Muzzle 위치에서 AimPoint까지 트레이스
+		FVector End = TraceRandShot(MuzzleLoc, AimPoint);
+		FHitResult PelletHit;
 		bool bHit = UKismetSystemLibrary::LineTraceSingle(
 			GetWorld(),
-			Start,
+			MuzzleLoc,
 			End,
 			TraceType,
 			true,
 			ActorsToIgnore,
 			DebugType,
-			OutHit,
+			PelletHit,
 			true,
 			FLinearColor::Red,
 			FLinearColor::Green,
 			FireDebugDuration
 		);
+		
+		LastHit = PelletHit;
+		
+		if (bHit)
+		{
+			if (!bHasBestHit || PelletHit.Distance < LastHit.Distance)
+			{
+				BestHit = PelletHit;
+				bHasBestHit = true;
+			}
+		}
 	}
+	
+	OutHit = bHasBestHit ? BestHit : LastHit;
 }
 
 FVector UCombatComponent::TraceRandShot(const FVector& TraceStart, const FVector& MaxTargetLocation)
 {
 	// 시작점에서 목표지점까지의 벡터를 정규화(방향만 유지, 크기는 1)
 	FVector ToTargetNormalized = (MaxTargetLocation - TraceStart).GetSafeNormal();
-	// 사거리 끝 지점에 구체의 중심점을 찍음.
-	FVector SphereCenter = TraceStart + ToTargetNormalized * Range;
+	
+	// MaxTargetLocation까지의 거리 기준으로 구체 중심을 잡는다. (기본 AimTrace가 Range 끝을 주면 결과적으로 Range와 동일)
+	const float TraceDistance = FMath::Max((MaxTargetLocation - TraceStart).Size(), 1.f);
+	// 거리 끝 지점에 구체의 중심점을 찍음.
+	FVector SphereCenter = TraceStart + ToTargetNormalized * TraceDistance;
+	
 	// 구체 중심을 기준으로 지정된 탄퍼짐 범위(PelletSpreadRadius)만큼의 범위 안에서 타겟 지점을 랜덤으로 정함.
-	FVector RandomTarget = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, PelletSpreadRadius);
+	FVector RandomTarget = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, CurrentWeaponStatus.PelletSpreadRadius);
 	// 실제 목표 지점.
 	FVector EndLocation = SphereCenter + RandomTarget;
 	
@@ -168,18 +231,18 @@ FVector UCombatComponent::TraceRandShot(const FVector& TraceStart, const FVector
 
 void UCombatComponent::SpreadBullet()
 {
-	if (WeaponData->WeaponType != EWeaponTypes::ShotGun)
+	if (WeaponDataView->WeaponType != EWeaponTypes::ShotGun)
 	{
-		PelletSpreadRadius = FMath::Clamp(
-			PelletSpreadRadius+IncreaseSpreadRadiusValue, 
-			WeaponData->SpreadRadius,
-			WeaponData->MaxSpreadRadius);
+		CurrentWeaponStatus.PelletSpreadRadius = FMath::Clamp(
+			CurrentWeaponStatus.PelletSpreadRadius+CurrentWeaponStatus.IncreaseSpreadRadiusValue, 
+			WeaponDataView->SpreadRadius,
+			WeaponDataView->MaxSpreadRadius);
 	}
 }
 
 void UCombatComponent::ResetSpreadRadius()
 {
-	PelletSpreadRadius = WeaponData->SpreadRadius;
+	CurrentWeaponStatus.PelletSpreadRadius = WeaponDataView->SpreadRadius;
 }
 
 void UCombatComponent::Reload()
@@ -197,20 +260,20 @@ void UCombatComponent::Reload()
 	ReloadTimerHandle,
 	FTimerDelegate::CreateLambda([this]()
 	{
-		CurrentAmmo = MaxAmmo;
+		CurrentAmmo = CurrentWeaponStatus.MaxAmmo;
 		bIsReloading = false;
 		UE_LOG(LogTemp, Warning, TEXT("Reload"));
-		UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, MaxAmmo);
+		UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, CurrentWeaponStatus.MaxAmmo);
 	}),
-	ReloadTime,
+	CurrentWeaponStatus.ReloadTime,
 	false
 );
 }
 
 void UCombatComponent::ConsumeAmmo()
 {
-	CurrentAmmo = FMath::Clamp(CurrentAmmo - 1, 0, MaxAmmo);
-	UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, MaxAmmo);
+	CurrentAmmo = FMath::Clamp(CurrentAmmo - 1, 0, CurrentWeaponStatus.MaxAmmo);
+	UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, CurrentWeaponStatus.MaxAmmo);
 }
 
 
@@ -220,7 +283,7 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 	Context.Attacker = GetOwner();
 	Context.Target = Hit.GetActor();
 	Context.HitResult = Hit;
-	Context.CurrentDamage = WeaponBaseDamage;
+	Context.CurrentDamage = CurrentWeaponStatus.WeaponBaseDamage;
 	
 	ExecutePipeline(Context);
 	
@@ -256,35 +319,38 @@ void UCombatComponent::ExecutePipeline(FDamageContext& Context)
 
 void UCombatComponent::SpawnFireParticles(const FHitResult& Hit)
 {
-	if (!WeaponData->ProjectileEffect.ToSoftObjectPath().IsValid())
+	if (WeaponDataView->MuzzleFlashEffect.ToSoftObjectPath().IsValid())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ProjectileEffect is null"));
-		return;
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			WeaponDataView->MuzzleFlashEffect.LoadSynchronous(),
+			Hit.TraceStart,
+			FRotator::ZeroRotator,
+			true
+		);
 	}
-	else
+	
+	if (WeaponDataView->ImpactEffect.ToSoftObjectPath().IsValid())
 	{
-		if (WeaponData->ImpactEffect.ToSoftObjectPath().IsValid())
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(
-				GetWorld(),
-				WeaponData->ImpactEffect.LoadSynchronous(),
-				Hit.ImpactPoint,
-				FRotator::ZeroRotator,
-				true
-			);
-		}
-		
-		if (WeaponData->ProjectileEffect.ToSoftObjectPath().IsValid())
-		{
-			UNiagaraComponent* Projectile = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				WeaponData->ProjectileEffect.LoadSynchronous(),
-				Hit.TraceStart,
-				FRotator::ZeroRotator
-			);
-			Projectile->SetVectorParameter(FName("Start"), Hit.TraceStart);
-			Projectile->SetVectorParameter(FName("Target"), Hit.TraceEnd);
-		}
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			WeaponDataView->ImpactEffect.LoadSynchronous(),
+			Hit.ImpactPoint,
+			FRotator::ZeroRotator,
+			true
+		);
+	}
+
+	if (WeaponDataView->ProjectileEffect.ToSoftObjectPath().IsValid())
+	{
+		UNiagaraComponent* Projectile = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			WeaponDataView->ProjectileEffect.LoadSynchronous(),
+			Hit.TraceStart,
+			FRotator::ZeroRotator
+		);
+		Projectile->SetVectorParameter(FName("Start"), Hit.TraceStart);
+		Projectile->SetVectorParameter(FName("Target"), Hit.TraceEnd);
 	}
 }
 

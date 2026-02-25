@@ -1,4 +1,6 @@
 #include "EquipmentComponent.h"
+#include "Character/MainCharacter.h"
+#include "DataAsset/WeaponDataAsset.h"
 
 void UEquipmentComponent::EquipSoulGem(const FSoulGemInstance& SoulGem, int32 SlotIndex)
 {
@@ -10,8 +12,8 @@ void UEquipmentComponent::EquipSoulGem(const FSoulGemInstance& SoulGem, int32 Sl
 	}
 	
 	EquippedSoulGems[SlotIndex] = SoulGem;
-	OnEquipmentChanged.Broadcast();
-	UE_LOG(LogTemp, Warning, TEXT("OnEquipmentChanged Fire!"));
+	OnGemEquipmentChanged.Broadcast();
+	UE_LOG(LogTemp, Warning, TEXT("OnGemEquipmentChanged : Gem"));
 }
 
 void UEquipmentComponent::CollectStatusModifiers(TArray<FStatusModifier>& Mod) const
@@ -21,6 +23,17 @@ void UEquipmentComponent::CollectStatusModifiers(TArray<FStatusModifier>& Mod) c
 		Mod.Append(Gem.StatusModifiers);
 		UE_LOG(LogTemp, Warning, TEXT("EquipmentComponent::CollectStatusModifiers"));
 	}
+}
+
+void UEquipmentComponent::EquipWeaponData(UWeaponDataAsset* NewWeapon)
+{
+	AMainCharacter* WeaponOwner = Cast<AMainCharacter>(GetOwner());
+	if (!WeaponOwner || !WeaponOwner->WeaponMeshComponent || !NewWeapon) return;
+	
+	CurrentWeapon = NewWeapon;
+	WeaponOwner->WeaponMeshComponent->SetStaticMesh(NewWeapon->Mesh);
+	OnWeaponEquipmentChanged.Broadcast(CurrentWeapon);
+	UE_LOG(LogTemp, Warning, TEXT("OnWeaponEquipmentChanged : Weapon"));
 }
 
 FCharacterStat UEquipmentComponent::GetTotalGemStats() const

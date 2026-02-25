@@ -2,9 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Data/StatusTypes.h"
 #include "DataAsset/WeaponDataAsset.h"
 #include "CombatComponent.generated.h"
 
+class AMainCharacter;
 struct FDamageContext;
 class UDamageModifier;
 class AWeaponBase;
@@ -18,6 +20,8 @@ public:
 	UCombatComponent();
 	
 	void InitializeWeaponData(UWeaponDataAsset* Weapon);
+	UFUNCTION(BlueprintCallable)
+	void HandleWeaponEquipmentChanged(UWeaponDataAsset* NewWeaponData);
 	
 	void StartFire();
 	void StopFire();
@@ -40,32 +44,20 @@ protected:
 	virtual void BeginPlay() override;
 	
 private:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category ="Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<const UWeaponDataAsset> WeaponDataView = nullptr;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category ="Weapon", meta = (AllowPrivateAccess = "true"))
+	FWeaponStat CurrentWeaponStatus;
+	int32 CurrentAmmo = 0;
 	
 	FTimerHandle FireTimerHandle;
 	FTimerHandle ReloadTimerHandle;
 	bool bIsFiring = false;
 	bool bIsReloading = false;
 	float LastFireTime = -1.f;
-	
-	UPROPERTY()
 	bool bDrawFireDebug = true; // 발사 디버그 표시 여부
-	UPROPERTY()
-	float FireDebugDuration = 0.f; // 발사 디버그 지속 시간
-	UPROPERTY()
-	bool bDrawDebugInfinite = false; // 발사 디버그 드로우를 영구지속할지 여부
+	float FireDebugDuration = 5.f; // 발사 디버그 지속 시간
+	bool bDrawDebugInfinite = true; // 발사 디버그 드로우를 영구지속할지 여부
 	
-	UPROPERTY()
-	TArray<TObjectPtr<UDamageModifier>> DamageModifiersPipeline;
-	
-	UPROPERTY()
-	TObjectPtr<UWeaponDataAsset> WeaponData = nullptr;
-	float WeaponBaseDamage = 1.f; // 무기 베이스 데미지.
-	float Range = 850.f; // 사거리
-	int32 AmountOfPellets = 1; // 발사체 갯수
-	float PelletSpreadRadius = 3.f; // 탄 퍼짐 정도
-	float IncreaseSpreadRadiusValue = 0.5f; // 트리거 시 탄 퍼짐 증가폭(샷건이 아닌 경우)
-	float FireInterval = 0.5f; // 발사 간격
-	int32 CurrentAmmo = 0; // 현재 탄창
-	int32 MaxAmmo = 0; // 탄창 최대치
-	float ReloadTime = 1.0f; // 재장전 시간
+	TArray<TObjectPtr<UDamageModifier>> DamageModifiersPipeline; // 데미지 계산 파이프라인
 };

@@ -84,14 +84,17 @@ public:
 
 #pragma region Components
 	
+	// 주현 : WeaponMeshComponent 장착하면 보이는 무기 메쉬
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Component")
+	TObjectPtr<UStaticMeshComponent> WeaponMeshComponent;
 	// 주현 : CombatComponent
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Component")
 	TObjectPtr<UCombatComponent> CombatComponent;
 	// 주현 : EquipmentComponent
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Component")
 	TObjectPtr<UEquipmentComponent> EquipmentComponent;
 	// 주현 : StatusComponent
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="CombatComponent")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Component")
 	TObjectPtr<UStatusComponent> StatusComponent;
 	
 #pragma endregion
@@ -174,9 +177,9 @@ public:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void Tick(float DeltaTime) override;
 	
-	// 주현 : 테스트용 무기
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Weapon")
-	TObjectPtr<UWeaponDataAsset> CurrentWeapon;
+	// 주현 : 테스트용 무기 슬롯
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TestWeapon")
+	TObjectPtr<UWeaponDataAsset> TestWeapon;
 	
 	// 주현 : SoulGem 장착할 때마다 SoulGem의 스탯들을 모아서 StatusComponent에 재적용.
 	UFUNCTION(BlueprintCallable)
