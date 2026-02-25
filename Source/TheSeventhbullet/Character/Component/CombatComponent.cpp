@@ -40,6 +40,7 @@ void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
 	
 	WeaponDataView = Weapon;
 	CurrentWeaponStatus.WeaponBaseDamage = WeaponDataView->BaseDamage;
+	CurrentWeaponStatus.WeaponDamageMultiplier = WeaponDataView->WeaponDamageMultiplier;
 	CurrentWeaponStatus.Range = WeaponDataView->Range;
 	CurrentWeaponStatus.AmountOfPellets = WeaponDataView->PelletsCount;
 	CurrentWeaponStatus.PelletSpreadRadius = WeaponDataView->SpreadRadius;
@@ -104,19 +105,21 @@ void UCombatComponent::HitScanFire()
 	}
 	LastFireTime = Now;
 	
-	FHitResult Hit;
-	PerformTrace(Hit);
 	SpreadBullet();
-	SpawnFireParticles(Hit);
 	ConsumeAmmo();
-	
-	if (Hit.bBlockingHit && Hit.GetActor()->ActorHasTag("Enemy"))
+	TArray<FHitResult> Hits;
+	PerformTrace(Hits);
+	for (const FHitResult& Hit : Hits)
 	{
-		ApplyDamageByHit(Hit);
+		SpawnFireParticles(Hit);
+		if (Hit.bBlockingHit && Hit.GetActor()->ActorHasTag("Enemy"))
+		{
+			ApplyDamageByHit(Hit);
+		}
 	}
 }
 
-void UCombatComponent::PerformTrace(FHitResult& OutHit)
+void UCombatComponent::PerformTrace(TArray<FHitResult>& OutHits)
 {
 	// 1) 카메라를 기준으로 타겟지점을 정함.
 	FVector CameraLocation;
@@ -167,10 +170,6 @@ void UCombatComponent::PerformTrace(FHitResult& OutHit)
 		}
 	}
 	
-	bool bHasBestHit = false;
-	FHitResult BestHit;
-	FHitResult LastHit;
-	
 	// 펠릿 수 만큼 트레이스
 	for (int32 i = 0; i < CurrentWeaponStatus.AmountOfPellets; i++)
 	{
@@ -192,19 +191,11 @@ void UCombatComponent::PerformTrace(FHitResult& OutHit)
 			FireDebugDuration
 		);
 		
-		LastHit = PelletHit;
-		
 		if (bHit)
 		{
-			if (!bHasBestHit || PelletHit.Distance < LastHit.Distance)
-			{
-				BestHit = PelletHit;
-				bHasBestHit = true;
-			}
+			OutHits.Add(PelletHit);
 		}
 	}
-	
-	OutHit = bHasBestHit ? BestHit : LastHit;
 }
 
 FVector UCombatComponent::TraceRandShot(const FVector& TraceStart, const FVector& MaxTargetLocation)
@@ -287,27 +278,22 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 	Context.Attacker = GetOwner();
 	Context.Target = Hit.GetActor();
 	Context.HitResult = Hit;
+	Context.DamageMultiplier = CurrentWeaponStatus.WeaponDamageMultiplier;
 	Context.CurrentDamage = CurrentWeaponStatus.WeaponBaseDamage;
 	
 	ExecutePipeline(Context);
+
+	UE_LOG(LogTemp, Warning, TEXT("Damage : %f"), Context.CurrentDamage);
 	
-	if (!Context.Target)
-	{
-		return;
-	}
-	
-	if (Context.Target->ActorHasTag("Enemy"))
-	{
-		UGameplayStatics::ApplyPointDamage(
-			Context.Target,
-			Context.CurrentDamage,
-			Context.Attacker->GetActorForwardVector(),
-			Hit,
-			Hit.GetActor()->GetInstigatorController(),
-			Context.Attacker,
-			UDamageType::StaticClass()
-		);
-	}
+	UGameplayStatics::ApplyPointDamage(
+		Context.Target,
+		Context.CurrentDamage,
+		Context.Attacker->GetActorForwardVector(),
+		Hit,
+		Hit.GetActor()->GetInstigatorController(),
+		Context.Attacker,
+		UDamageType::StaticClass()
+	);
 }
 
 void UCombatComponent::ExecutePipeline(FDamageContext& Context)
@@ -328,23 +314,24 @@ void UCombatComponent::SpawnFireParticles(const FHitResult& Hit)
 		const FVector EffectDirection = (Hit.TraceStart - Hit.TraceEnd).GetSafeNormal();
 		const FRotator EffectRotation = EffectDirection.Rotation();
 		
-		UGameplayStatics::SpawnEmitterAtLocation(
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
 			WeaponDataView->MuzzleFlashEffect.LoadSynchronous(),
 			Hit.TraceStart,
 			EffectRotation,
-			FVector(0.3),
+			FVector(1),
 			true
 		);
 	}
 	
-	if (WeaponDataView->ImpactEffect.ToSoftObjectPath().IsValid())
-	{
+	if (WeaponDataView->ImpactEffect.ToSoftObjectPath().IsValid() && !Hit.GetActor()->ActorHasTag("Enemy"))
+	{		
 		UGameplayStatics::SpawnEmitterAtLocation(
 			GetWorld(),
 			WeaponDataView->ImpactEffect.LoadSynchronous(),
 			Hit.ImpactPoint,
 			FRotator::ZeroRotator,
+			FVector(1),
 			true
 		);
 	}
