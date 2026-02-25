@@ -65,8 +65,8 @@ FCharacterStat UEquipmentComponent::GetTotalGemStats() const
 				TotalGemStat.CriticalChance = FMath::Clamp(TotalGemStat.CriticalChance, 0.0f, 0.85f);
 				break;
 			case EStatusType::CritDamage:
-				TotalGemStat.CriticalHitChance += MaterialStat.Value;
-				TotalGemStat.CriticalHitChance = FMath::Max(1.0f, TotalGemStat.CriticalHitChance);
+				TotalGemStat.CriticalDamage += MaterialStat.Value;
+				TotalGemStat.CriticalDamage = FMath::Max(1.0f, TotalGemStat.CriticalDamage);
 				break;
 			default:
 				break;

@@ -12,7 +12,7 @@ void UStatusDamageModifier::ModifyDamage(FDamageContext& Context)
 	
 	Context.StatusDamage = Character->GetTotalStatus().Attack;
 	Context.StatusCritChance = Character->GetTotalStatus().CriticalChance;
-	Context.StatusCritDamage = Character->GetTotalStatus().CriticalHitChance;
+	Context.StatusCritDamage = Character->GetTotalStatus().CriticalDamage;
 		
 	Context.CurrentDamage += Context.StatusDamage;
 	Context.CurrentCritChance += Context.StatusCritChance;

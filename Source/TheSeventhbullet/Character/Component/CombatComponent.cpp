@@ -279,16 +279,16 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 	Context.Attacker = GetOwner();
 	Context.Target = Hit.GetActor();
 	Context.HitResult = Hit;
+	Context.WeaponDamage = CurrentWeaponStatus.WeaponBaseDamage;
 	Context.DamageMultiplier = CurrentWeaponStatus.WeaponDamageMultiplier;
-	Context.CurrentDamage = CurrentWeaponStatus.WeaponBaseDamage;
 	
 	ExecutePipeline(Context);
 
-	UE_LOG(LogTemp, Warning, TEXT("Damage : %f"), Context.CurrentDamage);
+	UE_LOG(LogTemp, Warning, TEXT("Damage : %f"), Context.CurrentDamage*Context.DamageMultiplier);
 	
 	UGameplayStatics::ApplyPointDamage(
 		Context.Target,
-		Context.CurrentDamage,
+		Context.CurrentDamage * Context.DamageMultiplier,
 		Context.Attacker->GetActorForwardVector(),
 		Hit,
 		Hit.GetActor()->GetInstigatorController(),
