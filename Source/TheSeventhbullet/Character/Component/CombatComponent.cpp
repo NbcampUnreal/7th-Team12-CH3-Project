@@ -107,9 +107,13 @@ void UCombatComponent::HitScanFire()
 	FHitResult Hit;
 	PerformTrace(Hit);
 	SpreadBullet();
-	ApplyDamageByHit(Hit);
 	SpawnFireParticles(Hit);
 	ConsumeAmmo();
+	
+	if (Hit.bBlockingHit && Hit.GetActor()->ActorHasTag("Enemy"))
+	{
+		ApplyDamageByHit(Hit);
+	}
 }
 
 void UCombatComponent::PerformTrace(FHitResult& OutHit)
@@ -285,7 +289,7 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 	Context.HitResult = Hit;
 	Context.CurrentDamage = CurrentWeaponStatus.WeaponBaseDamage;
 	
-	//ExecutePipeline(Context);
+	ExecutePipeline(Context);
 	
 	if (!Context.Target)
 	{
@@ -321,11 +325,15 @@ void UCombatComponent::SpawnFireParticles(const FHitResult& Hit)
 {
 	if (WeaponDataView->MuzzleFlashEffect.ToSoftObjectPath().IsValid())
 	{
+		const FVector EffectDirection = (Hit.TraceStart - Hit.TraceEnd).GetSafeNormal();
+		const FRotator EffectRotation = EffectDirection.Rotation();
+		
 		UGameplayStatics::SpawnEmitterAtLocation(
 			GetWorld(),
 			WeaponDataView->MuzzleFlashEffect.LoadSynchronous(),
 			Hit.TraceStart,
-			FRotator::ZeroRotator,
+			EffectRotation,
+			FVector(0.3),
 			true
 		);
 	}

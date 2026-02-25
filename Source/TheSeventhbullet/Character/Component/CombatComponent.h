@@ -6,8 +6,8 @@
 #include "DataAsset/WeaponDataAsset.h"
 #include "CombatComponent.generated.h"
 
-class AMainCharacter;
 struct FDamageContext;
+class AMainCharacter;
 class UDamageModifier;
 class AWeaponBase;
 
@@ -44,6 +44,8 @@ protected:
 	virtual void BeginPlay() override;
 	
 private:
+	UPROPERTY()
+	TObjectPtr<AMainCharacter> WeaponOwner = nullptr;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category ="Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<const UWeaponDataAsset> WeaponDataView = nullptr;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category ="Weapon", meta = (AllowPrivateAccess = "true"))
