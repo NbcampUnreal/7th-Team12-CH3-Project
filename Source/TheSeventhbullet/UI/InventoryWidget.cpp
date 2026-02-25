@@ -55,12 +55,6 @@ void UInventoryWidget::SetInventoryComponent(UInventoryComponent* InComp)
 
 void UInventoryWidget::InitializeSlots()
 {
-	UE_LOG(LogTemp, Log, TEXT("InitializeSlots [%s] - bInit: %d, WrapBox: %s, SlotClass: %s"),
-		*GetName(),
-		bSlotsInitialized,
-		SlotWrapBox ? TEXT("Valid") : TEXT("NULL"),
-		SlotWidgetClass ? TEXT("Valid") : TEXT("NULL"));
-
 	if (bSlotsInitialized || !SlotWrapBox || !SlotWidgetClass)
 	{
 		return;

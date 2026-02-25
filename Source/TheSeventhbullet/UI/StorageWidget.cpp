@@ -16,10 +16,6 @@ void UStorageWidget::NativeConstruct()
 
 void UStorageWidget::OpenStorage(UInventoryComponent* ChestInv, UInventoryComponent* PlayerInv)
 {
-	UE_LOG(LogTemp, Log, TEXT("StorageWidget::OpenStorage - ChestPanel: %s, PlayerPanel: %s"),
-		ChestInventoryPanel ? TEXT("Valid") : TEXT("NULL"),
-		PlayerInventoryPanel ? TEXT("Valid") : TEXT("NULL"));
-
 	if (ChestInventoryPanel && ChestInv)
 	{
 		ChestInventoryPanel->SetInventoryComponent(ChestInv);
