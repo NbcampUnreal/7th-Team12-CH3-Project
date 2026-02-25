@@ -45,7 +45,7 @@ void AMainGameMode::PrepareStageAndPreLoad()
 {
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	
-	FStageRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
 	
 	TMap<EMonsterType, int32> MaxMonsterRequirements;
 	
@@ -103,7 +103,7 @@ void AMainGameMode::SetupCurrentWaveData()
 	if (!DataManager) return;
 	
 	FWaveRowData WaveData = DataManager->GetWaveData(CurrentStageIndex, CurrentWaveIndex);
-	const FStageRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
 	SpawnInterval = StageData.SpawnInterval;
 	SpawnTimer = 0.0f;
 	
