@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "MainCharacter.generated.h"
 
+
 class UInventoryComponent;
 class UCombatComponent; // 주현 : CombatComponent 전방선언
 class UEquipmentComponent; // 주현 : EquipmentComponent 전방선언
@@ -136,7 +137,6 @@ public:
 	void PlayerStartSprint(const FInputActionValue& value);
 	void PlayerStopSprint(const FInputActionValue& value);
 	void PlayerDodge(const FInputActionValue& value);
-	void PlayerDodgeFinished(const FInputActionValue& value);
 	void PlayerAim(const FInputActionValue& value);
 	void PlayerAimFinished(const FInputActionValue& value);
 	void PlayerFire(const FInputActionValue& value);
