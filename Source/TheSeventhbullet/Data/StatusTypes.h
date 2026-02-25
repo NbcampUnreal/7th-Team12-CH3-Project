@@ -95,7 +95,7 @@ struct FCharacterStat
 	int32 CriticalChance;//크리 확률
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	int32 CriticalHitChance;//크피 확률
+	int32 CriticalDamage;//크피 확률
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	int32 Speed;
@@ -103,13 +103,13 @@ struct FCharacterStat
 	//기본 생성자 (초기값 세팅)
 	FCharacterStat()
 	{
-		HP = 100;
-		Stamina = 100;
-		Attack = 100;
-		Defence = 10;
-		CriticalChance = 15;
-		CriticalHitChance = 150;
-		Speed = 600.0f;
+		HP = 0;
+		Stamina = 0;
+		Attack = 0;
+		Defence = 0;
+		CriticalChance = 0;
+		CriticalDamage = 0;
+		Speed = 0.0f;
 	}
 	
 	FCharacterStat operator+(const FCharacterStat& Other) const
@@ -119,6 +119,9 @@ struct FCharacterStat
 		Result.Defence = this->Defence + Other.Defence;
 		Result.Attack = this->Attack + Other.Attack;
 		Result.Stamina = this->Stamina + Other.Stamina;
+		Result.CriticalChance = this->CriticalChance + Other.CriticalChance;
+		Result.CriticalDamage = this->CriticalDamage + Other.CriticalDamage;
+		Result.Speed = this->Speed + Other.Speed;
 		return Result;
 	}
 	
@@ -128,7 +131,9 @@ struct FCharacterStat
 		this->Defence += Other.Defence;
 		this->Attack += Other.Attack;
 		this->Stamina += Other.Stamina;
-		
+		this->CriticalChance += Other.CriticalChance;
+		this->CriticalDamage += Other.CriticalDamage;
+		this->Speed += Other.Speed;
 		return *this;
 	}
 };
