@@ -225,24 +225,23 @@ void AMainCharacter::Reload()
 {
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 		
+	bIsReload = true;
+	
 	UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 		
 	UAnimMontage* MontageToPlay = EquipmentComponent->CurrentWeapon->ReloadMontage.Get();
 	if(!MontageToPlay)	MontageToPlay = EquipmentComponent->CurrentWeapon->ReloadMontage.LoadSynchronous();
 	
-	if (AnimInstance)
+	if (AnimInstance && MontageToPlay)
 	{
-		if (MontageToPlay)
-		{
-			float Duration = AnimInstance->Montage_Play(MontageToPlay);
-		
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AMainCharacter::EndedAnimMontage);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, MontageToPlay);
-		}
+		float Duration = AnimInstance->Montage_Play(MontageToPlay);
+	
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &AMainCharacter::EndedAnimMontage);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, MontageToPlay);
 	}
 	
-	CombatComponent->Reload();	
+	//CombatComponent->Reload();	
 }
 
 bool AMainCharacter::IsDodge()
@@ -302,16 +301,22 @@ void AMainCharacter::EndedAnimMontage(UAnimMontage* Montage, bool Interrupted)
 	UAnimMontage* ReloadMontage = EquipmentComponent->CurrentWeapon->ReloadMontage.Get();
 	if (Montage == ReloadMontage)
 	{
-		float FiraRate = EquipmentComponent->CurrentWeapon->FireInterval;
-		if (FiraRate > 0.0f)
-		{
-			GetWorldTimerManager().SetTimer(
-				FireTimerHandle,
-				this,
-				&AMainCharacter::Fire,
-				FiraRate,
-				true
-			);
+		bIsReload = false;
+		
+		if (bIsFireButtonPressed)
+		{			
+			float FiraRate = EquipmentComponent->CurrentWeapon->FireInterval;
+			if (FiraRate > 0.0f)
+			{
+				Fire();
+				GetWorldTimerManager().SetTimer(
+					FireTimerHandle,
+					this,
+					&AMainCharacter::Fire,
+					FiraRate,
+					true
+				);
+			}
 		}
 	}
 }
@@ -607,6 +612,7 @@ void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 void AMainCharacter::PlayerFire(const FInputActionValue& value)
 {
 	bIsFireButtonPressed = true;
+	
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 	
 	if (bIsDodge ||bIsReload)
@@ -633,8 +639,9 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 void AMainCharacter::FinishFire(const FInputActionValue& value)
 {
 	bIsFireButtonPressed = false;
-	
+		
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
+	
 	GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
 	CombatComponent->StopFire();
 }
@@ -680,13 +687,32 @@ void AMainCharacter::PlayerOpenInventory(const FInputActionValue& value)
 
 void AMainCharacter::PlayerStartReload(const FInputActionValue& value)
 {
-	bIsReload = true;
+	if (bIsReload || bIsDodge) return;
+	
+	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr) return;
+	
+	int CurrentAmmo = CombatComponent->GetCurrentAmmo();
+	int MaxAmmo = EquipmentComponent->CurrentWeapon->MaxAmmo;
+	
+	if (CurrentAmmo >= MaxAmmo) return;
+	
+	GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
+	
 	Reload();
+	// bIsReload = true;
+	// GetWorldTimerManager().SetTimer(
+	// ReloadTimerHandle, 
+	// this, 
+	// &AMainCharacter::Reload,
+	// EquipmentComponent->CurrentWeapon->ReloadTime, 
+	// false
+	// );
+	
 }
 
 void AMainCharacter::PlayerFinishReload(const FInputActionValue& value)
 {
-	bIsReload = false;
+	//bIsReload = false;
 }
 
 void AMainCharacter::ToggleEscMenu(const FInputActionValue& value)

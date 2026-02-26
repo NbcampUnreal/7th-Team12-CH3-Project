@@ -165,6 +165,7 @@ public:
 #pragma region Combat
 	
 	FTimerHandle FireTimerHandle;
+	FTimerHandle ReloadTimerHandle;
 	
 	void Fire();
 	void Reload();

@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "KismetAnimationLibrary.h"
+#include "Character/Component/CombatComponent.h"
 
 void UCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -60,6 +61,6 @@ void UCharacterAnimInstance::AnimNotify_RefillAmmo()
 {
 	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(TryGetPawnOwner()))
 	{
-		MainCharacter->Reload();
+		MainCharacter->CombatComponent->Reload();
 	}
 }
