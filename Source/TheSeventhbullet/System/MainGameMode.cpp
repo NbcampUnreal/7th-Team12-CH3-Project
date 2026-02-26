@@ -476,6 +476,16 @@ void AMainGameMode::RewardsChangeBroadCasting()
 {
 	OnStageRewardItemsChanged.Broadcast(StageRewardItems);
 }
+float AMainGameMode::GetWaveStartDelay() const
+{
+	USyncDataManager* DataManager = USyncDataManager::Get(this);
+	if (!DataManager) return 0.0f;
+	
+	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	
+	return StageData.WaveStartDelay;
+}
+
 
 void AMainGameMode::ClearStageRewards()
 {

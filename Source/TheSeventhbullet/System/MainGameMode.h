@@ -159,4 +159,5 @@ private:
 	static void StackItem(TArray<FDroppedMaterialsData>& ItemArray,
 	                            const TSoftObjectPtr<UMaterialDataAsset> Material,
 	                            int32 Count);
+	
 };
