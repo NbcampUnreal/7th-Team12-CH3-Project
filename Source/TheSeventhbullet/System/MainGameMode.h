@@ -146,11 +146,6 @@ private:
 	
 	EStageResult CurrentStageResult = EStageResult::None;
 	
-	float StageTimeLimit = 0.0f;
-	float StageElapsedTime = 0.0f;
-	
-	EStageResult CurrentStageResult = EStageResult::None;
-	
 public:
 	// 주현 : DELEGATE METHOD : 몬스터를 죽이고 아이템이 드랍된 경우
 	UPROPERTY(BlueprintAssignable)
