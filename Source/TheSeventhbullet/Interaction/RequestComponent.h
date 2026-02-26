@@ -13,7 +13,7 @@ public:
 	URequestComponent();
 	
 	UFUNCTION(BlueprintCallable, Category = "Interaction|Request")
-	void SelectRequest(int32 SelectedStageIndex);
+	void SelectRequest(int32 SelectedRequestID);
 	
 	virtual void BeginInteract(AActor* Interactor);
 	virtual void ProgressInteract(AActor* Interactor);

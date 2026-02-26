@@ -11,17 +11,14 @@ URequestComponent::URequestComponent()
 	
 }
 
-void URequestComponent::SelectRequest(int32 SelectedStageIndex)
+void URequestComponent::SelectRequest(int32 SelectedRequestID)
 {
-	//TODO : UI에서 선택한 의뢰를 GameMode로 넘겨주는 작업
-	
 	EndInteract(GetOwner());
-	
+
 	AMainGameMode* GM = AMainGameMode::Get(this);
 	if (!GM) return;
-	
-	GM->SetTargetStageIndex(SelectedStageIndex);
-	UE_LOG(LogTemp, Warning, TEXT("Quest Accepted!"));
+
+	GM->SetTargetRequestID(SelectedRequestID);
 }
 
 void URequestComponent::BeginInteract(AActor* Interactor)
@@ -45,7 +42,7 @@ void URequestComponent::ProgressInteract(AActor* Interactor)
 	
 	for (int32 i = 0 ; i < TotalCount; i++)
 	{
-		FRequestRowData Data = DataManager->GetStageData(i);
+		FRequestRowData Data = DataManager->GetRequestData(i);
 		if (DayAvailableLevel[CurrentDay] >= Data.RequestLevel)
 		{
 			ValidStageIndices.Add(i);
@@ -66,7 +63,7 @@ void URequestComponent::ProgressInteract(AActor* Interactor)
 	for (int32 i = 0 ; i < PickCount ; ++i)
 	{
 		int32 PickedIndex = ValidStageIndices[i];
-		SelectedRequests.Add(DataManager->GetStageData(PickedIndex));
+		SelectedRequests.Add(DataManager->GetRequestData(PickedIndex));
 		//TODO : UI위젯에서 나중에 SelectRequest()를 부를 때 이 PickedIndex를 넘겨주도록해야함
 	}
 	

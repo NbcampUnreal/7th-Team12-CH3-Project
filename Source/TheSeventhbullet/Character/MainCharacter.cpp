@@ -84,7 +84,11 @@ void AMainCharacter::BeginPlay()
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
-			Subsystem->AddMappingContext(PC->InputMappingContext, 0);
+			Subsystem->AddMappingContext(PC->InputMappingContext, 0);  // Gameplay
+			if (PC->UIMappingContext)
+			{
+				Subsystem->AddMappingContext(PC->UIMappingContext, 1);  // UI (항상 활성)
+			}
 		}
 	}
 	
@@ -721,7 +725,7 @@ void AMainCharacter::ToggleEscMenu(const FInputActionValue& value)
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->Toggle(UITags::EscMenu);
+		UIMgr->HandleEscapeAction();
 	}
 }
 

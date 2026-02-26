@@ -34,13 +34,20 @@ bool AMainGameMode::HasNextWave() const
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	if (!DataManager) return false;
 	
-	return CurrentWaveIndex < DataManager->GetStageData(CurrentStageIndex).Waves.Num();
+	if (DataManager->GetRequestData(CurrentRequestID).Waves.Num()
+		<= CurrentWaveIndex)
+	{
+		return false;
+	}
+		
+	return true;
 }
 
 void AMainGameMode::PrepareStageAndPreLoad()
 {
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
-	FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	
+	FRequestRowData StageData = DataManager->GetRequestData(CurrentRequestID);
 	
 	TMap<EMonsterType, int32> MaxMonsterRequirements;
 	
@@ -110,10 +117,11 @@ void AMainGameMode::SetupCurrentWaveData()
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	if (!DataManager) return;
 	
-	FWaveRowData WaveData = DataManager->GetWaveData(CurrentStageIndex, CurrentWaveIndex);
-	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	FWaveRowData WaveData = DataManager->GetWaveData(CurrentRequestID, CurrentWaveIndex);
+	const FRequestRowData StageData = DataManager->GetRequestData(CurrentRequestID);
 	SpawnInterval = StageData.SpawnInterval;
 	SpawnTimer = 0.0f;
+	
 	AliveMonsterCount = 0;
 	SpawnQueue.Empty();
 	
@@ -146,6 +154,7 @@ void AMainGameMode::UpdateSpawnLogic(float DeltaTime)
 	if (SpawnQueue.IsEmpty()) return;
 	
 	SpawnTimer += DeltaTime;
+	
 	if (SpawnTimer >= SpawnInterval)
 	{
 		SpawnTimer = 0.0f;
@@ -254,9 +263,9 @@ void AMainGameMode::SpawnOneMonster()
 	}
 }
 
-void AMainGameMode::SetTargetStageIndex(int32 InStageIndex)
+void AMainGameMode::SetTargetRequestID(int32 InRequestID)
 {
-	CurrentStageIndex = InStageIndex;
+	CurrentRequestID = InRequestID;
 }
 
 void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
@@ -369,7 +378,7 @@ void AMainGameMode::ReturnToMainMenu()
 	}
 
 	CurrentWaveIndex = 0;
-	CurrentStageIndex = 0;
+	CurrentRequestID = INDEX_NONE;
 	SpawnQueue.Empty();
 	AliveMonsterCount = 0;
 	SpawnTimer = 0.0f;
@@ -409,6 +418,8 @@ void AMainGameMode::ReturnToMainMenu()
 void AMainGameMode::ReturnToTown()
 {
 	CurrentWaveIndex = 0;
+	CurrentRequestID = INDEX_NONE;
+
 	SpawnQueue.Empty();
 	SpawnTimer = 0.0f;
 	AliveMonsterCount = 0;
@@ -432,9 +443,9 @@ void AMainGameMode::Tick(float DeltaSeconds)
 	}
 }
 
-int32 AMainGameMode::GetCurrentStageIndex() const
+int32 AMainGameMode::GetCurrentRequestID() const
 {
-	return CurrentStageIndex;
+	return CurrentRequestID;
 }
 
 int32 AMainGameMode::GetCurrentWaveIndex() const
@@ -466,6 +477,11 @@ void AMainGameMode::StackItem(TArray<FDroppedMaterialsData>& ItemArray,
 void AMainGameMode::RewardsChangeBroadCasting()
 {
 	OnStageRewardItemsChanged.Broadcast(StageRewardItems);
+}
+
+bool AMainGameMode::HasActiveRequest() const
+{
+	return CurrentRequestID != INDEX_NONE;
 }
 
 float AMainGameMode::GetWaveStartDelay() const

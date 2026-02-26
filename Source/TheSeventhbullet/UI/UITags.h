@@ -19,4 +19,5 @@ namespace UITags
 	const FName MainMenu   = FName(TEXT("MainMenu"));
 	const FName LoadingScreen    = FName(TEXT("LoadingScreen"));
 	const FName Storage          = FName(TEXT("Storage"));
+	const FName Request     = FName(TEXT("Request"));
 }

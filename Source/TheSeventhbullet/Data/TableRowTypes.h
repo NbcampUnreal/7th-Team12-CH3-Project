@@ -49,34 +49,34 @@ USTRUCT(BlueprintType)
 struct FRequestRowData : public FTableRowBase
 {
 	GENERATED_BODY()
-	
+    
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 RequestID = 0; // 의뢰 번호, 이 변수로 모든 상호작용, UI와 값을 주고받는 부분
-	
+    
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FName RequestName = "None";//의뢰 이름
-	
+    
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 RequestGold = 0;//의뢰 보상
-	
+    
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 RequestLevel = 1;//의뢰 난이도
-	
+    
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float StageTimeLimit = 180.0f;// 초 단위, 0이면 무제한
-	
+    
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WaveStartDelay = 3.0f;//웨이브 시작 전 딜레이
-	
+    
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float IntermissionDuration = 10.0f;// 쉬는 시간
-	
+    
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SpawnInterval = 0.5f; // 각 몬스터 스폰 딜레이
-	
+    
 	// UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	// int32 SpawnNumber = 0;
-	
+    
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FWaveRowData> Waves;
 };

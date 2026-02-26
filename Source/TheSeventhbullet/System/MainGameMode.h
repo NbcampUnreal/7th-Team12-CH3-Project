@@ -104,6 +104,10 @@ public:
 	TArray<AActor*> PlayerSpawnPoint;
 	
 	UFUNCTION(BlueprintCallable, Category = "WaveSystem")
+	void SetTargetRequestID(int32 InRequestID);
+
+	bool HasActiveRequest() const;
+
 	void SetTargetStageIndex(int32 InStageIndex);
 	
 	// 주현 : 몬스터로부터 아이템 드랍.
@@ -125,10 +129,10 @@ private:
 	TObjectPtr<UWaveStateMachine> WaveStateMachine;
 	
 	UPROPERTY()
-	int32 CurrentWaveIndex=0;
+	int32 CurrentWaveIndex = 0; // SpawnList의 인덱스 번호
 	
 	UPROPERTY()
-	int32 CurrentStageIndex=0;
+	int32 CurrentRequestID = INDEX_NONE; // WaveData의 인덱스 번호 (INDEX_NONE = 의뢰 미수락)
 	
 	UPROPERTY()
 	TArray<EMonsterType> SpawnQueue;
@@ -160,4 +164,7 @@ private:
 	                            const TSoftObjectPtr<UMaterialDataAsset> Material,
 	                            int32 Count);
 	
+	int32 GetCurrentRequestID() const;
+	int32 GetCurrentWaveIndex() const;
+	void IncreaseCurrentSpawnIndex();
 };

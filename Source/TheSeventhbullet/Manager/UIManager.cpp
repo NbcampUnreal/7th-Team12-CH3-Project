@@ -1,6 +1,8 @@
 #include "UIManager.h"
 #include "DataAsset/UIDataAsset.h"
 #include "TheSeventhbullet/UI/UITags.h"
+#include "TheSeventhbullet/Character/MainPlayerController.h"
+#include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
 
 void UUIManager::Initialize(FSubsystemCollectionBase& Collection)
@@ -213,6 +215,11 @@ UUserWidget* UUIManager::PushByTag(FName Tag, int32 ZOrder)
 	return Widget;
 }
 
+bool UUIManager::IsVisibleByTag(FName Tag) const
+{
+	return IsVisible(FindWidget(Tag));
+}
+
 void UUIManager::Toggle(FName Tag, int32 ZOrder)
 {
 	TSubclassOf<UUserWidget> WidgetClass = FindWidget(Tag);
@@ -229,6 +236,18 @@ void UUIManager::Toggle(FName Tag, int32 ZOrder)
 	{
 		Push(WidgetClass, ZOrder);
 		UpdateInputModeForStack();
+	}
+}
+
+void UUIManager::HandleEscapeAction()
+{
+	if (WidgetStack.Num() > 0)
+	{
+		Pop();
+	}
+	else
+	{
+		Toggle(UITags::EscMenu);
 	}
 }
 
@@ -249,14 +268,14 @@ void UUIManager::UpdateInputModeForStack()
 	if (WidgetStack.Num() > 0)
 	{
 		PC->SetShowMouseCursor(true);
-		PC->SetInputMode(FInputModeGameAndUI());
+		SetGameplayInputEnabled(false);  // IMC_Gameplay 제거
 	}
 	else
 	{
 		PC->SetShowMouseCursor(false);
-		PC->SetInputMode(FInputModeGameOnly());
+		SetGameplayInputEnabled(true);   // IMC_Gameplay 복원
 	}
-	
+
 	bool bShouldPause = false;
 	TSubclassOf<UUserWidget> EscMenuClass = FindWidget(UITags::EscMenu);
 	if (EscMenuClass)
@@ -271,4 +290,29 @@ void UUIManager::UpdateInputModeForStack()
 		}
 	}
 	UGameplayStatics::SetGamePaused(World, bShouldPause);
+}
+
+void UUIManager::SetGameplayInputEnabled(bool bEnabled)
+{
+	UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+	if (!World) return;
+
+	AMainPlayerController* PC = Cast<AMainPlayerController>(World->GetFirstPlayerController());
+	if (!PC || !PC->InputMappingContext) return;
+
+	UEnhancedInputLocalPlayerSubsystem* Subsystem =
+		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
+	if (!Subsystem) return;
+
+	if (bEnabled)
+	{
+		if (!Subsystem->HasMappingContext(PC->InputMappingContext))
+		{
+			Subsystem->AddMappingContext(PC->InputMappingContext, 0);
+		}
+	}
+	else
+	{
+		Subsystem->RemoveMappingContext(PC->InputMappingContext);
+	}
 }

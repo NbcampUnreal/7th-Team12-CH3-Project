@@ -79,11 +79,19 @@ public:
 	UUserWidget* PushByTag(FName Tag, int32 ZOrder = 0);
 
 	UFUNCTION(BlueprintCallable, Category = "UI|Tag")
+	bool IsVisibleByTag(FName Tag) const;
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Tag")
 	void Toggle(FName Tag, int32 ZOrder = 0);
+
+	/** 스택에 UI가 있으면 Pop, 비어있으면 EscMenu Toggle */
+	UFUNCTION(BlueprintCallable, Category = "UI|Stack")
+	void HandleEscapeAction();
 
 private:
 	TSubclassOf<UUserWidget> FindWidget(FName Tag) const;
 	void UpdateInputModeForStack();
+	void SetGameplayInputEnabled(bool bEnabled);
 
 	UPROPERTY()
 	TObjectPtr<UUIDataAsset> UIDataAsset;
