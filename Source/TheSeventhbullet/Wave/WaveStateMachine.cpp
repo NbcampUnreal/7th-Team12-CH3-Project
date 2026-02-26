@@ -9,6 +9,7 @@
 #include "WaveStates/NoneWaveState.h"
 #include "WaveStates/ProgressWaveState.h"
 #include "WaveStates/IntermissionWaveState.h"
+#include "WaveStates/ResultWaveState.h"
 
 void UWaveStateMachine::Initialize(AMainGameMode* InOwner)
 {
@@ -69,6 +70,8 @@ UBaseWaveState* UWaveStateMachine::GetOrCreateState(EWaveState StateType)
 	case EWaveState::Intermission:
 		StateClass = UIntermissionWaveState::StaticClass();
 		break;
+	case EWaveState::StageResult:
+		StateClass = UResultWaveState::StaticClass();
 	default:
 		UE_LOG(LogTemp,Warning,TEXT("Unknown Wave State Type"));
 		break;
