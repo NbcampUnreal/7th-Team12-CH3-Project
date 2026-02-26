@@ -19,6 +19,7 @@
 #include "System/MonsterManagerSubSystem.h"
 #include "Data/TableRowTypes.h"
 #include "Projectile/ProjectileStat.h"
+#include "System/MainGameMode.h"
 
 
 // Sets default values
@@ -166,7 +167,6 @@ void AEnemyBase::SetMonsterType(EMonsterType InEnemyMonsterType)
 	EnemyMonsterType=InEnemyMonsterType;
 }
 
-
 void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy,
                                       FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName,
                                       FVector ShotFromDirection,
@@ -192,7 +192,7 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 		//BT에 정보 전달
 		OnCharacterDead.Broadcast();
 		
-
+		DropItem();
 		
 		//5초 후 오브젝트 풀로 돌아간다.
 		FTimerHandle ReturnToPoolTimer;
@@ -228,6 +228,18 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 		}
 	}
 }
+
+void AEnemyBase::DropItem()
+{
+	if (bDroppedItem) return;
+	bDroppedItem = true;
+	
+	if (AMainGameMode* GM = AMainGameMode::Get(this))
+	{
+		GM->ItemDropFromMonster(EnemyMonsterType);
+	}
+}
+
 
 void AEnemyBase::SetHealth(float NewHealth)
 {

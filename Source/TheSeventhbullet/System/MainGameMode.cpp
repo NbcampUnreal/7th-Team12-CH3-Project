@@ -1,6 +1,7 @@
 #include "MainGameMode.h"
 
 #include "MonsterManagerSubSystem.h"
+#include "DataAsset/MaterialDataAsset.h"
 #include "TheSeventhbullet/Character/MainCharacter.h"
 #include "TheSeventhbullet/Character/MainPlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -9,6 +10,7 @@
 #include "TheSeventhbullet/Wave/WaveStateMachine.h"
 #include "TheSeventhbullet/Manager/UIManager.h"
 #include "TheSeventhbullet/UI/UITags.h"
+#include "Windows/WindowsApplication.h"
 
 AMainGameMode::AMainGameMode()
 {
@@ -190,6 +192,74 @@ void AMainGameMode::SetTargetStageIndex(int32 InStageIndex)
 	CurrentStageIndex = InStageIndex;
 }
 
+void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
+{
+	// 싱크매니저 가져오기
+	USyncDataManager* SDM = USyncDataManager::Get(this);
+	if (!SDM) return;
+	// 스테이지 인덱스를 현재 스테이지 인덱스에 따라서 보상표가 달라지기 때문에 현재 스테이지 인덱스로 가져오기.
+	const int32 StageIndex = CurrentStageIndex;
+	FMonsterDropRowData Row = SDM->GetDropMaterialData(MonsterType);
+	if (!Row.Stages.IsValidIndex(StageIndex)) return;
+	
+	const FStageDropData& DropData = Row.Stages[StageIndex];
+	if (DropData.DropRollsCount <= 0 || DropData.DropEntries.Num() == 0) return;
+	
+	// 이 함수를 호출하는 몬스터에게서 얻은 아이템을 저장할 배열.
+	TArray<FDroppedMaterialsData> DroppedItemFromMonster;
+	
+	// 드랍 롤 횟수만큼 롤을 돌린다.
+	for (int32 i = 0; i <DropData.DropRollsCount; i++)
+	{
+		// 아이템 드랍확률에 따라서 드랍이 발생했는지 여부를 검사. (0~1 사이의 값을 임의로 가져와서 드랍확률보다 높은지 판단하는 방식)
+		if (FMath::FRand() > DropData.DropChance)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed GetItem"));
+			continue;
+		}
+		// if문을 통과했으면 드랍풀을 만들어서 드랍될 아이템을 결정.
+		TArray<const FMaterialDropEntry*> DropPool;
+		DropPool.Reserve(DropData.DropEntries.Num());
+		
+		// 드랍재료 후보들을 전부 풀에 집어넣음. 
+		// 이 때 스테이지에 따라 최대 드랍 등급이 정해져 있으므로 최대 드랍 등급을 초과하지 않는 아이템만 풀에 추가 
+		for (const FMaterialDropEntry& DropEntry : DropData.DropEntries)
+		{
+			if (!DropEntry.Material.ToSoftObjectPath().IsValid()) continue;
+			
+			const UMaterialDataAsset* MaterialData = DropEntry.Material.LoadSynchronous();
+			const int32 Grade = MaterialData ? MaterialData->Grade : 1;
+			
+			if (Grade <= DropData.MaxAllowedGrade) DropPool.Add(&DropEntry);
+		}
+		if (DropPool.Num() == 0) continue;
+		
+		// 만들어진 풀에서 랜덤으로 하나의 아이템을 선택.
+		const int32 ChosenIndex = FMath::RandRange(0, DropPool.Num()-1);
+		const FMaterialDropEntry* PickFromPool = DropPool[ChosenIndex];
+		if (!PickFromPool) continue;
+		
+		// 아이템의 최소 획득 수와 최대 획득 수 사이에서 랜덤한 개수를 획득. 기본값은 일단 1개, 1개라서 1개만 나옴.
+		const int32 MinCount = FMath::Max(0, PickFromPool->MinCount);
+		const int32 MaxCount = FMath::Max(MinCount, PickFromPool->MaxCount);
+		const int32 Count = FMath::RandRange(MinCount, MaxCount);
+		if (Count <= 0) continue;
+		
+		// 이번에 획득한 아이템을 DroppedItemFromMonster 배열에 추가.
+		StackItem(DroppedItemFromMonster, PickFromPool->Material, Count);
+		UE_LOG(LogTemp, Warning, TEXT("GetItem"));
+	}
+	
+	// 이번에 획득한 아이템을 브로드캐스트
+	OnMaterialDroppedMonsterKilled.Broadcast(DroppedItemFromMonster);
+	
+	// 스테이지 결과 보상 아이템 배열에 이번에 획득한 아이템을 추가해둠.
+	for (const FDroppedMaterialsData& DroppedItemData : DroppedItemFromMonster)
+	{
+		StackItem(StageRewardItems, DroppedItemData.Material, DroppedItemData.Count);
+	}
+}
+
 void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -303,4 +373,35 @@ int32 AMainGameMode::GetCurrentSpawnIndex() const
 void AMainGameMode::IncreaseCurrentSpawnIndex()
 {
 	CurrentWaveIndex++;
+}
+
+void AMainGameMode::StackItem(TArray<FDroppedMaterialsData>& ItemArray,
+	const TSoftObjectPtr<UMaterialDataAsset> Material, int32 Count)
+{
+	if (!Material.ToSoftObjectPath().IsValid() || Count <= 0) return;
+
+	const FSoftObjectPath Key = Material.ToSoftObjectPath();
+	for (FDroppedMaterialsData& S : ItemArray)
+	{
+		if (S.Material.ToSoftObjectPath() == Key)
+		{
+			S.Count += Count;
+			return;
+		}
+	}
+
+	FDroppedMaterialsData NewStack;
+	NewStack.Material = Material;
+	NewStack.Count = Count;
+	ItemArray.Add(NewStack);
+}
+
+void AMainGameMode::RewardsChangeBroadCasting()
+{
+	OnStageRewardItemsChanged.Broadcast(StageRewardItems);
+}
+
+void AMainGameMode::ClearStageRewards()
+{
+	StageRewardItems.Reset();
 }

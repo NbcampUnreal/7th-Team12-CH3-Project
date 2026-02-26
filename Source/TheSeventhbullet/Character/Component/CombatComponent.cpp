@@ -24,7 +24,7 @@ void UCombatComponent::BeginPlay()
 	UEquipmentComponent* EC = GetOwner()->FindComponentByClass<UEquipmentComponent>();
 	if (EC)
 	{
-		EC->OnWeaponEquipmentChanged.AddDynamic(this, &UCombatComponent::UCombatComponent::HandleWeaponEquipmentChanged);
+		EC->OnWeaponEquipmentChanged.AddDynamic(this, &UCombatComponent::HandleWeaponEquipmentChanged);
 	}
 	
 	DamageModifiersPipeline.Add(NewObject<UWeaponDamageModifier>(this));
@@ -274,17 +274,17 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 	Context.CurrentDamage *= Context.DamageMultiplier;
 	Context.CurrentCritDamage = Context.CurrentDamage*Context.StatusCritDamage;
 	
-	float IsCritValue = FMath::RandRange(0.0f, 1.0f);
+	float IsCritValue = FMath::FRand();
 	bool bIsCrit = false;
 	
 	if (IsCritValue <= Context.StatusCritChance)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Critical!"));
-		Context.CurrentDamage *= Context.CurrentCritDamage;
+		Context.CurrentDamage = Context.CurrentCritDamage;
 		bIsCrit = true;
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("Damage : %f"), Context.CurrentDamage*Context.DamageMultiplier);
+	UE_LOG(LogTemp, Warning, TEXT("Damage : %f"), Context.CurrentDamage);
 	
 	UGameplayStatics::ApplyPointDamage(
 		Context.Target,

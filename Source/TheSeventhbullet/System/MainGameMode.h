@@ -8,6 +8,9 @@
 class ASpawner;
 class UWaveStateMachine;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaterialDroppedMonsterKilled, const TArray<FDroppedMaterialsData>&, DroppedMaterials);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStageRewardItemsChanged, const TArray<FDroppedMaterialsData>&, Rewards);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* [MainGameMode Guide]
  *
@@ -79,6 +82,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "WaveSystem")
 	void SetTargetStageIndex(int32 InStageIndex);
 	
+	// 주현 : 몬스터로부터 아이템 드랍.
+	UFUNCTION()
+	void ItemDropFromMonster(EMonsterType MonsterType);
+	// 주현 : 스테이지 결과 보상 아이템 배열이 추가/변경 되는 경우 브로드캐스팅.
+	UFUNCTION()
+	void RewardsChangeBroadCasting();
+	// 주현 : 스테이지 결과 보상 아이템 배열을 클리어.
+	UFUNCTION()
+	void ClearStageRewards();
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -96,6 +109,10 @@ private:
 	UPROPERTY()
 	TArray<EMonsterType> SpawnQueue;
 	
+	// 주현 : 스테이지 결과 보상 아이템 배열.
+	UPROPERTY()
+	TArray<FDroppedMaterialsData> StageRewardItems;
+	
 	float SpawnTimer = 0.0f;
 	float SpawnInterval = 0.0f;
 	int32 AliveMonsterCount = 0;
@@ -104,4 +121,18 @@ public:
 	int32 GetCurrentWaveIndex() const;
 	int32 GetCurrentSpawnIndex() const;
 	void IncreaseCurrentSpawnIndex();
+	
+public:
+	// 주현 : DELEGATE METHOD : 몬스터를 죽이고 아이템이 드랍된 경우
+	UPROPERTY(BlueprintAssignable)
+	FOnMaterialDroppedMonsterKilled OnMaterialDroppedMonsterKilled;
+	// 주현 : DELEGATE METHOD : 스테이지 보상 아이템이 추가/변경 된 경우
+	UPROPERTY(BlueprintAssignable)
+	FOnStageRewardItemsChanged OnStageRewardItemsChanged;
+	
+private:
+	// 주현 : ItemArray 배열에 Material을 Count개 만큼 넣어서 스택하는 함수.
+	static void StackItem(TArray<FDroppedMaterialsData>& ItemArray,
+	                            const TSoftObjectPtr<UMaterialDataAsset> Material,
+	                            int32 Count);
 };

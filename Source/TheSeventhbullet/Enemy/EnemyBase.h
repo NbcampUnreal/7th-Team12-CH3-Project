@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Data/TableRowTypes.h"
 #include "GameFramework/Character.h"
 #include "EnemyBase.generated.h"
 
@@ -87,6 +88,9 @@ public:
 	UFUNCTION()
 	void SetMonsterType(EMonsterType InEnemyMonsterType);
 	
+	// 주현 : DropItem 함수
+	UFUNCTION()
+	void DropItem();
 
 protected:
 #pragma region EnemyStatus
@@ -140,5 +144,7 @@ protected:
 
 private:
 	bool bIsDead;
+	// 주현 : 아이템이 혹시나 중복드랍되는 것을 막기 위한 boolean
+	bool bDroppedItem = false;
 	
 };
