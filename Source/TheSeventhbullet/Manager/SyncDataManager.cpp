@@ -22,12 +22,18 @@ void USyncDataManager::Initialize(FSubsystemCollectionBase& Collection)
 		StageCache,
 		[](const FRequestRowData* Row) { return Row->WaveNumber;}
 	);
-	
+
 	LoadAndCacheTable<FMonsterRowData, EMonsterType>(
 		TEXT("/Game/TheSeventhBullet/DataTable/DT_Monster"),
 		MonsterCache,
-		[](const FMonsterRowData* Row) {return Row->EnemyType;}
-		);
+		[](const FMonsterRowData* Row) { return Row->EnemyType; }
+	);
+
+	LoadAndCacheTable<FMonsterDropRowData, EMonsterType>(
+		TEXT("/Game/TheSeventhBullet/DataTable/DT_ItemDropTable"),
+		ItemDropCache,
+		[](const FMonsterDropRowData* Row) { return Row->MonsterType; }
+	);
 }
 
 FRequestRowData USyncDataManager::GetStageData(int32 StageIndex) const
@@ -53,5 +59,15 @@ FMonsterRowData USyncDataManager::GetMonsterData(const EMonsterType Tag) const
 FWaveRowData USyncDataManager::GetWaveData(int32 StageIndex, int32 WaveIndex)
 {
 	return StageCache[StageIndex].Waves[WaveIndex];
+}
+
+FMonsterDropRowData USyncDataManager::GetDropMaterialData(EMonsterType MonsterType) const
+{
+	const FMonsterDropRowData* Found = ItemDropCache.Find(MonsterType);
+	if (!Found)
+	{
+		return FMonsterDropRowData();
+	}
+	return *Found;
 }
 

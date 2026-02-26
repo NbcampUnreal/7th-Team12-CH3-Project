@@ -51,6 +51,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
 	FWaveRowData GetWaveData(int32 StageIndex, int32 WaveIndex);
 	
+	// 주현 : GetDropMaterialData
+	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
+	FMonsterDropRowData GetDropMaterialData(const EMonsterType MonsterType) const;
+	
 public:
 	template<typename RowType, typename KeyType>
 	static void LoadAndCacheTable(const TCHAR* Path, TMap<KeyType, RowType>& OutCache, TFunctionRef<KeyType(const RowType*)> KeySelector);
@@ -62,6 +66,9 @@ private:
 	UPROPERTY()
 	TMap<EMonsterType, FMonsterRowData> MonsterCache;
 	
+	// 주현 : 아이템 드랍 Row를 캐싱
+	UPROPERTY()
+	TMap<EMonsterType, FMonsterDropRowData> ItemDropCache;
 };
 
 #pragma region LoadHelper
