@@ -18,6 +18,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Hearing.h"
+#include "System/MainGameMode.h"
 
 
 AMainCharacter::AMainCharacter()
@@ -747,6 +748,15 @@ void AMainCharacter::SetTotalStatus(const FCharacterStat& NewStatus)
 	
 	//TODO : 만약 UI(체력바, 스탯창)를 업데이트해야 한다면 여기서 Delegate를 호출
 	//OnTotalStatChanged.Broadcast(TotalStatus);
+}
+
+void AMainCharacter::OnDeath()
+{
+	AMainGameMode* GM = AMainGameMode::Get(this);
+	if (GM)
+	{
+		GM->OnPlayerDead();
+	}
 }
 
 int32 AMainCharacter::GetGold()

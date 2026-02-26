@@ -20,4 +20,8 @@ public:
 	virtual void Enter() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void Exit() override;
+	
+private:
+	float ClearDelayTimer = 2.0f;
+	bool bHasDecided = false;
 };

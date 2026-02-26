@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Data/TableRowTypes.h"
 #include "GameFramework/GameMode.h"
+#include "Wave/WaveStates/WaveState.h"
 #include "MainGameMode.generated.h"
 
 class ASpawner;
@@ -61,13 +62,15 @@ class THESEVENTHBULLET_API AMainGameMode : public AGameMode
 public:
 	AMainGameMode();
 	static AMainGameMode* Get(const UObject* WorldContext);
+	
+	//게임 시작 / 메뉴
+	void StartGamePlay();
+	void ReturnToMainMenu();//메인메뉴로 돌아가는 함수
+	void ReturnToTown();//결산, 혹은 죽음 이후 마을로 돌아가는 함수
+	
+	// Wave System
 	bool HasNextWave() const;
 	void PrepareStageAndPreLoad();
-	void StartGamePlay();
-	//메인메뉴로 돌아가는 함수
-	void ReturnToMainMenu();
-	//결산, 혹은 죽음 이후 마을로 돌아가는 함수
-	void ReturnToTown();
 	void OnStageReady();
 	void SetupCurrentWaveData();
 	void UpdateSpawnLogic(float DeltaTime);
@@ -75,6 +78,27 @@ public:
 	
 	UFUNCTION()
 	void OnMonsterKilled();
+	
+	// Stage Timer
+	void UpdateStageTimer(float DeltaTime);
+	bool IsStageTimeOver() const;
+	float GetStageRemainingTime() const;
+	float GetStageTimeLimit() const;
+	
+	// Stage Result
+	void SetStageResult(EStageResult InResult);
+	EStageResult GetStageResult() const;
+	void CleanupAllMonsters();
+	
+	//Player Dead
+	void OnPlayerDead();
+	
+	//Wave Data Getter
+	int32 GetCurrentStageIndex() const;
+	int32 GetCurrentWaveIndex() const;
+	float GetWaveStartDelay() const;
+	void IncreaseCurrentWaveIndex();
+	float GetIntermissionDuration() const;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="PlayerSpawnPoint")
 	TArray<AActor*> PlayerSpawnPoint;
@@ -101,10 +125,10 @@ private:
 	TObjectPtr<UWaveStateMachine> WaveStateMachine;
 	
 	UPROPERTY()
-	int32 CurrentWaveIndex=0; // SpawnList의 인덱스 번호
+	int32 CurrentWaveIndex=0;
 	
 	UPROPERTY()
-	int32 CurrentStageIndex=0; // WaveData의 인덱스 번호
+	int32 CurrentStageIndex=0;
 	
 	UPROPERTY()
 	TArray<EMonsterType> SpawnQueue;
@@ -117,10 +141,10 @@ private:
 	float SpawnInterval = 0.0f;
 	int32 AliveMonsterCount = 0;
 	
-public:
-	int32 GetCurrentWaveIndex() const;
-	int32 GetCurrentSpawnIndex() const;
-	void IncreaseCurrentSpawnIndex();
+	float StageTimeLimit = 0.0f;
+	float StageElapsedTime = 0.0f;
+	
+	EStageResult CurrentStageResult = EStageResult::None;
 	
 public:
 	// 주현 : DELEGATE METHOD : 몬스터를 죽이고 아이템이 드랍된 경우
@@ -135,4 +159,5 @@ private:
 	static void StackItem(TArray<FDroppedMaterialsData>& ItemArray,
 	                            const TSoftObjectPtr<UMaterialDataAsset> Material,
 	                            int32 Count);
+	
 };
