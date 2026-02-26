@@ -65,6 +65,7 @@ void AMainGameMode::PrepareStageAndPreLoad()
 				GlobalMax = Elem.Value;
 			}
 		}
+		
 	}
 	
 	//서브시스템에 최댓값 pool 개수를 만들어서 넘김
@@ -441,16 +442,6 @@ int32 AMainGameMode::GetCurrentWaveIndex() const
 	return CurrentWaveIndex;
 }
 
-float AMainGameMode::GetWaveStartDelay() const
-{
-	USyncDataManager* DataManager = USyncDataManager::Get(this);
-	if (!DataManager) return 0.0f;
-	
-	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
-	
-	return StageData.WaveStartDelay;
-}
-
 void AMainGameMode::StackItem(TArray<FDroppedMaterialsData>& ItemArray,
 	const TSoftObjectPtr<UMaterialDataAsset> Material, int32 Count)
 {
@@ -476,6 +467,7 @@ void AMainGameMode::RewardsChangeBroadCasting()
 {
 	OnStageRewardItemsChanged.Broadcast(StageRewardItems);
 }
+
 float AMainGameMode::GetWaveStartDelay() const
 {
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
@@ -486,9 +478,9 @@ float AMainGameMode::GetWaveStartDelay() const
 	return StageData.WaveStartDelay;
 }
 
-
 void AMainGameMode::ClearStageRewards()
 {
 	StageRewardItems.Reset();
 }
+
 
