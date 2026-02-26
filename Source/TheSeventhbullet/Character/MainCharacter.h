@@ -7,14 +7,12 @@
 #include "GameFramework/Character.h"
 #include "MainCharacter.generated.h"
 
+
 class UInventoryComponent;
 class UCombatComponent; // 주현 : CombatComponent 전방선언
-class UEquipmentComponent; // 주현 : EquipmentComponent 전방선언
 class UWeaponDataAsset; // 주현 : WeaponDataAsset 전방선언
-class UCombatComponent; // CombatComponent 전방선언
 class UEquipmentComponent; // EquipmentComponent 전방선언
 class UStatusComponent; // StatusComponent 전방선언
-class AWeaponBase; // WeaponBase 전방선언
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
@@ -104,6 +102,8 @@ public:
 	bool bIsDodge = false;		// 회피 동작 상태
 	bool bIsInvicible = false;	// 무적 상태
 	bool bIsAiming = false;		// 조준 상태
+	bool bIsReload = false;	// 장전 상태
+	bool bIsFireButtonPressed = false;	// 사격 인풋 
 #pragma endregion
 	
 #pragma region Camera
@@ -136,7 +136,6 @@ public:
 	void PlayerStartSprint(const FInputActionValue& value);
 	void PlayerStopSprint(const FInputActionValue& value);
 	void PlayerDodge(const FInputActionValue& value);
-	void PlayerDodgeFinished(const FInputActionValue& value);
 	void PlayerAim(const FInputActionValue& value);
 	void PlayerAimFinished(const FInputActionValue& value);
 	void PlayerFire(const FInputActionValue& value);
@@ -144,7 +143,8 @@ public:
 	void PlayerSkill(const FInputActionValue& value);
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
-	void PlayerReload(const FInputActionValue& value);
+	void PlayerStartReload(const FInputActionValue& value);
+	void PlayerFinishReload(const FInputActionValue& value);
 	void ToggleEscMenu(const FInputActionValue& value);
 
 #pragma endregion
@@ -160,6 +160,15 @@ public:
 	
 	void ThrowGrenade();	// 스킬 실행
 	
+#pragma endregion
+	
+#pragma region Combat
+	
+	FTimerHandle FireTimerHandle;
+	FTimerHandle ReloadTimerHandle;
+	
+	void Fire();
+	void Reload();
 #pragma endregion
 	
 #pragma region Utilities

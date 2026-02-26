@@ -69,22 +69,22 @@ void UCombatComponent::StartFire()
 	bIsFiring = true;
 	
 	UE_LOG(LogTemp, Warning, TEXT("Start Fire"));
-
-	GetWorld()->GetTimerManager().SetTimer(
-		FireTimerHandle,
-		this,
-		&UCombatComponent::HitScanFire,
-		CurrentWeaponStatus.FireInterval,
-		true,
-		0.02
-	);
+	HitScanFire();
+	// GetWorld()->GetTimerManager().SetTimer(
+	// 	FireTimerHandle,
+	// 	this,
+	// 	&UCombatComponent::HitScanFire,
+	// 	CurrentWeaponStatus.FireInterval,
+	// 	true,
+	// 	0.02
+	// );
 }
 
 void UCombatComponent::StopFire()
 {
 	bIsFiring = false;
 	UE_LOG(LogTemp, Warning, TEXT("StopFire"));
-	GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
+	//GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
 	ResetSpreadRadius();
 }
 
@@ -241,29 +241,16 @@ void UCombatComponent::ResetSpreadRadius()
 	CurrentWeaponStatus.PelletSpreadRadius = WeaponDataView->SpreadRadius;
 }
 
+int UCombatComponent::GetCurrentAmmo() const
+{
+	return CurrentAmmo;
+}
+
 void UCombatComponent::Reload()
 {
-	if (bIsReloading)
-	{
-		return;
-	}
-	
-	bIsReloading = true;
+
 	UE_LOG(LogTemp, Warning, TEXT("Start Reload"));
-	
-	// 재장전 시간(ReloadTime) 이후에 재장전 완료
-	GetWorld()->GetTimerManager().SetTimer(
-	ReloadTimerHandle,
-	FTimerDelegate::CreateLambda([this]()
-	{
-		CurrentAmmo = CurrentWeaponStatus.MaxAmmo;
-		bIsReloading = false;
-		UE_LOG(LogTemp, Warning, TEXT("Reload"));
-		UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, CurrentWeaponStatus.MaxAmmo);
-	}),
-	CurrentWeaponStatus.ReloadTime,
-	false
-);
+	CurrentAmmo = CurrentWeaponStatus.MaxAmmo;
 }
 
 void UCombatComponent::ConsumeAmmo()
