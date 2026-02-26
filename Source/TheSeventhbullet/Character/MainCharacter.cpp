@@ -173,6 +173,78 @@ void AMainCharacter::ThrowGrenade()
 	}
 }
 
+void AMainCharacter::Fire()
+{
+	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
+		
+	int CurrentAmmo = CombatComponent->GetCurrentAmmo();
+	if (CurrentAmmo <= 0)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
+		Reload();
+		return;
+	}
+	
+	UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+	// 남태 : TestWeapon 나중 데이터에셋 변수 바뀌면 수정 해야함
+	TSoftObjectPtr<UAnimMontage> SelectedSoftMontage = bIsAiming ? EquipmentComponent->CurrentWeapon->AimedAttackMontage : EquipmentComponent->CurrentWeapon->AttackMontage;
+	
+	UAnimMontage* MontageToPlay = SelectedSoftMontage.Get();
+	if(!MontageToPlay)	MontageToPlay = EquipmentComponent->CurrentWeapon->AttackMontage.LoadSynchronous();
+	
+	if (AnimInstance)
+	{
+		if (MontageToPlay)
+		{
+			float Duration = AnimInstance->Montage_Play(MontageToPlay);
+		
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AMainCharacter::EndedAnimMontage);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, MontageToPlay);
+		}
+	}
+	FRotator CharacterRotation = GetBaseAimRotation();
+	CharacterRotation.Pitch = 0.0f;
+	CharacterRotation.Roll = 0.0f;
+	SetActorRotation(CharacterRotation);
+	
+	CombatComponent->StartFire(); // 발사 시작
+	
+	//현석 : 청각 이벤트 발생
+	UAISense_Hearing::ReportNoiseEvent(
+		   GetWorld(),
+		   GetActorLocation(),  // 클릭한 위치
+		   1.0f,               // Loudness
+		  this,          // Instigator
+		   2000.0f             // MaxRange
+	   );
+	UE_LOG(LogTemp,Warning,TEXT("Hearing Event Accured!"));
+}
+
+void AMainCharacter::Reload()
+{
+	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
+		
+	UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+		
+	UAnimMontage* MontageToPlay = EquipmentComponent->CurrentWeapon->ReloadMontage.Get();
+	if(!MontageToPlay)	MontageToPlay = EquipmentComponent->CurrentWeapon->ReloadMontage.LoadSynchronous();
+	
+	if (AnimInstance)
+	{
+		if (MontageToPlay)
+		{
+			float Duration = AnimInstance->Montage_Play(MontageToPlay);
+		
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AMainCharacter::EndedAnimMontage);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, MontageToPlay);
+		}
+	}
+	
+	CombatComponent->Reload();	
+}
+
 bool AMainCharacter::IsDodge()
 {
 	return bIsDodge;
@@ -225,6 +297,22 @@ void AMainCharacter::EndedAnimMontage(UAnimMontage* Montage, bool Interrupted)
 		// 비조준시 카메라 고정 해제
 		bUseControllerRotationYaw = false;
 		GetCharacterMovement()->bOrientRotationToMovement = true;
+	}
+	
+	UAnimMontage* ReloadMontage = EquipmentComponent->CurrentWeapon->ReloadMontage.Get();
+	if (Montage == ReloadMontage)
+	{
+		float FiraRate = EquipmentComponent->CurrentWeapon->FireInterval;
+		if (FiraRate > 0.0f)
+		{
+			GetWorldTimerManager().SetTimer(
+				FireTimerHandle,
+				this,
+				&AMainCharacter::Fire,
+				FiraRate,
+				true
+			);
+		}
 	}
 }
 
@@ -331,14 +419,22 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 				&AMainCharacter::PlayerOpenInventory
 			);
 			
-			// Reload 바인딩
+			// StartReload 바인딩
 			InputComponents->BindAction(
 				PC->ReloadAction,
 				ETriggerEvent::Started,
 				this,
-				&AMainCharacter::PlayerReload
+				&AMainCharacter::PlayerStartReload
 			);
 
+			// FinishReload 바인딩
+			InputComponents->BindAction(
+				PC->ReloadAction,
+				ETriggerEvent::Started,
+				this,
+				&AMainCharacter::PlayerFinishReload
+			);
+			
 			// EscMenu 바인딩
 			InputComponents->BindAction(
 				PC->EscMenuAction,
@@ -510,43 +606,36 @@ void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 
 void AMainCharacter::PlayerFire(const FInputActionValue& value)
 {
+	bIsFireButtonPressed = true;
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 	
-	if (CurrentState != EAnimState::None) return;
-	
-	UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
-	
-	if (AnimInstance && EquipmentComponent->CurrentWeapon->AttackMontage)
+	if (bIsDodge ||bIsReload)
 	{
-		AnimInstance->Montage_Play(EquipmentComponent->CurrentWeapon->AttackMontage.Get());
-		
-		FOnMontageEnded EndDelegate;
-		EndDelegate.BindUObject(this, &AMainCharacter::EndedAnimMontage);
-		AnimInstance->Montage_SetEndDelegate(EndDelegate, EquipmentComponent->CurrentWeapon->AttackMontage.Get());
+		return;
 	}
 	
-	FRotator CharacterRotation = GetBaseAimRotation();
-	CharacterRotation.Pitch = 0.0f;
-	CharacterRotation.Roll = 0.0f;
-	SetActorRotation(CharacterRotation);
+	// FireRate 0일 때 방어코드
+	float FireRate = EquipmentComponent->CurrentWeapon->FireInterval;
+	if (FireRate <= 0.0f) return;
 	
-	CombatComponent->StartFire(); // 발사 시작
+	Fire();
 	
-	//현석 : 청각 이벤트 발생
-	UAISense_Hearing::ReportNoiseEvent(
-		   GetWorld(),
-		   GetActorLocation(),  // 클릭한 위치
-		   1.0f,               // Loudness
-		  this,          // Instigator
-		   2000.0f             // MaxRange
-	   );
-	UE_LOG(LogTemp,Warning,TEXT("Hearing Event Accured!"));
+	UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+	GetWorldTimerManager().SetTimer(
+		FireTimerHandle, 
+		this, 
+		&AMainCharacter::Fire,
+		FireRate, 
+		true
+	);
 }
 
 void AMainCharacter::FinishFire(const FInputActionValue& value)
 {
-	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
+	bIsFireButtonPressed = false;
 	
+	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
+	GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
 	CombatComponent->StopFire();
 }
 
@@ -587,19 +676,17 @@ void AMainCharacter::PlayerOpenInventory(const FInputActionValue& value)
 	{
 		UIMgr->Toggle(UITags::Inventory);
 	}
-	
 }
 
-void AMainCharacter::PlayerReload(const FInputActionValue& value)
+void AMainCharacter::PlayerStartReload(const FInputActionValue& value)
 {
-	if (CurrentState != EAnimState::None) return;
-	
-	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
-		
-	if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
-	{
-		PlayAnimMotageByState(EAnimState::Reload_Rifle);
-	}
+	bIsReload = true;
+	Reload();
+}
+
+void AMainCharacter::PlayerFinishReload(const FInputActionValue& value)
+{
+	bIsReload = false;
 }
 
 void AMainCharacter::ToggleEscMenu(const FInputActionValue& value)

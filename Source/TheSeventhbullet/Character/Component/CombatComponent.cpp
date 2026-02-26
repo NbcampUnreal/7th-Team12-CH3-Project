@@ -241,6 +241,11 @@ void UCombatComponent::ResetSpreadRadius()
 	CurrentWeaponStatus.PelletSpreadRadius = WeaponDataView->SpreadRadius;
 }
 
+int UCombatComponent::GetCurrentAmmo() const
+{
+	return CurrentAmmo;
+}
+
 void UCombatComponent::Reload()
 {
 	if (bIsReloading)
