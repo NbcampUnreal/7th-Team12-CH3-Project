@@ -32,19 +32,12 @@ bool AMainGameMode::HasNextWave() const
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	if (!DataManager) return false;
 	
-	if (DataManager->GetStageData(CurrentStageIndex).Waves.Num()
-		<= CurrentWaveIndex)
-	{
-		return false;
-	}
-		
-	return true;
+	return CurrentWaveIndex < DataManager->GetStageData(CurrentStageIndex).Waves.Num();
 }
 
 void AMainGameMode::PrepareStageAndPreLoad()
 {
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
-	
 	FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
 	
 	TMap<EMonsterType, int32> MaxMonsterRequirements;
@@ -64,16 +57,12 @@ void AMainGameMode::PrepareStageAndPreLoad()
 		
 		for (auto& Elem : CurrentWaveCounts)
 		{
-			EMonsterType KeyType = Elem.Key;
-			int32 Required = Elem.Value;
-			
-			int32& GlobalMax = MaxMonsterRequirements.FindOrAdd(KeyType);
-			if (Required > GlobalMax)
+			int32& GlobalMax = MaxMonsterRequirements.FindOrAdd(Elem.Key);
+			if (Elem.Value > GlobalMax)
 			{
-				GlobalMax = Required;
+				GlobalMax = Elem.Value;
 			}
 		}
-		
 	}
 	
 	//서브시스템에 최댓값 pool 개수를 만들어서 넘김
@@ -98,6 +87,14 @@ void AMainGameMode::OnStageReady()
 	{
 		UIMgr->HideByTag(UITags::LoadingScreen);
 	}
+	USyncDataManager* DataManager = USyncDataManager::Get(this);
+	if (!DataManager) return;
+	
+	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	StageTimeLimit = StageData.StageTimeLimit;
+	
+	StageElapsedTime = 0.0f;
+	CurrentWaveIndex = 0;
 	
 	if (WaveStateMachine)
 	{
@@ -114,7 +111,6 @@ void AMainGameMode::SetupCurrentWaveData()
 	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
 	SpawnInterval = StageData.SpawnInterval;
 	SpawnTimer = 0.0f;
-	
 	AliveMonsterCount = 0;
 	SpawnQueue.Empty();
 	
@@ -147,7 +143,6 @@ void AMainGameMode::UpdateSpawnLogic(float DeltaTime)
 	if (SpawnQueue.IsEmpty()) return;
 	
 	SpawnTimer += DeltaTime;
-	
 	if (SpawnTimer >= SpawnInterval)
 	{
 		SpawnTimer = 0.0f;
@@ -163,6 +158,77 @@ bool AMainGameMode::IsWaveClear() const
 void AMainGameMode::OnMonsterKilled()
 {
 	AliveMonsterCount--;
+}
+
+void AMainGameMode::UpdateStageTimer(float DeltaTime)
+{
+	StageElapsedTime += DeltaTime;
+	
+	//TODO 영섭 : HUD에 남은 시간 업데이트
+}
+
+bool AMainGameMode::IsStageTimeOver() const
+{
+	if (StageTimeLimit <= 0.0f) return false; // 0이면 무제한
+	return StageElapsedTime >= StageTimeLimit;
+}
+
+float AMainGameMode::GetStageRemainingTime() const
+{
+	float Remaining = StageTimeLimit - StageElapsedTime;
+	return FMath::Max(0.0f, Remaining);
+}
+
+float AMainGameMode::GetStageTimeLimit() const
+{
+	return StageTimeLimit;
+}
+
+void AMainGameMode::SetStageResult(EStageResult InResult)
+{
+	CurrentStageResult = InResult;
+}
+
+EStageResult AMainGameMode::GetStageResult() const
+{
+	return CurrentStageResult;
+}
+
+void AMainGameMode::CleanupAllMonsters()
+{
+	SpawnQueue.Empty();
+	
+	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
+	if (!SubSystem) return;
+	
+	// TODO : MonsterManagerSubSystem에 CleanupActivemonsters() 추가 필요
+	
+	AliveMonsterCount = 0;
+	
+}
+
+void AMainGameMode::OnPlayerDead()
+{
+	CurrentStageResult = EStageResult::PlayerDead;
+	if (WaveStateMachine)
+	{
+		WaveStateMachine->ChangeState(EWaveState::StageResult);
+	}
+}
+
+void AMainGameMode::IncreaseCurrentWaveIndex()
+{
+	CurrentWaveIndex++;
+}
+
+float AMainGameMode::GetIntermissionDuration() const
+{
+	USyncDataManager* DataManager = USyncDataManager::Get(this);
+	if (!DataManager) return 0.0f;
+	
+	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	
+	return StageData.IntermissionDuration;
 }
 
 void AMainGameMode::SpawnOneMonster()
@@ -236,6 +302,8 @@ void AMainGameMode::ReturnToMainMenu()
 	SpawnQueue.Empty();
 	AliveMonsterCount = 0;
 	SpawnTimer = 0.0f;
+	StageElapsedTime = 0.0f;
+	CurrentStageResult = EStageResult::None;
 
 	// L_Town을 제외한 모든 서브레벨 언로드
 	UWorld* World = GetWorld();
@@ -270,14 +338,17 @@ void AMainGameMode::ReturnToMainMenu()
 void AMainGameMode::ReturnToTown()
 {
 	CurrentWaveIndex = 0;
-	
 	SpawnQueue.Empty();
 	SpawnTimer = 0.0f;
 	AliveMonsterCount = 0;
+	StageElapsedTime = 0.0f;
+	CurrentStageResult = EStageResult::None;
+
 	if (WaveStateMachine)
 	{
 		WaveStateMachine->ChangeState(EWaveState::None);
 	}
+	
 }
 
 void AMainGameMode::Tick(float DeltaSeconds)
@@ -290,17 +361,23 @@ void AMainGameMode::Tick(float DeltaSeconds)
 	}
 }
 
-int32 AMainGameMode::GetCurrentWaveIndex() const
+int32 AMainGameMode::GetCurrentStageIndex() const
 {
 	return CurrentStageIndex;
 }
 
-int32 AMainGameMode::GetCurrentSpawnIndex() const
+int32 AMainGameMode::GetCurrentWaveIndex() const
 {
 	return CurrentWaveIndex;
 }
 
-void AMainGameMode::IncreaseCurrentSpawnIndex()
+float AMainGameMode::GetWaveStartDelay() const
 {
-	CurrentWaveIndex++;
+	USyncDataManager* DataManager = USyncDataManager::Get(this);
+	if (!DataManager) return 0.0f;
+	
+	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	
+	return StageData.WaveStartDelay;
 }
+

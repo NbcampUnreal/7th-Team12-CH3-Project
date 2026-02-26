@@ -206,6 +206,8 @@ public:
 	
 	void SetTotalStatus(const FCharacterStat& NewStatus);
 	
+	UFUNCTION()
+	void OnDeath();
 public:
 	UFUNCTION()
 	int32 GetGold();

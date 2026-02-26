@@ -162,7 +162,7 @@ void UMonsterManagerSubSystem::ReturnToPool(AEnemyBase* Monster)
 	
 	Monster->SetActorHiddenInGame(true);
 	Monster->SetActorTickEnabled(false); 
-	Monster->SetActorEnableCollision(true);
+	Monster->SetActorEnableCollision(false);
 	
 	EMonsterType Type = Monster->GetMonsterType();
 	if (Type != EMonsterType::None)
