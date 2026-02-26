@@ -32,6 +32,7 @@ public:
 	void SpreadBullet();
 	void ResetSpreadRadius();
 
+	int GetCurrentAmmo() const;
 	void Reload();
 	void ConsumeAmmo();
 	

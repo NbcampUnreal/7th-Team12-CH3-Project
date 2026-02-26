@@ -33,6 +33,7 @@ protected:
 	
 	UFUNCTION()
 	void AnimNotify_Throw();
+	void AnimNotify_RefillAmmo();
 private:
 	UPROPERTY()
 	TObjectPtr<class ACharacter> OwnerCharacter;

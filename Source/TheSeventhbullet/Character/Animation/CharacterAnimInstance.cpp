@@ -55,3 +55,11 @@ void UCharacterAnimInstance::AnimNotify_Throw()
 		MainCharacter->ThrowGrenade();
 	}
 }
+
+void UCharacterAnimInstance::AnimNotify_RefillAmmo()
+{
+	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(TryGetPawnOwner()))
+	{
+		MainCharacter->Reload();
+	}
+}
