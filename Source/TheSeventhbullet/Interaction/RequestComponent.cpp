@@ -1,6 +1,9 @@
 #include "RequestComponent.h"
 
 #include "Manager/SyncDataManager.h"
+#include "Manager/UIManager.h"
+#include "UI/RequestWidget.h"
+#include "UI/UITags.h"
 #include "System/MainGameMode.h"
 #include "System/GameInstance/MainGameInstance.h"
 
@@ -23,7 +26,7 @@ void URequestComponent::SelectRequest(int32 SelectedRequestID)
 
 void URequestComponent::BeginInteract(AActor* Interactor)
 {
-	Super::BeginInteract(Interactor);
+	ProgressInteract(Interactor);
 }
 
 void URequestComponent::ProgressInteract(AActor* Interactor)
@@ -32,48 +35,63 @@ void URequestComponent::ProgressInteract(AActor* Interactor)
 	
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	if (!DataManager) return;
-	
-	int32 TotalCount = DataManager->GetTotalRequestCount();
-	TArray<int32> ValidStageIndices;
+
+	TArray<int32> AllRequestIDs = DataManager->GetAllRequestIDs();
+
+	TArray<int32> ValidRequestIDs;
 	UMainGameInstance* GI = UMainGameInstance::Get(this);
 	
 	if (!GI) return;
+
 	int32 CurrentDay = GI->CurrentDay;
-	
-	for (int32 i = 0 ; i < TotalCount; i++)
+
+	for (int32 RequestID : AllRequestIDs)
 	{
-		FRequestRowData Data = DataManager->GetRequestData(i);
+		FRequestRowData Data = DataManager->GetRequestData(RequestID);
 		if (DayAvailableLevel[CurrentDay] >= Data.RequestLevel)
 		{
-			ValidStageIndices.Add(i);
+			ValidRequestIDs.Add(RequestID);
 		}
 	}
-	
-	if (ValidStageIndices.Num() == 0) return;
-	
-	//셔플
-	for (int32 i = ValidStageIndices.Num() - 1; i > 0; --i)
+
+	if (ValidRequestIDs.Num() == 0) return;
+
+	// 셔플
+	for (int32 i = ValidRequestIDs.Num() - 1; i > 0; --i)
 	{
-		int32 RandomIndex = FMath::RandRange(0,i);
-		ValidStageIndices.Swap(i, RandomIndex);
+		int32 RandomIndex = FMath::RandRange(0, i);
+		ValidRequestIDs.Swap(i, RandomIndex);
 	}
-	
-	int32 PickCount = FMath::Min(3,ValidStageIndices.Num());
+
+	int32 PickCount = FMath::Min(3, ValidRequestIDs.Num());
+	TArray<int32> PickedIDs;
 	TArray<FRequestRowData> SelectedRequests;
-	for (int32 i = 0 ; i < PickCount ; ++i)
+	for (int32 i = 0; i < PickCount; ++i)
 	{
-		int32 PickedIndex = ValidStageIndices[i];
-		SelectedRequests.Add(DataManager->GetRequestData(PickedIndex));
-		//TODO : UI위젯에서 나중에 SelectRequest()를 부를 때 이 PickedIndex를 넘겨주도록해야함
+		int32 PickedID = ValidRequestIDs[i];
+		PickedIDs.Add(PickedID);
+		SelectedRequests.Add(DataManager->GetRequestData(PickedID));
 	}
-	
-	//TODO : UI 띄우기 
+
+	// UI 표시
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (!UIMgr) return;
+
+	UUserWidget* Widget = UIMgr->PushByTag(UITags::Request);
+	URequestWidget* RequestWidget = Cast<URequestWidget>(Widget);
+	if (RequestWidget)
+	{
+		RequestWidget->SetRequests(this, PickedIDs, SelectedRequests);
+	}
 }
 
 void URequestComponent::EndInteract(AActor* Interactor)
 {
-	//TODO : UI 끄기
-	Super::EndInteract(Interactor);
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->Pop();
+	}
 }
 
 
