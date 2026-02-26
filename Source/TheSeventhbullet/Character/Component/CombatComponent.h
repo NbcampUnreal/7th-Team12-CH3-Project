@@ -11,6 +11,8 @@ class AMainCharacter;
 class UDamageModifier;
 class AWeaponBase;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentDamageBroadcast, float, Damage, bool, bIsCrit);
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class THESEVENTHBULLET_API UCombatComponent : public UActorComponent
 {
@@ -40,6 +42,10 @@ public:
 	void ExecutePipeline(FDamageContext& Context);
 	
 	void SpawnFireParticles(const FHitResult& Hit);
+	
+public:
+	UPROPERTY(BlueprintAssignable, Category = "Combat")
+	FOnCurrentDamageBroadcast OnCurrentDamageBroadcast;
 	
 protected:
 	virtual void BeginPlay() override;
