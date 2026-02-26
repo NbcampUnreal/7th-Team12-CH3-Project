@@ -20,7 +20,7 @@ void USyncDataManager::Initialize(FSubsystemCollectionBase& Collection)
 	LoadAndCacheTable<FRequestRowData, int32>(
 		TEXT("/Game/TheSeventhBullet/DataTable/DT_Wave"),
 		StageCache,
-		[](const FRequestRowData* Row) { return Row->WaveNumber;}
+		[](const FRequestRowData* Row) { return Row->RequestID;}
 	);
 	
 	LoadAndCacheTable<FMonsterRowData, EMonsterType>(
