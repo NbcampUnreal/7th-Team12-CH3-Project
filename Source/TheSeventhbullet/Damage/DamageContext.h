@@ -16,10 +16,6 @@ struct FDamageContext
 
 	UPROPERTY()
 	float CurrentDamage = 0.0f; // 현재 실제 공격력.
-	UPROPERTY()
-	float CurrentCritChance = 0.0f; // 현재 크리티컬 확률
-	UPROPERTY()
-	float CurrentCritDamage = 0.0f; // 현재 크리티컬 데미지
 	
 	UPROPERTY()
 	float WeaponDamage = 0.0f; // 무기 공격력	

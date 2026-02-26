@@ -283,12 +283,22 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 	Context.DamageMultiplier = CurrentWeaponStatus.WeaponDamageMultiplier;
 	
 	ExecutePipeline(Context);
-
+	
+	Context.CurrentDamage *= Context.DamageMultiplier;
+	
+	float IsCritValue = FMath::RandRange(0.0f, 1.0f);
+	
+	if (IsCritValue <= Context.StatusCritChance)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Critical!"));
+		Context.CurrentDamage *= Context.StatusCritDamage;
+	}
+	
 	UE_LOG(LogTemp, Warning, TEXT("Damage : %f"), Context.CurrentDamage*Context.DamageMultiplier);
 	
 	UGameplayStatics::ApplyPointDamage(
 		Context.Target,
-		Context.CurrentDamage * Context.DamageMultiplier,
+		Context.CurrentDamage,
 		Context.Attacker->GetActorForwardVector(),
 		Hit,
 		Hit.GetActor()->GetInstigatorController(),

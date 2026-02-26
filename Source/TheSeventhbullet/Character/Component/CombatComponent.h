@@ -58,10 +58,11 @@ private:
 	FTimerHandle ReloadTimerHandle;
 	
 	int32 CurrentAmmo = 0;
-	
-	bool bIsFiring = false;
-	bool bIsReloading = false;
 	float LastFireTime = -1.f;
+	
+	bool bIsFiring = false; // 발사 중인지 여부
+	bool bIsReloading = false; // 재장전 중인지 여부
+	
 	bool bDrawFireDebug = false; // 발사 디버그 표시 여부
 	float FireDebugDuration = 0.f; // 발사 디버그 지속 시간
 	bool bDrawDebugInfinite = false; // 발사 디버그 드로우를 영구지속할지 여부

@@ -28,8 +28,8 @@ AMainCharacter::AMainCharacter()
 	TotalStatus.HP = 100;
 	TotalStatus.Attack = 100;
 	TotalStatus.Defence = 10;
-	TotalStatus.CriticalChance = 15;
-	TotalStatus.CriticalDamage = 150;
+	TotalStatus.CriticalChance = 0.15f;
+	TotalStatus.CriticalDamage = 1.5f;
 	
 	SprintMultiplier = 1.5f;
 	AimMultiplier = 0.8f;

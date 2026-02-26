@@ -10,8 +10,8 @@ UStatusComponent::UStatusComponent()
 	CharacterStatus.HP = 100;
 	CharacterStatus.Attack = 10;
 	CharacterStatus.Defence = 10;
-	CharacterStatus.CriticalChance = 15;
-	CharacterStatus.CriticalDamage = 150;
+	CharacterStatus.CriticalChance = 0.15f;
+	CharacterStatus.CriticalDamage = 1.5f;
 }
 
 void UStatusComponent::UpdateTotalStat()

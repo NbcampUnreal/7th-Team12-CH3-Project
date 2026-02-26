@@ -15,7 +15,4 @@ void UStatusDamageModifier::ModifyDamage(FDamageContext& Context)
 	Context.StatusCritDamage = Character->GetTotalStatus().CriticalDamage;
 		
 	Context.CurrentDamage += Context.StatusDamage;
-	Context.CurrentCritChance += Context.StatusCritChance;
-	Context.CurrentCritDamage += Context.StatusCritDamage;
-	
 }

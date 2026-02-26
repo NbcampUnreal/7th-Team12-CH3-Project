@@ -92,10 +92,10 @@ struct FCharacterStat
 	int32 Defence;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	int32 CriticalChance;//크리 확률
+	float CriticalChance;//크리 확률
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	int32 CriticalDamage;//크피 확률
+	float CriticalDamage;//크피 확률
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	int32 Speed;
@@ -107,8 +107,8 @@ struct FCharacterStat
 		Stamina = 0;
 		Attack = 0;
 		Defence = 0;
-		CriticalChance = 0;
-		CriticalDamage = 0;
+		CriticalChance = 0.f;
+		CriticalDamage = 0.f;
 		Speed = 0.0f;
 	}
 	
