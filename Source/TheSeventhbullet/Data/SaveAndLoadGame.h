@@ -7,7 +7,6 @@
 #include "SoulGem/SoulGemInstance.h"
 #include "SaveAndLoadGame.generated.h"
 
-
 UCLASS()
 class THESEVENTHBULLET_API USaveAndLoadGame : public USaveGame
 {
