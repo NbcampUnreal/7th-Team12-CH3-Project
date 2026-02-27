@@ -110,3 +110,9 @@ FCharacterStat UEquipmentComponent::GetTotalGemStats() const
 	}
 	return TotalGemStat;
 }
+
+void UEquipmentComponent::LoadData(TArray<FSoulGemInstance>& LoadEquippedSoulGems)
+{
+	EquippedSoulGems = LoadEquippedSoulGems;
+}
+

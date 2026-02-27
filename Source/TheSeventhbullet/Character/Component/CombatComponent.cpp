@@ -11,6 +11,7 @@
 #include "Damage/Modifier/StatusDamageModifier.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "System/MainGameMode.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -29,6 +30,7 @@ void UCombatComponent::BeginPlay()
 	
 	DamageModifiersPipeline.Add(NewObject<UWeaponDamageModifier>(this));
 	DamageModifiersPipeline.Add(NewObject<UStatusDamageModifier>(this));
+	GM = AMainGameMode::Get(this);
 }
 
 void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
@@ -115,6 +117,8 @@ void UCombatComponent::HitScanFire()
 		SpawnFireParticles(Hit);
 		if (Hit.bBlockingHit && Hit.GetActor()->ActorHasTag("Enemy"))
 		{
+			if (!GM) return;
+			GM->RequestAttack++;
 			ApplyDamageByHit(Hit);
 		}
 	}

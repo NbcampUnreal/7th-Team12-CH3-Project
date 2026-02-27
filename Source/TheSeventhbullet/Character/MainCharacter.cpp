@@ -763,6 +763,12 @@ void AMainCharacter::OnDeath()
 	}
 }
 
+void AMainCharacter::LoadData(FCharacterStat& LoadTotalCharacterStatus, int32 CharacterGold)
+{
+	TotalStatus = LoadTotalCharacterStatus;
+	Gold = CharacterGold;
+}
+
 int32 AMainCharacter::GetGold()
 {
 	return Gold;

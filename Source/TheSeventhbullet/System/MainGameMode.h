@@ -124,6 +124,8 @@ public:
 	UFUNCTION()
 	void ClearStageRewards();
 	
+	int32 RequestAttack = 0;// 한 의뢰에서 총을 맞힌 횟수
+	int32 RequestHit = 0;// 한 의뢰에서 공격을 당한 횟수
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
