@@ -63,6 +63,11 @@ void UMainGameInstance::ReturnToMainMenu()
 
 void UMainGameInstance::GameStartMapLoad()
 {
+	if (UUIManager* UIMgr = UUIManager::Get(this))
+	{
+		UIMgr->Close(UITags::MainMenu);
+	}
+
 	FLatentActionInfo LatentInfo;
 	LatentInfo.CallbackTarget = this;
 	LatentInfo.ExecutionFunction = FName("OnMapLoadFinished");
@@ -112,7 +117,7 @@ void UMainGameInstance::ShowLoadingScreen()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UUserWidget* Widget = UIMgr->ShowByTag(UITags::LoadingScreen);
+		UUserWidget* Widget = UIMgr->Open(UITags::LoadingScreen);
 		CachedLoadingWidget = Cast<ULoadingScreenWidget>(Widget);
 		if (CachedLoadingWidget)
 		{
@@ -141,7 +146,7 @@ void UMainGameInstance::HideLoadingScreen()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->HideByTag(UITags::LoadingScreen);
+		UIMgr->Close(UITags::LoadingScreen);
 	}
 }
 

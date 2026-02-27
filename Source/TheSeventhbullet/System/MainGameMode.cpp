@@ -34,17 +34,24 @@ bool AMainGameMode::HasNextWave() const
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	if (!DataManager) return false;
 	
-	return CurrentWaveIndex < DataManager->GetStageData(CurrentStageIndex).Waves.Num();
+	if (DataManager->GetRequestData(CurrentRequestID).Waves.Num()
+		<= CurrentWaveIndex)
+	{
+		return false;
+	}
+		
+	return true;
 }
 
 void AMainGameMode::PrepareStageAndPreLoad()
 {
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
-	FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	
+	FRequestRowData RequestData = DataManager->GetRequestData(CurrentRequestID);
 	
 	TMap<EMonsterType, int32> MaxMonsterRequirements;
 	
-	for (const FWaveRowData& Wave : StageData.Waves)
+	for (const FWaveRowData& Wave : RequestData.Waves)
 	{
 		TMap<EMonsterType,int32> CurrentWaveCounts;
 		//최댓값 갱신
@@ -83,18 +90,16 @@ void AMainGameMode::OnStageReady()
 {
 	UE_LOG(LogTemp, Log, TEXT("Stage Preparation Complete!"));
 	
-	//TODO : LevelStreamTrigger쪽에있는 CachedLoadingWidget progress 처리부분 제외했음
-	
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->HideByTag(UITags::LoadingScreen);
+		UIMgr->Close(UITags::LoadingScreen);
 	}
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	if (!DataManager) return;
 	
-	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
-	StageTimeLimit = StageData.StageTimeLimit;
+	const FRequestRowData RequestData = DataManager->GetRequestData(CurrentRequestID);
+	StageTimeLimit = RequestData.StageTimeLimit;
 	
 	StageElapsedTime = 0.0f;
 	CurrentWaveIndex = 0;
@@ -110,10 +115,11 @@ void AMainGameMode::SetupCurrentWaveData()
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	if (!DataManager) return;
 	
-	FWaveRowData WaveData = DataManager->GetWaveData(CurrentStageIndex, CurrentWaveIndex);
-	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
-	SpawnInterval = StageData.SpawnInterval;
+	FWaveRowData WaveData = DataManager->GetWaveData(CurrentRequestID, CurrentWaveIndex);
+	const FRequestRowData RequestData = DataManager->GetRequestData(CurrentRequestID);
+	SpawnInterval = RequestData.SpawnInterval;
 	SpawnTimer = 0.0f;
+	
 	AliveMonsterCount = 0;
 	SpawnQueue.Empty();
 	
@@ -146,6 +152,7 @@ void AMainGameMode::UpdateSpawnLogic(float DeltaTime)
 	if (SpawnQueue.IsEmpty()) return;
 	
 	SpawnTimer += DeltaTime;
+	
 	if (SpawnTimer >= SpawnInterval)
 	{
 		SpawnTimer = 0.0f;
@@ -229,9 +236,8 @@ float AMainGameMode::GetIntermissionDuration() const
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	if (!DataManager) return 0.0f;
 	
-	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
-	
-	return StageData.IntermissionDuration;
+	const FRequestRowData RequestData = DataManager->GetRequestData(CurrentRequestID);
+	return RequestData.IntermissionDuration;
 }
 
 void AMainGameMode::SpawnOneMonster()
@@ -254,19 +260,19 @@ void AMainGameMode::SpawnOneMonster()
 	}
 }
 
-void AMainGameMode::SetTargetStageIndex(int32 InStageIndex)
+void AMainGameMode::SetTargetRequestID(int32 InRequestID)
 {
-	CurrentStageIndex = InStageIndex;
+	CurrentRequestID = InRequestID;
 }
 
 void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 {
 	// 싱크매니저 가져오기
-	USyncDataManager* SDM = USyncDataManager::Get(this);
-	if (!SDM) return;
-	// 스테이지 인덱스를 현재 스테이지 인덱스에 따라서 보상표가 달라지기 때문에 현재 스테이지 인덱스로 가져오기.
-	const int32 StageIndex = CurrentStageIndex;
-	FMonsterDropRowData Row = SDM->GetDropMaterialData(MonsterType);
+	USyncDataManager*  DataManager = USyncDataManager::Get(this);
+	if (! DataManager) return;
+	// Request Index 를 현재 Request Index에 따라서 보상표가 달라지기 때문에 현재 Request Index로 가져오기.
+	const int32 StageIndex = CurrentRequestID;
+	FMonsterDropRowData Row =  DataManager->GetDropMaterialData(MonsterType);
 	if (!Row.Stages.IsValidIndex(StageIndex)) return;
 	
 	const FStageDropData& DropData = Row.Stages[StageIndex];
@@ -346,7 +352,7 @@ void AMainGameMode::BeginPlay()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->ShowByTag(UITags::MainMenu);
+		UIMgr->Open(UITags::MainMenu);
 	}
 }
 
@@ -355,7 +361,7 @@ void AMainGameMode::StartGamePlay()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->HideByTag(UITags::MainMenu);
+		UIMgr->Close(UITags::MainMenu);
 	}
 
 }
@@ -369,7 +375,7 @@ void AMainGameMode::ReturnToMainMenu()
 	}
 
 	CurrentWaveIndex = 0;
-	CurrentStageIndex = 0;
+	CurrentRequestID = INDEX_NONE;
 	SpawnQueue.Empty();
 	AliveMonsterCount = 0;
 	SpawnTimer = 0.0f;
@@ -398,17 +404,18 @@ void AMainGameMode::ReturnToMainMenu()
 		}
 	}
 
-	// 메인 메뉴 표시
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->ShowByTag(UITags::MainMenu);
+		UIMgr->Open(UITags::MainMenu);
 	}
 }
 
 void AMainGameMode::ReturnToTown()
 {
 	CurrentWaveIndex = 0;
+	CurrentRequestID = INDEX_NONE;
+
 	SpawnQueue.Empty();
 	SpawnTimer = 0.0f;
 	AliveMonsterCount = 0;
@@ -432,9 +439,9 @@ void AMainGameMode::Tick(float DeltaSeconds)
 	}
 }
 
-int32 AMainGameMode::GetCurrentStageIndex() const
+int32 AMainGameMode::GetCurrentRequestID() const
 {
-	return CurrentStageIndex;
+	return CurrentRequestID;
 }
 
 int32 AMainGameMode::GetCurrentWaveIndex() const
@@ -468,14 +475,19 @@ void AMainGameMode::RewardsChangeBroadCasting()
 	OnStageRewardItemsChanged.Broadcast(StageRewardItems);
 }
 
+bool AMainGameMode::HasActiveRequest() const
+{
+	return CurrentRequestID != INDEX_NONE;
+}
+
 float AMainGameMode::GetWaveStartDelay() const
 {
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	if (!DataManager) return 0.0f;
 	
-	const FRequestRowData StageData = DataManager->GetStageData(CurrentStageIndex);
+	const FRequestRowData RequestData = DataManager->GetRequestData(CurrentRequestID);
 	
-	return StageData.WaveStartDelay;
+	return RequestData.WaveStartDelay;
 }
 
 void AMainGameMode::ClearStageRewards()

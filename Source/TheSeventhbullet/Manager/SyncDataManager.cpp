@@ -19,10 +19,10 @@ void USyncDataManager::Initialize(FSubsystemCollectionBase& Collection)
 	
 	LoadAndCacheTable<FRequestRowData, int32>(
 		TEXT("/Game/TheSeventhBullet/DataTable/DT_Wave"),
-		StageCache,
+		RequestCache,
 		[](const FRequestRowData* Row) { return Row->RequestID;}
 	);
-
+	
 	LoadAndCacheTable<FMonsterRowData, EMonsterType>(
 		TEXT("/Game/TheSeventhBullet/DataTable/DT_Monster"),
 		MonsterCache,
@@ -36,14 +36,27 @@ void USyncDataManager::Initialize(FSubsystemCollectionBase& Collection)
 	);
 }
 
-FRequestRowData USyncDataManager::GetStageData(int32 StageIndex) const
+FRequestRowData USyncDataManager::GetRequestData(int32 RequestID) const
 {
-	return StageCache[StageIndex];
+	const FRequestRowData* Found = RequestCache.Find(RequestID);
+	if (!Found)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[SyncDataManager] RequestID %d not found"), RequestID);
+		return FRequestRowData();
+	}
+	return *Found;
 }
 
 int32 USyncDataManager::GetTotalRequestCount() const
 {
-	return StageCache.Num();
+	return RequestCache.Num();
+}
+
+TArray<int32> USyncDataManager::GetAllRequestIDs() const
+{
+	TArray<int32> Keys;
+	RequestCache.GetKeys(Keys);
+	return Keys;
 }
 
 FMonsterRowData USyncDataManager::GetMonsterData(const EMonsterType Tag) const
@@ -56,9 +69,15 @@ FMonsterRowData USyncDataManager::GetMonsterData(const EMonsterType Tag) const
 	return *Found;
 }
 
-FWaveRowData USyncDataManager::GetWaveData(int32 StageIndex, int32 WaveIndex)
+FWaveRowData USyncDataManager::GetWaveData(int32 RequestID, int32 WaveIndex)
 {
-	return StageCache[StageIndex].Waves[WaveIndex];
+	const FRequestRowData* Found = RequestCache.Find(RequestID);
+	if (!Found || !Found->Waves.IsValidIndex(WaveIndex))
+	{
+		UE_LOG(LogTemp, Error, TEXT("[SyncDataManager] GetWaveData failed - RequestID: %d, WaveIndex: %d"), RequestID, WaveIndex);
+		return FWaveRowData();
+	}
+	return Found->Waves[WaveIndex];
 }
 
 FMonsterDropRowData USyncDataManager::GetDropMaterialData(EMonsterType MonsterType) const

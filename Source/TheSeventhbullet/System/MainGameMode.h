@@ -54,6 +54,13 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStageRewardItemsChanged, const TA
  *   GM->IsWaveClear();         // 웨이브 클리어 확인
  */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// 2월 27일 오후 1시 기준 
+// 영섭 : 변수 이름 변경에 관해 
+// *** Request : DT상에서 StageData에 들어갈 정보들을 RequestData, RequestID로 저장 
+// *** Stage : MainGameMode에서 RequestData(DT상) -> StageData(GameMode내) Data 이동이 있다 
+// Data와 Instance 상 이름 구분이라고 생각하면 편할듯 하다
+// *** Wave : 기존 Wave와 동일
 UCLASS()
 class THESEVENTHBULLET_API AMainGameMode : public AGameMode
 {
@@ -94,7 +101,7 @@ public:
 	void OnPlayerDead();
 	
 	//Wave Data Getter
-	int32 GetCurrentStageIndex() const;
+	int32 GetCurrentRequestID() const;
 	int32 GetCurrentWaveIndex() const;
 	float GetWaveStartDelay() const;
 	void IncreaseCurrentWaveIndex();
@@ -104,8 +111,9 @@ public:
 	TArray<AActor*> PlayerSpawnPoint;
 	
 	UFUNCTION(BlueprintCallable, Category = "WaveSystem")
-	void SetTargetStageIndex(int32 InStageIndex);
-	
+	void SetTargetRequestID(int32 InRequestID);
+	bool HasActiveRequest() const;
+
 	// 주현 : 몬스터로부터 아이템 드랍.
 	UFUNCTION()
 	void ItemDropFromMonster(EMonsterType MonsterType);
@@ -125,10 +133,10 @@ private:
 	TObjectPtr<UWaveStateMachine> WaveStateMachine;
 	
 	UPROPERTY()
-	int32 CurrentWaveIndex=0;
+	int32 CurrentWaveIndex = 0; // SpawnList의 인덱스 번호
 	
 	UPROPERTY()
-	int32 CurrentStageIndex=0;
+	int32 CurrentRequestID = INDEX_NONE; // WaveData의 인덱스 번호 (INDEX_NONE = 의뢰 미수락)
 	
 	UPROPERTY()
 	TArray<EMonsterType> SpawnQueue;
@@ -159,5 +167,4 @@ private:
 	static void StackItem(TArray<FDroppedMaterialsData>& ItemArray,
 	                            const TSoftObjectPtr<UMaterialDataAsset> Material,
 	                            int32 Count);
-	
 };
