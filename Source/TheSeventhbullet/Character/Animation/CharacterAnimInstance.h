@@ -30,6 +30,8 @@ protected:
 	bool bIsDodging;
 	UPROPERTY(BlueprintReadOnly, Category = "Action")
 	bool bIsAiming;
+	UPROPERTY(BlueprintReadOnly, Category = "Action")
+	bool bIsFiring;
 	
 	UFUNCTION()
 	void AnimNotify_Throw();

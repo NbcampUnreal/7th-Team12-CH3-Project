@@ -104,6 +104,8 @@ public:
 	bool bIsAiming = false;		// 조준 상태
 	bool bIsReload = false;	// 장전 상태
 	bool bIsFireButtonPressed = false;	// 사격 인풋 
+	bool bIsFire = false;	// 사격 상태
+	
 #pragma endregion
 	
 #pragma region Camera
@@ -123,6 +125,11 @@ public:
 	float NormalArmLength; 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
 	float AimingArmLength;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
+	float NormalFOV;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
+	float AimingFOV;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
 	float CameraInterpSpeed;
@@ -164,11 +171,16 @@ public:
 	
 #pragma region Combat
 	
-	FTimerHandle FireTimerHandle;
-	FTimerHandle ReloadTimerHandle;
+	FTimerHandle FireTimerHandle;	// 사격 간격 TimeHandle
+	FTimerHandle ReloadTimerHandle;	// 장전 TimeHandle
+	FTimerHandle AimFireStateTimerHandle;	// 조준사격 카메라 분리를 위한 TimeHandle
 	
 	void Fire();
 	void Reload();
+	
+	void UpdateRotationState();	// 조준시 캐릭터 Rotation State 업데이트 
+	void ResetFireState();
+	
 #pragma endregion
 	
 #pragma region Utilities
@@ -176,6 +188,7 @@ public:
 	bool IsDodge();
 	bool IsInvicible();
 	bool IsAiming();
+	bool IsFiring();
 	
 #pragma endregion
 	
