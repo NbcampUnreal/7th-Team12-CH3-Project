@@ -46,27 +46,62 @@ FCharacterStat UEquipmentComponent::GetTotalGemStats() const
 			switch (MaterialStat.Status)
 			{
 			case EStatusType::ATK:
-				TotalGemStat.Attack += MaterialStat.Value;
+				if (MaterialStat.CalculationMethod == EStatusCalculationMethod::AddFlat)
+				{
+					TotalGemStat.Attack += MaterialStat.Value;
+				}
+				else if (MaterialStat.CalculationMethod == EStatusCalculationMethod::Multiply)
+				{
+					TotalGemStat.Attack *= MaterialStat.Value;
+				}
 				break;
 			case EStatusType::DEF:
-				TotalGemStat.Defence += MaterialStat.Value;
+				if (MaterialStat.CalculationMethod == EStatusCalculationMethod::AddFlat)
+				{
+					TotalGemStat.Defence += MaterialStat.Value;
+				}
+				else if (MaterialStat.CalculationMethod == EStatusCalculationMethod::Multiply)
+				{
+					TotalGemStat.Defence *= MaterialStat.Value;
+				}
 				break;
 			case EStatusType::HP:
-				TotalGemStat.HP += MaterialStat.Value;
+				if (MaterialStat.CalculationMethod == EStatusCalculationMethod::AddFlat)
+				{
+					TotalGemStat.HP += MaterialStat.Value;
+				}
+				else if (MaterialStat.CalculationMethod == EStatusCalculationMethod::Multiply)
+				{
+					TotalGemStat.HP *= MaterialStat.Value;
+				}
 				break;
 			case EStatusType::MaxSpeed:
-				TotalGemStat.Speed += MaterialStat.Value;
+				if (MaterialStat.CalculationMethod == EStatusCalculationMethod::AddFlat)
+				{
+					TotalGemStat.Speed += MaterialStat.Value;
+				}
+				else if (MaterialStat.CalculationMethod == EStatusCalculationMethod::Multiply)
+				{
+					TotalGemStat.Speed *= MaterialStat.Value;
+				}
 				break;
 			case EStatusType::Stamina:
-				TotalGemStat.Stamina += MaterialStat.Value;
+				if (MaterialStat.CalculationMethod == EStatusCalculationMethod::AddFlat)
+				{
+					TotalGemStat.Stamina += MaterialStat.Value;
+				}
+				else if (MaterialStat.CalculationMethod == EStatusCalculationMethod::Multiply)
+				{
+					TotalGemStat.Stamina *= MaterialStat.Value;
+				}
 				break;
 			case EStatusType::CritChance:
 				TotalGemStat.CriticalChance += MaterialStat.Value;
-				TotalGemStat.CriticalChance = FMath::Clamp(TotalGemStat.CriticalChance, 0.0f, 0.85f);
+				TotalGemStat.CriticalChance = FMath::Clamp(TotalGemStat.CriticalChance, 0.0f, 1.0f);
 				break;
 			case EStatusType::CritDamage:
 				TotalGemStat.CriticalDamage += MaterialStat.Value;
-				TotalGemStat.CriticalDamage = FMath::Max(1.0f, TotalGemStat.CriticalDamage);
+				TotalGemStat.CriticalDamage = FMath::Max(1.5f, TotalGemStat.CriticalDamage);
 				break;
 			default:
 				break;
@@ -75,26 +110,3 @@ FCharacterStat UEquipmentComponent::GetTotalGemStats() const
 	}
 	return TotalGemStat;
 }
-
-
-// void UGemStatusComponent::CalculateStatusFromModifiers(const TArray<FStatusModifier>& Modifiers)
-// {
-// 	FinalStatus = BaseStatus;
-// 	
-// 	for (const FStatusModifier& Mod : Modifiers)
-// 	{
-// 		if (Mod.CalculationMethod == EStatusCalculationMethod::AddFlat)
-// 		{
-// 			GetStatusRef(FinalStatus, Mod.Status) += Mod.Value;
-// 		}
-// 		else if (Mod.CalculationMethod == EStatusCalculationMethod::Multiply)
-// 		{
-// 			GetStatusRef(FinalStatus, Mod.Status) *= Mod.Value;
-// 		}
-// 		UE_LOG(LogTemp, Warning, TEXT("CalculateStatusFromModifiers"));
-// 	}
-// 	
-// 	// 크리티컬 관련 제한
-// 	FinalStatus.Dynamic_CritChance = FMath::Clamp(FinalStatus.Dynamic_CritChance, 0.0f, 0.85f); // 최소 0.0f(0%), 최대 1.0f(100%)로 제한
-// 	FinalStatus.Dynamic_CritDamage = FMath::Max(1.0f, FinalStatus.Dynamic_CritDamage); // 1.0f(100%)로 최솟값 제한
-// }

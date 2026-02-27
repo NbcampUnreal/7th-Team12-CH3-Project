@@ -64,9 +64,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Mesh")
 	TObjectPtr<UStaticMesh> Mesh; // 메쉬
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
-	TSoftObjectPtr<UNiagaraSystem> MuzzleFlashEffect; // 발사 이펙트(총구)
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
-	TSoftObjectPtr<UNiagaraSystem> ProjectileEffect; // 발사체 이펙트
+	TSoftObjectPtr<UNiagaraSystem> MuzzleFlashEffect; // 발사 이펙트(총구) + 발사체 이펙트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
 	TSoftObjectPtr<UParticleSystem> ImpactEffect; // Hit 이펙트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Animation")

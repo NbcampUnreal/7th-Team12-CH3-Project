@@ -313,7 +313,7 @@ void UCombatComponent::SpawnFireParticles(const FHitResult& Hit)
 {
 	if (WeaponDataView->MuzzleFlashEffect.ToSoftObjectPath().IsValid())
 	{
-		const FVector EffectDirection = (Hit.TraceStart - Hit.TraceEnd).GetSafeNormal();
+		const FVector EffectDirection = (Hit.TraceEnd - Hit.TraceStart).GetSafeNormal();
 		const FRotator EffectRotation = EffectDirection.Rotation();
 		
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
@@ -336,18 +336,6 @@ void UCombatComponent::SpawnFireParticles(const FHitResult& Hit)
 			FVector(1),
 			true
 		);
-	}
-
-	if (WeaponDataView->ProjectileEffect.ToSoftObjectPath().IsValid())
-	{
-		UNiagaraComponent* Projectile = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			GetWorld(),
-			WeaponDataView->ProjectileEffect.LoadSynchronous(),
-			Hit.TraceStart,
-			FRotator::ZeroRotator
-		);
-		Projectile->SetVectorParameter(FName("Start"), Hit.TraceStart);
-		Projectile->SetVectorParameter(FName("Target"), Hit.TraceEnd);
 	}
 }
 
