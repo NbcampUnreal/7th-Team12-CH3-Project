@@ -30,7 +30,7 @@ void UCombatComponent::BeginPlay()
 	
 	DamageModifiersPipeline.Add(NewObject<UWeaponDamageModifier>(this));
 	DamageModifiersPipeline.Add(NewObject<UStatusDamageModifier>(this));
-	AMainGameMode* GM = AMainGameMode::Get(this);
+	GM = AMainGameMode::Get(this);
 }
 
 void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
