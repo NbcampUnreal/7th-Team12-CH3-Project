@@ -5,46 +5,32 @@
 #include "CoreMinimal.h"
 #include "Character/MainCharacter.h"
 #include "GameFramework/SaveGame.h"
+#include "Inventory/ItemInstance.h"
 #include "SaveAndLoadGame.generated.h"
-
-USTRUCT(BlueprintType)
-struct FCharacterSaveData
-{
-	GENERATED_BODY()
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 TotalGold = 0;
-	
-	//TODO : 골드로 업그레이드할 Stat 정보들은 기본 시작 스텟과 별개로 다른 변수로 저장할 것
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 UpgradeAttack = 0; //골드로 업그레이드한 공격력 레벨
-	
-};
-
-USTRUCT(BlueprintType)
-struct FInventorySaveData
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<FName, int32> MaterialCounts; // 객체 포인터가 아닌 이름이나 ID로 저장
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FName> OwnedSoulGems; // 획득한 소울젬 ID 리스트
-};
 
 UCLASS()
 class THESEVENTHBULLET_API USaveAndLoadGame : public USaveGame
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FCharacterSaveData CharacterSaveData;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FInventorySaveData InventoryData;
+	FCharacterStat TotalStat;//Character 총 스텟
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FCharacterStat CharacterStat;
+	FCharacterStat CharacterBaseStat;//Character 기본 스탯
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FEnhancerStatus EnhanceStat;//상점에서 구매한 스탯
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FItemInstance> CharacterInventoryItems;//캐릭터 인벤토리 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FItemInstance> ChestInventoryItems;//창고 인벤토리
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FSoulGemInstance> EquippedSoulGems;//장착 중인 소울잼 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName CurrentDay;//현재 날짜

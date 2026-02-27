@@ -36,6 +36,8 @@ public:
 	
 	FCharacterStat GetTotalGemStats() const;
 	
+	UFUNCTION()
+	void LoadData(TArray<FSoulGemInstance>& LoadEquippedSoulGems);
 public:
 	// 장착된 소울젬이 변경
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")

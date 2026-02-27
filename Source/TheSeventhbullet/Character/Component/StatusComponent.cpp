@@ -50,6 +50,12 @@ FCharacterStat UStatusComponent::EnhanceStatToCharacterStat()
 	return FinalStat;
 }
 
+void UStatusComponent::LoadData(FCharacterStat& LoadCharacterStatus, FEnhancerStatus& LoadEnhancerStatus)
+{
+	CharacterStatus = LoadCharacterStatus;
+	CharacterEnhanceStatus = LoadEnhancerStatus;
+}
+
 FCharacterStat UStatusComponent::GetCharacterStatus() const
 {
 	return CharacterStatus;
