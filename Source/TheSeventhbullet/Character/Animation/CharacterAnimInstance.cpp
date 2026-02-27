@@ -35,17 +35,18 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsFalling = MovementComp->IsFalling();
 	}
 	
-	// 회피 상태 계산
+	
 	AMainCharacter* MainCharacter = Cast<AMainCharacter>(OwnerCharacter);
 	if (MainCharacter)
 	{
+		// 회피 상태
 		bIsDodging = MainCharacter->IsDodge();
-	}
-	
-	// 조준 상태 계산
-	if (MainCharacter)
-	{
+		
+		// 조준 상태
 		bIsAiming = MainCharacter->IsAiming();
+		
+		// 사격 상태
+		bIsFiring = MainCharacter->IsFiring();
 	}
 }
 

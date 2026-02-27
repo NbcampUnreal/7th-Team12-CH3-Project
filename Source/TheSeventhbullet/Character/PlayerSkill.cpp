@@ -8,7 +8,7 @@
 
 APlayerSkill::APlayerSkill()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	
 	Collision = CreateDefaultSubobject<USphereComponent>(TEXT("Collision"));
 	Collision->SetSphereRadius(15.0f);
@@ -24,7 +24,7 @@ APlayerSkill::APlayerSkill()
 	ProjectileMovement->InitialSpeed = 2000.0f;
 	ProjectileMovement->MaxSpeed = 2000.0f;
 	ProjectileMovement->bRotationFollowsVelocity = true;	// 날아가는 방향으로 회전 True
-	ProjectileMovement->bShouldBounce = false;	// 벽에 닿으면 튕김
+	ProjectileMovement->bShouldBounce = true;	// 벽에 닿으면 튕김
 	
 	ExplodeRadius = 500.0f;
 	DamageAmount = 50.0f;
@@ -35,6 +35,8 @@ void APlayerSkill::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	RandomPitch = FMath::RandRange(300.f, 800.f);
+	RandomYaw = FMath::RandRange(300.f, 800.f);
 	// 충돌 무시 설정
 	AActor* Player = GetOwner();
 	//UPrimitiveComponent* CollisionComp = Cast<UPrimitiveComponent>(RootComponent);	
@@ -44,8 +46,18 @@ void APlayerSkill::BeginPlay()
 	}
 }
 
+void APlayerSkill::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+	if (Mesh)
+	{
+		Mesh->AddLocalRotation(FRotator(RandomPitch, RandomYaw, 0.0f) * DeltaTime);
+	}
+}
+
 void APlayerSkill::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse, const FHitResult& Hit)
+                         FVector NormalImpulse, const FHitResult& Hit)
 {
 	// 플레이어 아니면 Explode
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherActor != GetOwner()))
