@@ -66,6 +66,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryChanged OnItemRemoved;
 	
+	UFUNCTION()
+	void LoadData(TArray<FItemInstance>& InventoryItem);
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FItemInstance> Items;

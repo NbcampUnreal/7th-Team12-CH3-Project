@@ -49,5 +49,6 @@ private:
 	UPROPERTY()	
 	TArray<TObjectPtr<AActor>> HittedCharacterArray;
 	
+	AMainGameMode* GM = nullptr;
 	
 };

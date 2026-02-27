@@ -31,7 +31,7 @@ public:
 	UFUNCTION()
 	void LoadData(FCharacterStat& LoadCharacterStatus, FEnhancerStatus& LoadEnhancerStatus);
 	UFUNCTION()
-	FCharacterStat GetCharacterStatus() const;
+	FCharacterStat GetCharacterBaseStatus() const;
 	void SetCharacterStatus(FCharacterStat& Status);
 	void SetCharacterEnhanceStatus(FEnhancerStatus& Status);
 	FEnhancerStatus GetCharacterEnhanceStatus() const;

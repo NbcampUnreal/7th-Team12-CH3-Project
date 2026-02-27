@@ -6,6 +6,7 @@
 #include "TheSeventhbullet/Character/MainPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/LevelStreaming.h"
+#include "GameInstance/MainGameInstance.h"
 #include "TheSeventhbullet/Manager/SyncDataManager.h"
 #include "TheSeventhbullet/Wave/WaveStateMachine.h"
 #include "TheSeventhbullet/Manager/UIManager.h"
@@ -72,9 +73,7 @@ void AMainGameMode::PrepareStageAndPreLoad()
 				GlobalMax = Elem.Value;
 			}
 		}
-		
 	}
-	
 	//서브시스템에 최댓값 pool 개수를 만들어서 넘김
 	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
 	if (SubSystem)
@@ -425,6 +424,29 @@ void AMainGameMode::StartGamePlay()
 
 }
 
+void AMainGameMode::ReturnToTown()
+{
+	CurrentWaveIndex = 0;
+	CurrentRequestID = INDEX_NONE;
+	
+	UMainGameInstance* GI = UMainGameInstance::Get(this);
+	if (!GI) return;
+	
+	GI->TotalRequestAttack += RequestAttack;
+	GI->TotalRequestHit += RequestHit;
+	SpawnQueue.Empty();
+	SpawnTimer = 0.0f;
+	AliveMonsterCount = 0;
+	StageElapsedTime = 0.0f;
+	CurrentStageResult = EStageResult::None;
+
+	if (WaveStateMachine)
+	{
+		WaveStateMachine->ChangeState(EWaveState::None);
+	}
+	
+}
+
 void AMainGameMode::ReturnToMainMenu()
 {
 	// 웨이브 상태 리셋
@@ -432,7 +454,7 @@ void AMainGameMode::ReturnToMainMenu()
 	{
 		WaveStateMachine->ChangeState(EWaveState::None);
 	}
-
+	
 	CurrentWaveIndex = 0;
 	CurrentRequestID = INDEX_NONE;
 	SpawnQueue.Empty();
@@ -468,24 +490,6 @@ void AMainGameMode::ReturnToMainMenu()
 	{
 		UIMgr->Open(UITags::MainMenu);
 	}
-}
-
-void AMainGameMode::ReturnToTown()
-{
-	CurrentWaveIndex = 0;
-	CurrentRequestID = INDEX_NONE;
-
-	SpawnQueue.Empty();
-	SpawnTimer = 0.0f;
-	AliveMonsterCount = 0;
-	StageElapsedTime = 0.0f;
-	CurrentStageResult = EStageResult::None;
-
-	if (WaveStateMachine)
-	{
-		WaveStateMachine->ChangeState(EWaveState::None);
-	}
-	
 }
 
 void AMainGameMode::Tick(float DeltaSeconds)

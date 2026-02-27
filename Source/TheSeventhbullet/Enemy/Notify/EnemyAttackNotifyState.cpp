@@ -5,6 +5,7 @@
 #include"Kismet/KismetSystemLibrary.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
+#include "System/MainGameMode.h"
 #include "TheSeventhbullet/Character/MainCharacter.h"
 #include "TheSeventhbullet/Enemy/EnemyBase.h"
 #include "WorldPartition/HLOD/DestructibleHLODComponent.h"
@@ -34,6 +35,8 @@ void UEnemyAttackNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAni
 	                                              GetLocation();
 	PresentAttackSocketLocation = OwnerEnemyBase->GetMesh()->GetSocketTransform(FName("Attack_Socket"), RTS_World).
 	                                              GetLocation();
+	
+	GM = AMainGameMode::Get(this);
 }
 
 void UEnemyAttackNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -91,6 +94,9 @@ void UEnemyAttackNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 		{
 			continue;
 		}
+		
+		if (!GM) return;
+		GM->RequestHit++;
 		
 		//피격당한 목록에 추가
 		HittedCharacterArray.Add(HittedCharacter);

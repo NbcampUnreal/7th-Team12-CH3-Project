@@ -4,6 +4,7 @@
 #include "Components/ActorComponent.h"
 #include "Data/StatusTypes.h"
 #include "DataAsset/WeaponDataAsset.h"
+#include "System/MainGameMode.h"
 #include "CombatComponent.generated.h"
 
 struct FDamageContext;
@@ -73,4 +74,5 @@ private:
 	bool bDrawFireDebug = false; // 발사 디버그 표시 여부
 	float FireDebugDuration = 0.f; // 발사 디버그 지속 시간
 	bool bDrawDebugInfinite = false; // 발사 디버그 드로우를 영구지속할지 여부
+	AMainGameMode* GM = nullptr;
 };
