@@ -114,7 +114,7 @@ void UEscMenuWidget::OnBackToMenuClicked()
 {
 	if (UUIManager* UIMgr = UUIManager::Get(this))
 	{
-		UIMgr->PopAll();
+		UIMgr->Close(UITags::EscMenu);
 	}
 
 	UMainGameInstance* GI = UMainGameInstance::Get(this);

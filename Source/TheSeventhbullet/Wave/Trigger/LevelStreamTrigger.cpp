@@ -102,7 +102,7 @@ void ALevelStreamTrigger::ShowLoadingScreen()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UUserWidget* Widget = UIMgr->ShowByTag(UITags::LoadingScreen);
+		UUserWidget* Widget = UIMgr->Open(UITags::LoadingScreen);
 		CachedLoadingWidget = Cast<ULoadingScreenWidget>(Widget);
 		if (CachedLoadingWidget)
 		{
@@ -122,6 +122,6 @@ void ALevelStreamTrigger::HideLoadingScreen()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->HideByTag(UITags::LoadingScreen);
+		UIMgr->Close(UITags::LoadingScreen);
 	}
 }

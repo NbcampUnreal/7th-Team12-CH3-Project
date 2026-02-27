@@ -77,7 +77,7 @@ void URequestComponent::ProgressInteract(AActor* Interactor)
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (!UIMgr) return;
 
-	UUserWidget* Widget = UIMgr->PushByTag(UITags::Request);
+	UUserWidget* Widget = UIMgr->Open(UITags::Request);
 	URequestWidget* RequestWidget = Cast<URequestWidget>(Widget);
 	if (RequestWidget)
 	{
@@ -90,7 +90,7 @@ void URequestComponent::EndInteract(AActor* Interactor)
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->Pop();
+		UIMgr->Close(UITags::Request);
 	}
 }
 

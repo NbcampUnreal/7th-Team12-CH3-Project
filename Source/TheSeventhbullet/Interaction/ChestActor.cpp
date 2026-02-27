@@ -30,7 +30,7 @@ void AChestActor::Interact(AActor* Interactor)
 		return;
 	}
 
-	UUserWidget* Widget = UIMgr->PushByTag(UITags::Storage);
+	UUserWidget* Widget = UIMgr->Open(UITags::Storage);
 	UStorageWidget* StorageWidget = Cast<UStorageWidget>(Widget);
 	if (StorageWidget)
 	{

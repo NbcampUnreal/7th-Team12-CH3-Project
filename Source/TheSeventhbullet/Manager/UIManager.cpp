@@ -1,6 +1,5 @@
 #include "UIManager.h"
 #include "DataAsset/UIDataAsset.h"
-#include "TheSeventhbullet/UI/UITags.h"
 #include "TheSeventhbullet/Character/MainPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
@@ -8,20 +7,19 @@
 void UUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	
+
 	const TCHAR* AssetPath = TEXT("/Game/TheSeventhBullet/Blueprints/UI/UIConfig/DA_UIConfig.DA_UIConfig");
-	
 	UIDataAsset = Cast<UUIDataAsset>(StaticLoadObject(UUIDataAsset::StaticClass(), nullptr, AssetPath));
 
-	if (!UIDataAsset)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UIManager: DA_UIConfig not found"));
-	}
+	if (!UIDataAsset) return;
 }
 
 void UUIManager::Deinitialize()
 {
-	WidgetStack.Empty();
+	ActiveGameMenu = nullptr;
+	ActiveMenu = nullptr;
+	ModalStack.Empty();
+	ModalTagStack.Empty();
 
 	for (auto& Pair : WidgetCache)
 	{
@@ -44,20 +42,30 @@ UUIManager* UUIManager::Get(const UObject* WorldContextObject)
 	return nullptr;
 }
 
-UUserWidget* UUIManager::GetWidget(TSubclassOf<UUserWidget> WidgetClass)
+const FUIWidgetEntry* UUIManager::FindEntry(FName Tag) const
 {
-	if (!WidgetClass)
+	if (!UIDataAsset)
 	{
 		return nullptr;
 	}
+	return UIDataAsset->FindEntry(Tag);
+}
 
-	if (TObjectPtr<UUserWidget>* Found = WidgetCache.Find(WidgetClass))
+UUserWidget* UUIManager::GetOrCreateWidget(FName Tag, int32 ZOrder)
+{
+	if (TObjectPtr<UUserWidget>* Found = WidgetCache.Find(Tag))
 	{
 		if (Found->Get())
 		{
 			return Found->Get();
 		}
-		WidgetCache.Remove(WidgetClass);
+		WidgetCache.Remove(Tag);
+	}
+
+	const FUIWidgetEntry* Entry = FindEntry(Tag);
+	if (!Entry || !Entry->WidgetClass)
+	{
+		return nullptr;
 	}
 
 	UWorld* World = GetGameInstance()->GetWorld();
@@ -66,43 +74,170 @@ UUserWidget* UUIManager::GetWidget(TSubclassOf<UUserWidget> WidgetClass)
 		return nullptr;
 	}
 
-	UUserWidget* NewWidget = CreateWidget<UUserWidget>(World, WidgetClass);
+	UUserWidget* NewWidget = CreateWidget<UUserWidget>(World, Entry->WidgetClass);
 	if (NewWidget)
 	{
 		NewWidget->SetVisibility(ESlateVisibility::Collapsed);
-		NewWidget->AddToViewport();
-		WidgetCache.Add(WidgetClass, NewWidget);
+		NewWidget->AddToViewport(ZOrder);
+		WidgetCache.Add(Tag, NewWidget);
 	}
 	return NewWidget;
 }
 
-
-UUserWidget* UUIManager::Show(TSubclassOf<UUserWidget> WidgetClass, int32 ZOrder)
+void UUIManager::CloseWidget(UUserWidget* Widget, EUILayer Layer)
 {
-	UUserWidget* Widget = GetWidget(WidgetClass);
+	if (!Widget)
+	{
+		return;
+	}
+	Widget->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+UUserWidget* UUIManager::Open(FName Tag)
+{
+	const FUIWidgetEntry* Entry = FindEntry(Tag);
+	if (!Entry)
+	{
+		return nullptr;
+	}
+
+	const EUILayer Layer = Entry->Layer;
+	int32 ZOrder = ZOrder_Game;
+
+	switch (Layer)
+	{
+	case EUILayer::Game:
+		ZOrder = ZOrder_Game;
+		break;
+	case EUILayer::GameMenu:
+		ZOrder = ZOrder_GameMenu;
+		break;
+	case EUILayer::Menu:
+		ZOrder = ZOrder_Menu;
+		break;
+	case EUILayer::Modal:
+		ZOrder = ZOrder_Modal;
+		break;
+	}
+
+	UUserWidget* Widget = GetOrCreateWidget(Tag, ZOrder);
 	if (!Widget)
 	{
 		return nullptr;
 	}
 
-	Widget->SetVisibility(ESlateVisibility::Visible);
+	switch (Layer)
+	{
+	case EUILayer::Game:
+		Widget->SetVisibility(ESlateVisibility::Visible);
+		break;
+
+	case EUILayer::GameMenu:
+		if (ActiveGameMenu && ActiveGameMenu != Widget)
+		{
+			return nullptr;
+		}
+		ActiveGameMenu = Widget;
+		ActiveGameMenuTag = Tag;
+		Widget->SetVisibility(ESlateVisibility::Visible);
+		break;
+
+	case EUILayer::Menu:
+		if (ActiveMenu && ActiveMenu != Widget)
+		{
+			return nullptr;
+		}
+		ActiveMenu = Widget;
+		ActiveMenuTag = Tag;
+		Widget->SetVisibility(ESlateVisibility::Visible);
+		break;
+
+	case EUILayer::Modal:
+		if (!ModalStack.Contains(Widget))
+		{
+			ModalStack.Add(Widget);
+			ModalTagStack.Add(Tag);
+		}
+		Widget->SetVisibility(ESlateVisibility::Visible);
+		break;
+	}
+
+	UpdateInputMode();
 	return Widget;
 }
 
-void UUIManager::Hide(TSubclassOf<UUserWidget> WidgetClass)
+void UUIManager::Close(FName Tag)
 {
-	TObjectPtr<UUserWidget>* Found = WidgetCache.Find(WidgetClass);
+	const FUIWidgetEntry* Entry = FindEntry(Tag);
+	if (!Entry)
+	{
+		return;
+	}
+
+	TObjectPtr<UUserWidget>* Found = WidgetCache.Find(Tag);
 	if (!Found || !Found->Get())
 	{
 		return;
 	}
 
-	Found->Get()->SetVisibility(ESlateVisibility::Collapsed);
+	UUserWidget* Widget = Found->Get();
+	const EUILayer Layer = Entry->Layer;
+
+	switch (Layer)
+	{
+	case EUILayer::Game:
+		Widget->SetVisibility(ESlateVisibility::Collapsed);
+		break;
+
+	case EUILayer::GameMenu:
+		if (ActiveGameMenu == Widget)
+		{
+			CloseWidget(Widget, EUILayer::GameMenu);
+			ActiveGameMenu = nullptr;
+			ActiveGameMenuTag = NAME_None;
+		}
+		break;
+
+	case EUILayer::Menu:
+		if (ActiveMenu == Widget)
+		{
+			CloseWidget(Widget, EUILayer::Menu);
+			ActiveMenu = nullptr;
+			ActiveMenuTag = NAME_None;
+		}
+		break;
+
+	case EUILayer::Modal:
+		{
+			int32 Idx = ModalStack.IndexOfByKey(Widget);
+			if (Idx != INDEX_NONE)
+			{
+				CloseWidget(Widget, EUILayer::Modal);
+				ModalStack.RemoveAt(Idx);
+				ModalTagStack.RemoveAt(Idx);
+			}
+		}
+		break;
+	}
+
+	UpdateInputMode();
 }
 
-bool UUIManager::IsVisible(TSubclassOf<UUserWidget> WidgetClass) const
+void UUIManager::Toggle(FName Tag)
 {
-	const TObjectPtr<UUserWidget>* Found = WidgetCache.Find(WidgetClass);
+	if (IsOpen(Tag))
+	{
+		Close(Tag);
+	}
+	else
+	{
+		Open(Tag);
+	}
+}
+
+bool UUIManager::IsOpen(FName Tag) const
+{
+	const TObjectPtr<UUserWidget>* Found = WidgetCache.Find(Tag);
 	if (!Found || !Found->Get())
 	{
 		return false;
@@ -110,148 +245,45 @@ bool UUIManager::IsVisible(TSubclassOf<UUserWidget> WidgetClass) const
 	return Found->Get()->GetVisibility() == ESlateVisibility::Visible;
 }
 
-UUserWidget* UUIManager::Push(TSubclassOf<UUserWidget> WidgetClass, int32 ZOrder)
+UUserWidget* UUIManager::GetWidget(FName Tag)
 {
-	UUserWidget* Widget = GetWidget(WidgetClass);
-	if (!Widget)
+	const FUIWidgetEntry* Entry = FindEntry(Tag);
+	if (!Entry)
 	{
 		return nullptr;
 	}
 
-	// 이미 스택에 있으면 중복 Push 방지
-	if (WidgetStack.Contains(Widget))
+	int32 ZOrder = ZOrder_Game;
+	switch (Entry->Layer)
 	{
-		Widget->SetVisibility(ESlateVisibility::Visible);
-		return Widget;
+	case EUILayer::GameMenu: ZOrder = ZOrder_GameMenu; break;
+	case EUILayer::Menu:     ZOrder = ZOrder_Menu;     break;
+	case EUILayer::Modal:    ZOrder = ZOrder_Modal;    break;
+	default: break;
 	}
 
-	// 기존 Top 숨기기
-	if (WidgetStack.Num() > 0)
-	{
-		UUserWidget* OldTop = WidgetStack.Last();
-		if (OldTop)
-		{
-			OldTop->SetVisibility(ESlateVisibility::Collapsed);
-		}
-	}
-
-	WidgetStack.Add(Widget);
-	Widget->SetVisibility(ESlateVisibility::Visible);
-
-	return Widget;
-}
-
-void UUIManager::Pop()
-{
-	if (WidgetStack.Num() == 0)
-	{
-		return;
-	}
-
-	UUserWidget* Top = WidgetStack.Pop();
-	if (Top)
-	{
-		Top->SetVisibility(ESlateVisibility::Collapsed);
-	}
-
-	if (WidgetStack.Num() > 0)
-	{
-		UUserWidget* NewTop = WidgetStack.Last();
-		if (NewTop)
-		{
-			NewTop->SetVisibility(ESlateVisibility::Visible);
-		}
-	}
-
-	UpdateInputModeForStack();
-}
-
-void UUIManager::PopAll()
-{
-	while (WidgetStack.Num() > 0)
-	{
-		UUserWidget* Top = WidgetStack.Pop();
-		if (Top)
-		{
-			Top->SetVisibility(ESlateVisibility::Collapsed);
-		}
-	}
-
-	UpdateInputModeForStack();
-}
-
-// ──────────────────────────────────────────────
-// Tag 기반 API
-// ──────────────────────────────────────────────
-
-TSubclassOf<UUserWidget> UUIManager::FindWidget(FName Tag) const
-{
-	if (!UIDataAsset)
-	{
-		return nullptr;
-	}
-	TSubclassOf<UUserWidget> WidgetClass = UIDataAsset->FindWidget(Tag);
-	if (!WidgetClass)
-	{	
-		return nullptr;
-	}
-	return WidgetClass;
-}
-
-UUserWidget* UUIManager::ShowByTag(FName Tag, int32 ZOrder)
-{
-	return Show(FindWidget(Tag), ZOrder);
-}
-
-void UUIManager::HideByTag(FName Tag)
-{
-	Hide(FindWidget(Tag));
-}
-
-UUserWidget* UUIManager::PushByTag(FName Tag, int32 ZOrder)
-{
-	UUserWidget* Widget = Push(FindWidget(Tag), ZOrder);
-	UpdateInputModeForStack();
-	return Widget;
-}
-
-bool UUIManager::IsVisibleByTag(FName Tag) const
-{
-	return IsVisible(FindWidget(Tag));
-}
-
-void UUIManager::Toggle(FName Tag, int32 ZOrder)
-{
-	TSubclassOf<UUserWidget> WidgetClass = FindWidget(Tag);
-	if (!WidgetClass)
-	{
-		return;
-	}
-
-	if (IsVisible(WidgetClass))
-	{
-		Pop();
-	}
-	else
-	{
-		Push(WidgetClass, ZOrder);
-		UpdateInputModeForStack();
-	}
+	return GetOrCreateWidget(Tag, ZOrder);
 }
 
 void UUIManager::HandleEscapeAction()
 {
-	if (WidgetStack.Num() > 0)
+	if (ModalStack.Num() > 0)
 	{
-		Pop();
+		FName TopTag = ModalTagStack.Last();
+		Close(TopTag);
+		return;
 	}
-	else
+
+	if (ActiveGameMenu)
 	{
-		Toggle(UITags::EscMenu);
+		Close(ActiveGameMenuTag);
+		return;
 	}
+
+	Toggle(UITags::EscMenu);
 }
 
-void UUIManager::UpdateInputModeForStack()
+void UUIManager::UpdateInputMode()
 {
 	UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
 	if (!World)
@@ -265,31 +297,31 @@ void UUIManager::UpdateInputModeForStack()
 		return;
 	}
 
-	if (WidgetStack.Num() > 0)
+	if (ModalStack.Num() > 0)
 	{
 		PC->SetShowMouseCursor(true);
-		SetGameplayInputEnabled(false);  // IMC_Gameplay 제거
+		SetGameplayInputEnabled(false);
+		UGameplayStatics::SetGamePaused(World, false);
+	}
+	else if (ActiveMenu)
+	{
+		PC->SetShowMouseCursor(true);
+		SetGameplayInputEnabled(false);
+		bool bShouldPause = (ActiveMenuTag == UITags::EscMenu);
+		UGameplayStatics::SetGamePaused(World, bShouldPause);
+	}
+	else if (ActiveGameMenu)
+	{
+		PC->SetShowMouseCursor(true);
+		SetGameplayInputEnabled(false);
+		UGameplayStatics::SetGamePaused(World, false);
 	}
 	else
 	{
 		PC->SetShowMouseCursor(false);
-		SetGameplayInputEnabled(true);   // IMC_Gameplay 복원
+		SetGameplayInputEnabled(true);
+		UGameplayStatics::SetGamePaused(World, false);
 	}
-
-	bool bShouldPause = false;
-	TSubclassOf<UUserWidget> EscMenuClass = FindWidget(UITags::EscMenu);
-	if (EscMenuClass)
-	{
-		for (const TObjectPtr<UUserWidget>& Widget : WidgetStack)
-		{
-			if (Widget && Widget->GetClass() == EscMenuClass)
-			{
-				bShouldPause = true;
-				break;
-			}
-		}
-	}
-	UGameplayStatics::SetGamePaused(World, bShouldPause);
 }
 
 void UUIManager::SetGameplayInputEnabled(bool bEnabled)

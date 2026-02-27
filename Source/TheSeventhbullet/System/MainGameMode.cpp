@@ -90,12 +90,10 @@ void AMainGameMode::OnStageReady()
 {
 	UE_LOG(LogTemp, Log, TEXT("Stage Preparation Complete!"));
 	
-	//TODO : LevelStreamTrigger쪽에있는 CachedLoadingWidget progress 처리부분 제외했음
-	
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->HideByTag(UITags::LoadingScreen);
+		UIMgr->Close(UITags::LoadingScreen);
 	}
 	USyncDataManager* DataManager = USyncDataManager::Get(this);
 	if (!DataManager) return;
@@ -355,7 +353,7 @@ void AMainGameMode::BeginPlay()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->ShowByTag(UITags::MainMenu);
+		UIMgr->Open(UITags::MainMenu);
 	}
 }
 
@@ -364,7 +362,7 @@ void AMainGameMode::StartGamePlay()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->HideByTag(UITags::MainMenu);
+		UIMgr->Close(UITags::MainMenu);
 	}
 
 }
@@ -407,11 +405,10 @@ void AMainGameMode::ReturnToMainMenu()
 		}
 	}
 
-	// 메인 메뉴 표시
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->ShowByTag(UITags::MainMenu);
+		UIMgr->Open(UITags::MainMenu);
 	}
 }
 

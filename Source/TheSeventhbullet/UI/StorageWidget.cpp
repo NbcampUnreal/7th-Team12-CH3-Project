@@ -3,6 +3,7 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Manager/UIManager.h"
+#include "UITags.h"
 
 void UStorageWidget::NativeConstruct()
 {
@@ -32,6 +33,6 @@ void UStorageWidget::OnCloseClicked()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->Pop();
+		UIMgr->Close(UITags::Storage);
 	}
 }
