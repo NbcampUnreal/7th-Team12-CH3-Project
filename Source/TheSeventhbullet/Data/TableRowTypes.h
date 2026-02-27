@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DataAsset/MaterialDataAsset.h"
 #include "Engine/DataTable.h"
 #include "TableRowTypes.generated.h"
 
@@ -139,10 +140,8 @@ struct FMaterialDropEntry
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSoftObjectPtr<UMaterialDataAsset> Material;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 MinCount = 1;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 MaxCount = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin = "0.0"))
+	float DropWeight = 100.f;
 };
 
 USTRUCT(BlueprintType)
@@ -156,12 +155,11 @@ struct FStageDropData
 	// 각 롤을 돌릴 때마다 드랍확률. 기본적으로 일단 50%. 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin="0.0"))
 	float DropChance  = 0.5f;
-	// 최대 드랍 등급
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin="0.0"))
-	int32 MaxAllowedGrade  = 2;
-	// 드랍되는 재료 후보들. (몬스터 별로 다르게 설정할 수도 있게 했음)
+	
+	// Grade 1~6까지 있고, Grade에 따라서 Stage 인덱스별로 가중치를 주는 방식
+	// [1.0, 1.0, 1.0, 0.2, 0.05, 0.01]처럼 Grade가 높은 아이템도 낮은 Stage에서 뜰 확률 자체는 있게 만드는게 좋다고 함.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<FMaterialDropEntry> DropEntries;
+	TArray<float> GradeWeights;
 };
 
 USTRUCT(BlueprintType)
@@ -171,6 +169,15 @@ struct FMonsterDropRowData : public FTableRowBase
 	// 몬스터 타입 별로 드랍테이블을 관리.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	EMonsterType MonsterType;
+	
+	// 드랍되는 재료 후보들. (몬스터 별로 다르게 설정할 수도 있게 했음)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FMaterialDropEntry> DropEntries;
+	
+	// 몬스터가 드랍할 수 있는 Material들을 Type별로 관리함.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<EMaterialTypes> AllowedMaterialTypes;
+	
 	// 스테이지 별 드랍 데이터를 둬서, 스테이지에 따라 드랍되는 Material의 등급을 조금씩 높이는 방식.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FStageDropData> Stages;
