@@ -11,6 +11,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Manager/ProjectilePoolManager.h"
+#include "System/MainGameMode.h"
 #include "Tests/AutomationEditorCommon.h"
 
 
@@ -54,9 +55,11 @@ void AProjectileActor::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor
 	{
 		return;
 	}
-	
 	if (TObjectPtr<AMainCharacter> MainCharacter= Cast<AMainCharacter>(OtherActor))
 	{
+		if (!GM) return;
+		GM->RequestAttack++;
+		
 		UGameplayStatics::ApplyDamage(MainCharacter,AttackPoint,nullptr,this,UDamageType::StaticClass());
 	}
 	GetWorld()->GetSubsystem<UProjectilePoolManager>()->ReturnToPool(this);
@@ -92,7 +95,6 @@ void AProjectileActor::SetEnemySetting(TObjectPtr<AEnemyBase> InEnemy)
 		{
 			ProjectileMovement->bIsHomingProjectile=false;
 		}
-		
 		if (PStatus->StaticMesh!=nullptr)
 		{
 			ProjectileStaticMesh->SetStaticMesh(PStatus->StaticMesh);
@@ -101,11 +103,7 @@ void AProjectileActor::SetEnemySetting(TObjectPtr<AEnemyBase> InEnemy)
 		{
 			ProjectileStaticMesh->SetOverlayMaterial(PStatus->Material);
 		}
-		
 	}
-	
-	
-
 }
 
 
@@ -114,7 +112,6 @@ void AProjectileActor::SetActiveAndCollision(bool InActive)
 
 	if (InActive)
 	{
-		
 		SetActorHiddenInGame(false);
 		SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
@@ -125,8 +122,6 @@ void AProjectileActor::SetActiveAndCollision(bool InActive)
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle,this,&AProjectileActor::LifeTimeEnd,5.0f,false);
 		UE_LOG(LogTemp,Warning,TEXT("Activated"));
 		
-
-
 	}
 	else
 	{
@@ -148,5 +143,11 @@ void AProjectileActor::LifeTimeEnd()
 	}
 	GetWorld()->GetSubsystem<UProjectilePoolManager>()->ReturnToPool(this);
 	UE_LOG(LogTemp,Warning,TEXT("TimeEnd"));
+}
+
+void AProjectileActor::BeginPlay()
+{
+	Super::BeginPlay();
+	GM = AMainGameMode::Get(this);
 }
 

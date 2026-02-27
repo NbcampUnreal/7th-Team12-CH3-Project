@@ -36,7 +36,8 @@ public:
 	void SetActiveAndCollision(bool InActive);
 	
 	void LifeTimeEnd();
-
+protected:
+	virtual void BeginPlay() override;
 private:
 	UPROPERTY(VisibleAnywhere)
 	float AttackPoint=0.0f;	
@@ -59,7 +60,7 @@ private:
 	UPROPERTY(VisibleAnywhere)
     TObjectPtr<AEnemyBase> Enemy;
 	
-	
+	AMainGameMode* GM = nullptr;
 	
 	FTimerHandle TimerHandle;
 	

@@ -217,6 +217,9 @@ public:
 	
 	UFUNCTION()
 	void OnDeath();
+	
+	UFUNCTION()
+	void LoadData(FCharacterStat& LoadTotalCharacterStatus, int32 CharacterGold);
 public:
 	UFUNCTION()
 	int32 GetGold();

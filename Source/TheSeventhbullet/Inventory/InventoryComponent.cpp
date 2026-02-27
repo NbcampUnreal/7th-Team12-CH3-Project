@@ -39,6 +39,11 @@ bool UInventoryComponent::AddItem(FPrimaryAssetId ItemID, int32 Count)
 	return AddItemInternal(ItemID, Count);
 }
 
+void UInventoryComponent::LoadData(TArray<FItemInstance>& InventoryItem)
+{
+	Items = InventoryItem;
+}
+
 bool UInventoryComponent::AddItemInternal(FPrimaryAssetId ItemID, int32 Count)
 {
 	UAsyncDataManager* Mgr = UAsyncDataManager::Get(this);

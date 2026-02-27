@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Data/SaveAndLoadGame.h"
 #include "Engine/GameInstance.h"
 #include "MainGameInstance.generated.h"
 
@@ -58,7 +59,9 @@ class THESEVENTHBULLET_API UMainGameInstance : public UGameInstance
 	GENERATED_BODY()
 public:
 	static UMainGameInstance* Get(const UObject* WorldContext);
-	int32 CurrentDay = 1;
+	int32 CurrentDay = 1;//현재 날짜
+	int32 TotalRequestAttack = 0;//게임에서 총 공격한 횟수
+	int32 TotalRequestHit = 0;//게임에서 총 공격 당한 횟수
 	void SaveGameData();
 	void LoadAsyncSaveData();
 	void GameStartMapLoad();
@@ -66,7 +69,7 @@ public:
 	void ReturnToMainMenu();
 
 	bool DoesSaveExist() const;
-
+	
 private:
 	void OnSaveDataLoadFinished(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData);
 	UFUNCTION()
@@ -88,7 +91,10 @@ private:
 	TObjectPtr<ULoadingScreenWidget> CachedLoadingWidget;
 
 	FTimerHandle ProgressTimerHandle;
-
+	
+	UPROPERTY()
+	USaveAndLoadGame* CurrentSaveData;
+	
 	float DisplayProgress = 0.0f;
 	float TargetProgress = 0.0f;
 };
