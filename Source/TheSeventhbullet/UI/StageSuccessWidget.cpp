@@ -19,44 +19,29 @@ void UStageSuccessWidget::NativeConstruct()
 	{
 		ReturnButton->OnClicked.AddDynamic(this, &UStageSuccessWidget::OnReturnClicked);
 	}
-
-	if (ShowAnimation)
-	{
-		PlayAnimation(ShowAnimation);
-	}
 }
 
 void UStageSuccessWidget::SetRewards(const TArray<FDroppedMaterialsData>& Rewards)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[StageSuccessWidget] SetRewards called - Num=%d"), Rewards.Num());
-	UE_LOG(LogTemp, Warning, TEXT("[StageSuccessWidget] RewardListBox=%s, RewardEntryClass=%s"),
-		RewardListBox ? TEXT("OK") : TEXT("NULL"),
-		RewardEntryClass ? TEXT("OK") : TEXT("NULL"));
-
 	if (!RewardListBox || !RewardEntryClass) return;
 
 	RewardListBox->ClearChildren();
 
-	for (int32 i = 0; i < Rewards.Num(); i++)
+	for (const FDroppedMaterialsData& Reward : Rewards)
 	{
-		const FDroppedMaterialsData& Reward = Rewards[i];
-		UE_LOG(LogTemp, Warning, TEXT("[StageSuccessWidget] Creating Entry [%d] Material=%s, Count=%d"),
-			i, *Reward.Material.GetAssetName(), Reward.Count);
-
 		URewardEntryWidget* Entry = CreateWidget<URewardEntryWidget>(this, RewardEntryClass);
 		if (Entry)
 		{
 			Entry->SetData(Reward);
 			RewardListBox->AddChildToVerticalBox(Entry);
-			UE_LOG(LogTemp, Warning, TEXT("[StageSuccessWidget] Entry [%d] added to ListBox"), i);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("[StageSuccessWidget] CreateWidget FAILED for Entry [%d]"), i);
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[StageSuccessWidget] Final children count=%d"), RewardListBox->GetChildrenCount());
+	// 2회차 이후 캐시 재사용 시에도 애니메이션 재생
+	if (ShowAnimation)
+	{
+		PlayAnimation(ShowAnimation);
+	}
 }
 
 void UStageSuccessWidget::OnReturnClicked()

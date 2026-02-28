@@ -7,9 +7,6 @@
 
 void URewardEntryWidget::SetData(const FDroppedMaterialsData& Data)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[RewardEntry] SetData - Material=%s, Count=%d"),
-		*Data.Material.GetAssetName(), Data.Count);
-
 	// MaterialDataAsset 로드 (캐시 우선, 폴백 동기 로드)
 	UMaterialDataAsset* MatAsset = nullptr;
 	if (UAsyncDataManager* Mgr = UAsyncDataManager::Get(this))
@@ -18,20 +15,12 @@ void URewardEntryWidget::SetData(const FDroppedMaterialsData& Data)
 			FPrimaryAssetType("Item"),
 			FName(*Data.Material.GetAssetName()));
 		MatAsset = Cast<UMaterialDataAsset>(Mgr->GetLoadedAsset(AssetID));
-		UE_LOG(LogTemp, Warning, TEXT("[RewardEntry] AsyncDataManager cache=%s"), MatAsset ? TEXT("HIT") : TEXT("MISS"));
 	}
 	if (!MatAsset)
 	{
 		MatAsset = Data.Material.LoadSynchronous();
-		UE_LOG(LogTemp, Warning, TEXT("[RewardEntry] LoadSynchronous=%s"), MatAsset ? TEXT("OK") : TEXT("FAILED"));
 	}
-	if (!MatAsset)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[RewardEntry] MaterialDataAsset load FAILED - skipping"));
-		return;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("[RewardEntry] DisplayName=%s"), *MatAsset->DisplayName.ToString());
+	if (!MatAsset) return;
 
 	if (ItemIconImage)
 	{

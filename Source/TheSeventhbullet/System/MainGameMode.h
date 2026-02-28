@@ -75,7 +75,10 @@ public:
 	void StartGamePlay();
 	void ReturnToMainMenu();//메인메뉴로 돌아가는 함수
 	void ReturnToTown();//결산, 혹은 죽음 이후 마을로 돌아가는 함수
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LevelStream")
+	FName TownLevelName = FName(TEXT("L_Town"));
+
 	// Wave System
 	bool HasNextWave() const;
 	void PrepareStageAndPreLoad();
@@ -174,6 +177,9 @@ private:
 	float StageElapsedTime = 0.0f;
 	
 	EStageResult CurrentStageResult = EStageResult::None;
+
+	UFUNCTION()
+	void OnTownLevelLoaded();
 	
 	bool bBossDead = false;
 	

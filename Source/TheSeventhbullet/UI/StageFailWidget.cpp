@@ -13,11 +13,6 @@ void UStageFailWidget::NativeConstruct()
 	{
 		ReturnButton->OnClicked.AddDynamic(this, &UStageFailWidget::OnReturnClicked);
 	}
-
-	if (ShowAnimation)
-	{
-		PlayAnimation(ShowAnimation);
-	}
 }
 
 void UStageFailWidget::SetFailReason(EStageResult Result)
@@ -49,6 +44,12 @@ void UStageFailWidget::SetFailReason(EStageResult Result)
 			ReturnButtonText->SetText(FText::FromString(TEXT("Return to Town")));
 		}
 		break;
+	}
+
+	// 2회차 이후 캐시 재사용 시에도 애니메이션 재생
+	if (ShowAnimation)
+	{
+		PlayAnimation(ShowAnimation);
 	}
 }
 

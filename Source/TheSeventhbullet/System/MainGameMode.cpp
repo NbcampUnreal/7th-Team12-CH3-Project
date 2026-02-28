@@ -418,25 +418,91 @@ void AMainGameMode::StartGamePlay()
 
 void AMainGameMode::ReturnToTown()
 {
-	CurrentWaveIndex = 0;
-	CurrentRequestID = INDEX_NONE;
-	
+	// 웨이브 상태 리셋
+	if (WaveStateMachine)
+	{
+		WaveStateMachine->ChangeState(EWaveState::None);
+	}
 	UMainGameInstance* GI = UMainGameInstance::Get(this);
 	if (!GI) return;
 	
 	GI->TotalRequestAttack += RequestAttack;
 	GI->TotalRequestHit += RequestHit;
+	
+	RequestAttack = 0;
+	RequestHit = 0;
+
+	// 스테이지 데이터 초기화
+	CurrentWaveIndex = 0;
+	CurrentRequestID = INDEX_NONE;
+	
+
 	SpawnQueue.Empty();
 	SpawnTimer = 0.0f;
 	AliveMonsterCount = 0;
 	StageElapsedTime = 0.0f;
 	CurrentStageResult = EStageResult::None;
+	StageRewardItems.Empty();
 
-	if (WaveStateMachine)
+	// UI 정리 + 로딩 화면 표시
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
 	{
-		WaveStateMachine->ChangeState(EWaveState::None);
+		UIMgr->Close(UITags::StageSuccess);
+		UIMgr->Close(UITags::StageFail);
+		UIMgr->Close(UITags::HUD);
+		UIMgr->Close(UITags::Crosshair);
+		UIMgr->Open(UITags::LoadingScreen);
+	}
+
+	// L_Town을 제외한 모든 서브레벨 언로드
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		const TArray<ULevelStreaming*>& StreamingLevels = World->GetStreamingLevels();
+
+		for (ULevelStreaming* StreamingLevel : StreamingLevels)
+		{
+			if (!StreamingLevel) continue;
+
+			FString ShortName = FPackageName::GetShortName(StreamingLevel->GetWorldAssetPackageName());
+			if (FName(*ShortName) == TownLevelName) continue;
+
+			if (StreamingLevel->IsLevelLoaded())
+			{
+				FLatentActionInfo LatentInfo;
+				UGameplayStatics::UnloadStreamLevel(this, FName(*ShortName), LatentInfo, false);
+			}
+		}
 	}
 	
+	FLatentActionInfo LatentInfo;
+	LatentInfo.CallbackTarget = this;
+	LatentInfo.ExecutionFunction = FName("OnTownLevelLoaded");
+	LatentInfo.Linkage = 0;
+	LatentInfo.UUID = GetUniqueID();
+
+	UGameplayStatics::LoadStreamLevel(this, TownLevelName, true, false, LatentInfo);
+}
+
+void AMainGameMode::OnTownLevelLoaded()
+{
+	if (PlayerSpawnPoint.Num() > 0 && PlayerSpawnPoint[0])
+	{
+		APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0);
+		if (Pawn)
+		{
+			Pawn->SetActorLocation(PlayerSpawnPoint[0]->GetActorLocation());
+			Pawn->SetActorRotation(PlayerSpawnPoint[0]->GetActorRotation());
+		}
+	}
+
+	// 로딩 화면 닫기
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->Close(UITags::LoadingScreen);
+	}
 	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (!Character) return;
 	
@@ -454,14 +520,20 @@ void AMainGameMode::ReturnToMainMenu()
 	{
 		WaveStateMachine->ChangeState(EWaveState::None);
 	}
+	
+	RequestAttack = 0;
+	RequestHit = 0;
 
+	// 스테이지 데이터 초기화
 	CurrentWaveIndex = 0;
 	CurrentRequestID = INDEX_NONE;
 	SpawnQueue.Empty();
+	SpawnTimer = 0.0f;
 	AliveMonsterCount = 0;
 	SpawnTimer = 0.0f;
 	StageElapsedTime = 0.0f;
 	CurrentStageResult = EStageResult::None;
+	StageRewardItems.Empty();
 
 	// L_Town을 제외한 모든 서브레벨 언로드
 	UWorld* World = GetWorld();
@@ -485,9 +557,14 @@ void AMainGameMode::ReturnToMainMenu()
 		}
 	}
 
+	// UI 정리 후 메인메뉴 표시
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
+		UIMgr->Close(UITags::StageSuccess);
+		UIMgr->Close(UITags::StageFail);
+		UIMgr->Close(UITags::HUD);
+		UIMgr->Close(UITags::Crosshair);
 		UIMgr->Open(UITags::MainMenu);
 	}
 }
