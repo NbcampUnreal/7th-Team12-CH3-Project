@@ -105,7 +105,6 @@ public:
 	bool bIsReload = false;	// 장전 상태
 	bool bIsFireButtonPressed = false;	// 사격 인풋 
 	bool bIsFire = false;	// 사격 상태
-	
 #pragma endregion
 	
 #pragma region Camera
@@ -189,6 +188,7 @@ public:
 	bool IsInvicible();
 	bool IsAiming();
 	bool IsFiring();
+	bool IsFalling();
 	
 #pragma endregion
 	

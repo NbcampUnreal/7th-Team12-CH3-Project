@@ -34,9 +34,9 @@ AMainCharacter::AMainCharacter()
 	SprintMultiplier = 1.5f;
 	AimMultiplier = 0.8f;
 	NormalArmLength = 400.0f; 
-	AimingArmLength = 300.0f;
-	NormalSpringArm = FVector(0.0f, 10.0f, 50.0f);
-	AimingSpringArm = FVector(0.0f, 70.0f, 70.0f);
+	AimingArmLength = 200.0f;
+	NormalSpringArm = FVector(0.0f, 30.0f, 60.0f);
+	AimingSpringArm = FVector(0.0f, 90.0f, 80.0f);
 	NormalFOV = 90.0f;
 	AimingFOV = 70.0f;
 	CameraInterpSpeed = 15.0f;
@@ -283,6 +283,11 @@ bool AMainCharacter::IsAiming()
 bool AMainCharacter::IsFiring()
 {
 	return bIsFire;
+}
+
+bool AMainCharacter::IsFalling()
+{
+	return GetCharacterMovement()->IsFalling();
 }
 
 void AMainCharacter::PlayAnimMotageByState(EAnimState AnimState)
@@ -675,7 +680,7 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 	
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 	
-	if (bIsDodge ||bIsReload)
+	if (bIsDodge || bIsReload || IsFalling())
 	{
 		return;
 	}
