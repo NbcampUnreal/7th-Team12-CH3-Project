@@ -105,6 +105,86 @@ void UMainHUDWidget::OnCurrentNotifyHideFinished()
 	ShowNextNotify();
 }
 
+// --- Wave Info ---
+void UMainHUDWidget::ShowWaveInfo(int32 WaveNumber, float Countdown)
+{
+	if (WaveInfoText)
+	{
+		WaveInfoText->SetText(FText::FromString(FString::Printf(TEXT("Wave %d"), WaveNumber)));
+		WaveInfoText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+	if (WaveTimerText)
+	{
+		WaveTimerText->SetText(FText::FromString(FString::Printf(TEXT("%.0f"), FMath::CeilToFloat(Countdown))));
+		WaveTimerText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+	if (MonsterCountText)
+	{
+		MonsterCountText->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void UMainHUDWidget::UpdateWaveTimer(float RemainingTime)
+{
+	if (WaveTimerText)
+	{
+		int32 Minutes = FMath::FloorToInt(RemainingTime / 60.f);
+		int32 Seconds = FMath::FloorToInt(FMath::Fmod(RemainingTime, 60.f));
+		WaveTimerText->SetText(FText::FromString(FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds)));
+	}
+}
+
+void UMainHUDWidget::UpdateMonsterCount(int32 AliveCount)
+{
+	if (MonsterCountText)
+	{
+		MonsterCountText->SetText(FText::FromString(FString::Printf(TEXT("Remaining : %d"), AliveCount)));
+		MonsterCountText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+}
+
+void UMainHUDWidget::ShowWaveClear()
+{
+	if (WaveInfoText)
+	{
+		WaveInfoText->SetText(FText::FromString(TEXT("Wave Clear!")));
+		WaveInfoText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+	if (WaveTimerText)
+	{
+		WaveTimerText->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (MonsterCountText)
+	{
+		MonsterCountText->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void UMainHUDWidget::ShowIntermission(float RemainingTime)
+{
+	if (WaveInfoText)
+	{
+		WaveInfoText->SetText(FText::FromString(TEXT("Intermission")));
+		WaveInfoText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+	if (WaveTimerText)
+	{
+		WaveTimerText->SetText(FText::FromString(FString::Printf(TEXT("%.0f"), FMath::CeilToFloat(RemainingTime))));
+		WaveTimerText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+	if (MonsterCountText)
+	{
+		MonsterCountText->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void UMainHUDWidget::HideWaveInfo()
+{
+	if (WaveInfoText) WaveInfoText->SetVisibility(ESlateVisibility::Collapsed);
+	if (WaveTimerText) WaveTimerText->SetVisibility(ESlateVisibility::Collapsed);
+	if (MonsterCountText) MonsterCountText->SetVisibility(ESlateVisibility::Collapsed);
+}
+
 //스탯관리하는 부분에서 BroadCast받아 올 예정
 void UMainHUDWidget::UpdateHP(float CurrentHP, float MaxHP)
 {

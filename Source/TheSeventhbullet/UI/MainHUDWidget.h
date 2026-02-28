@@ -30,6 +30,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|HUD")
 	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
 
+	// --- Wave Info ---
+	void ShowWaveInfo(int32 WaveNumber, float Countdown);
+	void UpdateWaveTimer(float RemainingTime);
+	void UpdateMonsterCount(int32 AliveCount);
+	void ShowWaveClear();
+	void ShowIntermission(float RemainingTime);
+	void HideWaveInfo();
+
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
@@ -40,6 +48,16 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> AmmoText;
+
+	// --- Wave Info ---
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> WaveInfoText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> WaveTimerText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> MonsterCountText;
 
 	// --- 드랍 알림 ---
 	UPROPERTY(meta = (BindWidget))

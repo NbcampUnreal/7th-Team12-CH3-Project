@@ -103,6 +103,7 @@ public:
 	void OnPlayerDead();
 	
 	//Wave Data Getter
+	int32 GetAliveMonsterCount() const;
 	int32 GetCurrentRequestID() const;
 	int32 GetCurrentWaveIndex() const;
 	float GetWaveStartDelay() const;

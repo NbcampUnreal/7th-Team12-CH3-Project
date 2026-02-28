@@ -21,14 +21,30 @@ void UResultWaveState::Enter()
 	UIMgr->Close(UITags::HUD);
 	UIMgr->Close(UITags::Crosshair);
 
+	UE_LOG(LogTemp, Warning, TEXT("[ResultWaveState] StageResult=%d"), (int32)Result);
+
 	switch (Result)
 	{
 	case EStageResult::Success:
 		{
+			const TArray<FDroppedMaterialsData>& Rewards = GM->GetStageRewardItems();
+			UE_LOG(LogTemp, Warning, TEXT("[ResultWaveState] Success - RewardItems Num=%d"), Rewards.Num());
+			for (int32 i = 0; i < Rewards.Num(); i++)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[ResultWaveState]   [%d] Material=%s, Count=%d"),
+					i, *Rewards[i].Material.GetAssetName(), Rewards[i].Count);
+			}
+
 			UUserWidget* Widget = UIMgr->Open(UITags::StageSuccess);
+			UE_LOG(LogTemp, Warning, TEXT("[ResultWaveState] Open StageSuccess Widget=%s"), Widget ? *Widget->GetName() : TEXT("NULL"));
+
 			if (UStageSuccessWidget* SuccessWidget = Cast<UStageSuccessWidget>(Widget))
 			{
-				SuccessWidget->SetRewards(GM->GetStageRewardItems());
+				SuccessWidget->SetRewards(Rewards);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("[ResultWaveState] Cast to UStageSuccessWidget FAILED"));
 			}
 		}
 		break;

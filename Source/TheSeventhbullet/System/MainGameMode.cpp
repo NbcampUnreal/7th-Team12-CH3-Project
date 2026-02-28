@@ -176,8 +176,6 @@ void AMainGameMode::OnMonsterKilled()
 void AMainGameMode::UpdateStageTimer(float DeltaTime)
 {
 	StageElapsedTime += DeltaTime;
-	
-	//TODO 영섭 : HUD에 남은 시간 업데이트
 }
 
 bool AMainGameMode::IsStageTimeOver() const
@@ -502,6 +500,11 @@ void AMainGameMode::Tick(float DeltaSeconds)
 	{
 		WaveStateMachine->Tick(DeltaSeconds);
 	}
+}
+
+int32 AMainGameMode::GetAliveMonsterCount() const
+{
+	return AliveMonsterCount;
 }
 
 int32 AMainGameMode::GetCurrentRequestID() const
