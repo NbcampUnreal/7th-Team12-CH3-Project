@@ -182,3 +182,15 @@ struct FMonsterDropRowData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FStageDropData> Stages;
 };
+
+USTRUCT(BlueprintType)
+struct FMaterialRecycleRow : public FTableRowBase
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 Grade = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FMaterialDropEntry> RecycleResultPool;
+};
