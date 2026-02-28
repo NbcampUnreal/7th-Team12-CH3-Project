@@ -73,7 +73,9 @@ void AMainGameMode::PrepareStageAndPreLoad()
 				GlobalMax = Elem.Value;
 			}
 		}
+		
 	}
+	
 	//서브시스템에 최댓값 pool 개수를 만들어서 넘김
 	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
 	if (SubSystem)
@@ -203,6 +205,11 @@ EStageResult AMainGameMode::GetStageResult() const
 	return CurrentStageResult;
 }
 
+const TArray<FDroppedMaterialsData>& AMainGameMode::GetStageRewardItems() const
+{
+	return StageRewardItems;
+}
+
 void AMainGameMode::CleanupAllMonsters()
 {
 	SpawnQueue.Empty();
@@ -268,12 +275,12 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 {
 	// 싱크매니저 가져오기
 	USyncDataManager*  DataManager = USyncDataManager::Get(this);
-	if (! DataManager) return;
+	if (!DataManager) return;
 	// Request Index 를 현재 Request Index에 따라서 보상표가 달라지기 때문에 현재 Request Index로 가져오기.
 	const int32 StageIndex = CurrentRequestID;
 	FMonsterDropRowData Row =  DataManager->GetDropMaterialData(MonsterType);
 	if (!Row.Stages.IsValidIndex(StageIndex)) return;
-	
+
 	const FStageDropData& DropData = Row.Stages[StageIndex];
 	if (DropData.DropRollsCount <= 0 || Row.DropEntries.Num() == 0) return;
 	
@@ -454,7 +461,7 @@ void AMainGameMode::ReturnToMainMenu()
 	{
 		WaveStateMachine->ChangeState(EWaveState::None);
 	}
-	
+
 	CurrentWaveIndex = 0;
 	CurrentRequestID = INDEX_NONE;
 	SpawnQueue.Empty();

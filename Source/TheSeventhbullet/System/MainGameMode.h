@@ -95,6 +95,7 @@ public:
 	// Stage Result
 	void SetStageResult(EStageResult InResult);
 	EStageResult GetStageResult() const;
+	const TArray<FDroppedMaterialsData>& GetStageRewardItems() const;
 	void CleanupAllMonsters();
 	
 	//Player Dead

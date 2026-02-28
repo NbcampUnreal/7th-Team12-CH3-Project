@@ -233,7 +233,7 @@ void AEnemyBase::DropItem()
 {
 	if (bDroppedItem) return;
 	bDroppedItem = true;
-	
+
 	if (AMainGameMode* GM = AMainGameMode::Get(this))
 	{
 		GM->ItemDropFromMonster(EnemyMonsterType);

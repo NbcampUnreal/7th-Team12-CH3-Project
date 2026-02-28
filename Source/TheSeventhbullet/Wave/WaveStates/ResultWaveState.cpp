@@ -1,58 +1,79 @@
 #include "ResultWaveState.h"
 
 #include "Manager/UIManager.h"
+#include "UI/UITags.h"
+#include "UI/StageSuccessWidget.h"
+#include "UI/StageFailWidget.h"
 
 void UResultWaveState::Enter()
 {
 	Super::Enter();
 	AMainGameMode* GM = GetGameMode();
 	if (!GM) return;
-	
+
 	EStageResult Result = GM->GetStageResult();
-	
+
 	GM->CleanupAllMonsters();
-	
+
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (!UIMgr) return;
-	
+
+	UIMgr->Close(UITags::HUD);
+	UIMgr->Close(UITags::Crosshair);
+
 	switch (Result)
 	{
 	case EStageResult::Success:
-		// TODO 영섭 : 보상 정산 데이터 전달
+		{
+			UUserWidget* Widget = UIMgr->Open(UITags::StageSuccess);
+			if (UStageSuccessWidget* SuccessWidget = Cast<UStageSuccessWidget>(Widget))
+			{
+				SuccessWidget->SetRewards(GM->GetStageRewardItems());
+			}
+		}
 		break;
 	case EStageResult::TimeOver:
-		// TODO 영섭 : 시간 초과 메세지 전달
+		{
+			UUserWidget* Widget = UIMgr->Open(UITags::StageFail);
+			if (UStageFailWidget* FailWidget = Cast<UStageFailWidget>(Widget))
+			{
+				FailWidget->SetFailReason(EStageResult::TimeOver);
+			}
+		}
 		break;
 	case EStageResult::PlayerDead:
-		// TODO 영섭 : "사망" 메세지 전달, 부활
+		{
+			UUserWidget* Widget = UIMgr->Open(UITags::StageFail);
+			if (UStageFailWidget* FailWidget = Cast<UStageFailWidget>(Widget))
+			{
+				FailWidget->SetFailReason(EStageResult::PlayerDead);
+			}
+		}
 		break;
 	default:
 		break;
 	}
-	
+
 	bWaitingForInput = true;
 }
 
 void UResultWaveState::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	//결산 화면에서 버튼 입력 기다림
-	//실제 UI버튼의 Onclick에서 GM->ReturnToTown()을 호출
-	AMainGameMode* GM = GetGameMode();
-	GM->ReturnToTown();
+	// 결산 화면에서 버튼 입력 기다림
+	// 실제 UI 버튼의 OnClicked에서 GM->ReturnToTown()을 호출
 }
 
 void UResultWaveState::Exit()
 {
 	Super::Exit();
-	UE_LOG(LogTemp,Error,TEXT("RESULT"));
-	//TODO 영섭 : UI 끄기
-	// UUIManager* UIMgr = UUIManager::Get(this);
-	// if (UIMgr)
-	// {
-	// 	UIMgr->HideByTag(UITags::StageSuccessPanel);
-	// 	UIMgr->HideByTag(UITags::StageFailPanel);
-	// }
-	
+
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->Close(UITags::StageSuccess);
+		UIMgr->Close(UITags::StageFail);
+	}
+
 	bWaitingForInput = false;
 }
