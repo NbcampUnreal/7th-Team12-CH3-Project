@@ -42,7 +42,8 @@ public:
 	void ApplyDamageByHit(const FHitResult& Hit);
 	void ExecutePipeline(FDamageContext& Context);
 	
-	void SpawnFireParticles(const FHitResult& Hit);
+	void SpawnFireParticles();
+	void SpawnHitParticles(const FHitResult& Hit);
 	
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat")

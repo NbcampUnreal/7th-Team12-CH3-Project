@@ -7,6 +7,7 @@
 #include "ProjectileActor.generated.h"
 
 
+class AMainGameMode;
 class UProjectileMovementComponent;
 class USphereComponent;
 class AEnemyBase;

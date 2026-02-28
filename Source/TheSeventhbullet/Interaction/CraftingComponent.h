@@ -14,6 +14,9 @@ class THESEVENTHBULLET_API UCraftingComponent : public UBaseInteractionComponent
 {
 	GENERATED_BODY()
 
+public:
+	UCraftingComponent();
+	
 protected:
 	virtual void BeginPlay() override;
 	
@@ -23,8 +26,6 @@ public:
 	virtual void EndInteract(AActor* Interactor) override;
 	
 public:
-	UCraftingComponent();
-	
 	// 재료를 SourceMaterials 배열에 추가하는 함수.
 	UFUNCTION(BlueprintCallable, Category = "CraftingComp")
 	bool AddMaterial(UMaterialDataAsset* Material);
