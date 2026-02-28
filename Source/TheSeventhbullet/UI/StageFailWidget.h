@@ -25,7 +25,15 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ReturnButton;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> ReturnButtonText;
+
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	TObjectPtr<UWidgetAnimation> ShowAnimation;
+
 private:
 	UFUNCTION()
 	void OnReturnClicked();
+
+	EStageResult CachedResult = EStageResult::None;
 };

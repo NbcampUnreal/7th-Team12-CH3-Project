@@ -13,22 +13,41 @@ void UStageFailWidget::NativeConstruct()
 	{
 		ReturnButton->OnClicked.AddDynamic(this, &UStageFailWidget::OnReturnClicked);
 	}
+
+	if (ShowAnimation)
+	{
+		PlayAnimation(ShowAnimation);
+	}
 }
 
 void UStageFailWidget::SetFailReason(EStageResult Result)
 {
+	CachedResult = Result;
+
 	if (!FailReasonText) return;
 
 	switch (Result)
 	{
 	case EStageResult::TimeOver:
-		FailReasonText->SetText(FText::FromString(TEXT("시간 초과")));
+		FailReasonText->SetText(FText::FromString(TEXT("Time Over")));
+		if (ReturnButtonText)
+		{
+			ReturnButtonText->SetText(FText::FromString(TEXT("Return to Town")));
+		}
 		break;
 	case EStageResult::PlayerDead:
-		FailReasonText->SetText(FText::FromString(TEXT("사망")));
+		FailReasonText->SetText(FText::FromString(TEXT("You Died")));
+		if (ReturnButtonText)
+		{
+			ReturnButtonText->SetText(FText::FromString(TEXT("Game Over")));
+		}
 		break;
 	default:
-		FailReasonText->SetText(FText::FromString(TEXT("스테이지 실패")));
+		FailReasonText->SetText(FText::FromString(TEXT("Stage Failed")));
+		if (ReturnButtonText)
+		{
+			ReturnButtonText->SetText(FText::FromString(TEXT("Return to Town")));
+		}
 		break;
 	}
 }
@@ -36,7 +55,13 @@ void UStageFailWidget::SetFailReason(EStageResult Result)
 void UStageFailWidget::OnReturnClicked()
 {
 	AMainGameMode* GM = AMainGameMode::Get(this);
-	if (GM)
+	if (!GM) return;
+
+	if (CachedResult == EStageResult::PlayerDead)
+	{
+		GM->ReturnToMainMenu();
+	}
+	else
 	{
 		GM->ReturnToTown();
 	}
