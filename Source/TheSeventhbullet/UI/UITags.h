@@ -24,4 +24,7 @@ namespace UITags
 	const FName Request        = FName(TEXT("Request"));
 	const FName StageSuccess   = FName(TEXT("StageSuccess"));
 	const FName StageFail      = FName(TEXT("StageFail"));
+	const FName Gamble		   = FName(TEXT("Gamble"));
+	const FName StatEnhancer   = FName(TEXT("StatEnhancer"));
+	const FName GambleDialogue = FName(TEXT("GambleDialogue"));
 }

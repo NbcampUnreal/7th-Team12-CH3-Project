@@ -5,6 +5,8 @@
 
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Engine/Engine.h"
+
 
 void USaveWidget::PlaySleepAnimation()
 {
@@ -35,7 +37,7 @@ void USaveWidget::PlayWakeAnimation()
 	}
 	if (MoonImage)
 		MoonImage->SetVisibility(ESlateVisibility::Hidden);
-	SetPhase(EPhase::Wake_FadeIn);
+	SetPhase(EPhase::Wake_Travel);
 }
 
 void USaveWidget::NativeConstruct()
@@ -45,7 +47,15 @@ void USaveWidget::NativeConstruct()
 	if (ArchImage && ArchTexture) ArchImage->SetBrushFromTexture(ArchTexture);
 	if (MoonImage && MoonTexture) MoonImage->SetBrushFromTexture(MoonTexture);
 	if (SunImage  && SunTexture) SunImage->SetBrushFromTexture(SunTexture);
-	
+	if (BackgroundOverlay)
+	{
+		if (UCanvasPanelSlot* BGSlot = Cast<UCanvasPanelSlot>(BackgroundOverlay->Slot))
+		{
+			BGSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f)); // 전체화면 앵커
+			BGSlot->SetOffsets(FMargin(0.f, 0.f, 0.f, 0.f));  // 상하좌우 여백 0
+			BGSlot->SetAlignment(FVector2D(0.f, 0.f));
+		}
+	}
 	SetOverlayAlpha(0.f);
 	if (MoonImage)
 		MoonImage->SetVisibility(ESlateVisibility::Hidden);
@@ -68,9 +78,6 @@ void USaveWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		break;
 	case EPhase::Sleep_FadeOut:
 		TickSleepFade(InDeltaTime);
-		break;
-	case EPhase::Wake_FadeIn:
-		TickWakeFade(InDeltaTime);
 		break;
 	case EPhase::Wake_Travel:
 		TickWakeTravel(InDeltaTime);
@@ -111,34 +118,27 @@ void USaveWidget::TickSleepFade(float Dt)
 	{
 		SetOverlayAlpha(1.f);
 		SetPhase(EPhase::Idle);
-		OnTransitionComplete.Broadcast();
-	}
-}
-
-void USaveWidget::TickWakeFade(float Dt)
-{
-	const float T = FMath::Clamp(Elapsed / FadeDuration, 0.f,1.f);
-	SetOverlayAlpha(FMath::Lerp(1.f, 0.f, EaseInOut(T)));
-	
-	if (T >= 1.f)
-	{
-		SetOverlayAlpha(0.f);
-		SetPhase(EPhase::Wake_Travel);
+		OnTransitionComplete_Sleep.Broadcast();
 	}
 }
 
 void USaveWidget::TickWakeTravel(float Dt)
 {
 	const float T = FMath::Clamp(Elapsed / TravelDuration, 0.f, 1.f);
-	MoveCelestial(SunImage, EaseInOut(T),true);
-	
+
+	// 태양 이동 (오른쪽 밖 → 왼쪽 밖)
+	MoveCelestial(SunImage, EaseInOut(T), true);
+
+	// 배경 알파 1 → 0 (태양이 들어오면서 동시에 밝아짐)
+	SetOverlayAlpha(FMath::Lerp(1.f, 0.f, EaseInOut(T)));
+
 	if (T >= 1.f)
 	{
-		if (SunImage)
-			SunImage->SetVisibility(ESlateVisibility::Hidden);
-		SetVisibility(ESlateVisibility::Hidden);
+		SetOverlayAlpha(0.f);
+		if (SunImage) SunImage->SetVisibility(ESlateVisibility::Hidden);
+		SetVisibility(ESlateVisibility::Collapsed);
 		SetPhase(EPhase::Idle);
-		OnTransitionComplete.Broadcast();
+		OnTransitionComplete_Wake.Broadcast();
 	}
 }
 
@@ -146,14 +146,14 @@ void USaveWidget::MoveCelestial(UImage* Img, float Progress, bool bReverse) cons
 {
 	if (!Img) return;
 
-	UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(Img->Slot);
-	if (!Slot) return;
+	UCanvasPanelSlot* Canvas = Cast<UCanvasPanelSlot>(Img->Slot);
+	if (!Canvas) return;
 
 	FVector2D ViewportSize(1920.f, 1080.f);
 	if (GEngine && GEngine->GameViewport)
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
 
-	const FVector2D ImgSize = Slot->GetSize();
+	const FVector2D ImgSize = Canvas->GetSize();
 
 	// bReverse=false : 왼쪽 밖(-ImgW) → 오른쪽 밖(ViewportW)
 	// bReverse=true  : 오른쪽 밖(ViewportW) → 왼쪽 밖(-ImgW)
@@ -162,7 +162,7 @@ void USaveWidget::MoveCelestial(UImage* Img, float Progress, bool bReverse) cons
 	const float PosX   = FMath::Lerp(StartX, EndX, Progress);
 	const float PosY   = ViewportSize.Y * PathYRatio - ImgSize.Y * 0.5f;
 
-	Slot->SetPosition(FVector2D(PosX, PosY));
+	Canvas->SetPosition(FVector2D(PosX, PosY));
 }
 void USaveWidget::SetOverlayAlpha(float Alpha)
 {

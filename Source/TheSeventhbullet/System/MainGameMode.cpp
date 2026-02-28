@@ -1,6 +1,7 @@
 #include "MainGameMode.h"
 
 #include "MonsterManagerSubSystem.h"
+#include "Character/Component/EquipmentComponent.h"
 #include "DataAsset/MaterialDataAsset.h"
 #include "TheSeventhbullet/Character/MainCharacter.h"
 #include "TheSeventhbullet/Character/MainPlayerController.h"
@@ -436,6 +437,14 @@ void AMainGameMode::ReturnToTown()
 	{
 		WaveStateMachine->ChangeState(EWaveState::None);
 	}
+	
+	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (!Character) return;
+	
+	UEquipmentComponent* EquipmentComponent = Character->GetComponentByClass<UEquipmentComponent>();
+	if (!EquipmentComponent) return;
+	
+	EquipmentComponent->CurrentWeapon = nullptr;
 	
 }
 

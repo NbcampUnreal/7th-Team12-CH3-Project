@@ -8,7 +8,8 @@ class UImage;
 class UOverlay;
 class UMaterialInstanceDynamic;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSleepTransitionComplete);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSleepComplete);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWakeComplete);
 
 UCLASS()
 class THESEVENTHBULLET_API USaveWidget : public UUserWidget
@@ -22,7 +23,10 @@ public:
 	void PlayWakeAnimation();
 	
 	UPROPERTY(BlueprintAssignable, Category = "Sleep")
-	FOnSleepTransitionComplete OnTransitionComplete;
+	FOnSleepComplete OnTransitionComplete_Sleep;
+
+	UPROPERTY(BlueprintAssignable, Category = "Sleep")
+	FOnWakeComplete OnTransitionComplete_Wake;
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
@@ -63,7 +67,6 @@ private:
 		Idle,
 		Sleep_Travel,
 		Sleep_FadeOut,
-		Wake_FadeIn,
 		Wake_Travel,
 	};
 	
@@ -73,7 +76,6 @@ private:
 	void SetPhase(EPhase NewPhase);
 	void TickSleepTravel(float Dt);
 	void TickSleepFade(float Dt);
-	void TickWakeFade(float Dt);
 	void TickWakeTravel(float Dt);
 	
 	void MoveCelestial(UImage* Img, float Progress,  bool bReverse) const;
