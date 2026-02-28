@@ -334,12 +334,7 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 		DropPool.Add({ &DropEntry, FinalWeight});
 	}
 	
-	if (DropPool.Num() == 0)
-	{
-		// 드랍 풀이 아예 비어버린 경우 디버깅 하기 위한 로그
-		UE_LOG(LogTemp, Warning, TEXT("DropPool empty. Monster = %d Stage = %d"), (int32)MonsterType, StageIndex);
-		return;
-	}
+	if (DropPool.Num() == 0) return;
 	
 	// 이번 몬스터의 드랍결과를 임시로 저장하는 배열.
 	TArray<FDroppedMaterialsData> DroppedItemFromMonster;
@@ -348,11 +343,7 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 	for (int32 i = 0; i <DropData.DropRollsCount; i++)
 	{		
 		// 아이템 드랍확률에 따라서 드랍이 발생했는지 여부를 검사. (0~1 사이의 값을 임의로 가져와서 드랍확률보다 높은지 판단하는 방식)
-		if (FMath::FRand() > DropData.DropChance)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Failed GetItem"));
-			continue;
-		}
+		if (FMath::FRand() > DropData.DropChance) continue;
 		
 		float TotalWeight = 0.0f;
 		for (const FDropPool& Pool : DropPool)
@@ -380,12 +371,6 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 		
 		// 이번에 획득한 아이템을 DroppedItemFromMonster 배열에 추가.
 		StackItem(DroppedItemFromMonster, PickFromPool->Material, 1);
-		
-		for (const FDroppedMaterialsData& DroppedItem : DroppedItemFromMonster)
-		{
-			// 디버그용 아이템 드랍 판단.
-			UE_LOG(LogTemp, Warning, TEXT("GetItem : %s"), *DroppedItem.Material.ToSoftObjectPath().GetAssetName());
-		}
 	}
 	
 	// 이번에 획득한 아이템을 브로드캐스트
