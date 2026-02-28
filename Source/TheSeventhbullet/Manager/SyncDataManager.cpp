@@ -34,6 +34,12 @@ void USyncDataManager::Initialize(FSubsystemCollectionBase& Collection)
 		ItemDropCache,
 		[](const FMonsterDropRowData* Row) { return Row->MonsterType; }
 	);
+
+	LoadAndCacheTable<FMaterialRecycleRowData, int32>(
+		TEXT("/Game/TheSeventhBullet/DataTable/DT_MaterialRecycleTable"),
+		MaterialRecycleCache,
+		[](const FMaterialRecycleRowData* Row){ return Row->Grade; }
+	);
 }
 
 FRequestRowData USyncDataManager::GetRequestData(int32 RequestID) const
@@ -86,6 +92,16 @@ FMonsterDropRowData USyncDataManager::GetDropMaterialData(EMonsterType MonsterTy
 	if (!Found)
 	{
 		return FMonsterDropRowData();
+	}
+	return *Found;
+}
+
+FMaterialRecycleRowData USyncDataManager::GetRecycleResultData(const int32 Grade) const
+{
+	const FMaterialRecycleRowData* Found = MaterialRecycleCache.Find(Grade);
+	if (!Found)
+	{
+		return FMaterialRecycleRowData();
 	}
 	return *Found;
 }

@@ -184,7 +184,7 @@ struct FMonsterDropRowData : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
-struct FMaterialRecycleRow : public FTableRowBase
+struct FMaterialRecycleRowData : public FTableRowBase
 {
 	GENERATED_BODY()
 	

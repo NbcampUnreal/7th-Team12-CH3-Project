@@ -110,11 +110,12 @@ void UCombatComponent::HitScanFire()
 	
 	SpreadBullet();
 	ConsumeAmmo();
+	SpawnFireParticles();
 	TArray<FHitResult> Hits;
 	PerformTrace(Hits);
 	for (const FHitResult& Hit : Hits)
 	{
-		SpawnFireParticles(Hit);
+		SpawnHitParticles(Hit);
 		if (Hit.bBlockingHit && Hit.GetActor()->ActorHasTag("Enemy"))
 		{
 			if (!GM) return;
@@ -313,23 +314,23 @@ void UCombatComponent::ExecutePipeline(FDamageContext& Context)
 	}
 }
 
-void UCombatComponent::SpawnFireParticles(const FHitResult& Hit)
+void UCombatComponent::SpawnFireParticles()
 {
 	if (WeaponDataView->MuzzleFlashEffect.ToSoftObjectPath().IsValid())
-	{
-		const FVector EffectDirection = (Hit.TraceEnd - Hit.TraceStart).GetSafeNormal();
-		const FRotator EffectRotation = EffectDirection.Rotation();
-		
+	{		
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
 			WeaponDataView->MuzzleFlashEffect.LoadSynchronous(),
-			Hit.TraceStart,
-			EffectRotation,
+			WeaponOwner->WeaponMeshComponent->GetSocketLocation("WeaponMuzzle"),
+			WeaponOwner->WeaponMeshComponent->GetSocketRotation("WeaponMuzzle"),
 			FVector(1),
 			true
 		);
 	}
-	
+}
+
+void UCombatComponent::SpawnHitParticles(const FHitResult& Hit)
+{	
 	if (WeaponDataView->ImpactEffect.ToSoftObjectPath().IsValid() && !Hit.GetActor()->ActorHasTag("Enemy"))
 	{		
 		UGameplayStatics::SpawnEmitterAtLocation(

@@ -58,6 +58,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
 	FMonsterDropRowData GetDropMaterialData(const EMonsterType MonsterType) const;
 	
+	// 주현 : GetRecycleResultData
+	UFUNCTION(BlueprintCallable, Category = "Data|Sync")
+	FMaterialRecycleRowData GetRecycleResultData(const int32 Grade) const;
+	
 public:
 	template<typename RowType, typename KeyType>
 	static void LoadAndCacheTable(const TCHAR* Path, TMap<KeyType, RowType>& OutCache, TFunctionRef<KeyType(const RowType*)> KeySelector);
@@ -72,6 +76,10 @@ private:
 	// 주현 : 아이템 드랍 Row를 캐싱
 	UPROPERTY()
 	TMap<EMonsterType, FMonsterDropRowData> ItemDropCache;
+	
+	// 주현 : Material 재활용 결과로 나올 Pool을 저장한 Row를 캐싱
+	UPROPERTY()
+	TMap<int32, FMaterialRecycleRowData> MaterialRecycleCache;
 };
 
 #pragma region LoadHelper
