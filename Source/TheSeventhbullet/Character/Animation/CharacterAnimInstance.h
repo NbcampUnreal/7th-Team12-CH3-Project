@@ -24,6 +24,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float Direction;
 	
+	UPROPERTY(BlueprintReadOnly, Category = "Aiming")
+	float AimPitch;
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsFalling;
 	UPROPERTY(BlueprintReadOnly, Category = "Action")
