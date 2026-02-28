@@ -135,6 +135,7 @@ void AEnemyBase::ResetEnemy()
 	
 	//사망 상태를 다시 바꾼다.
 	bIsDead=false;
+	bDroppedItem=false;
 	
 	//일시정지되었던 애니메이션 재시작
 	GetMesh()->bPauseAnims=false;
@@ -233,7 +234,7 @@ void AEnemyBase::DropItem()
 {
 	if (bDroppedItem) return;
 	bDroppedItem = true;
-	
+
 	if (AMainGameMode* GM = AMainGameMode::Get(this))
 	{
 		GM->ItemDropFromMonster(EnemyMonsterType);

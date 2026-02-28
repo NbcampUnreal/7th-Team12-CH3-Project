@@ -2,7 +2,7 @@
 /*
  * MainHUDWidget - 인게임 HUD (HP Bar + 탄약 정보)
  *
- * UIManager::ShowByTag(UITags::HUD)로 표시.
+ * UIManager::Open(UITags::HUD)로 표시.
  * Crosshair는 별도 CrosshairWidget으로 분리.
  * 블루프린트에서 WBP_MainHUD를 만들고 BindWidget 위젯들을 배치해야 함.
  */
@@ -11,10 +11,13 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Data/TableRowTypes.h"
 #include "MainHUDWidget.generated.h"
 
 class UProgressBar;
 class UTextBlock;
+class UOverlay;
+class UItemDropNotifyWidget;
 
 UCLASS()
 class THESEVENTHBULLET_API UMainHUDWidget : public UUserWidget
@@ -29,10 +32,38 @@ public:
 
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
+	// --- HUD ---
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> HPBar;
-	
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> AmmoText;
+
+	// --- 드랍 알림 ---
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UOverlay> DropNotifyBox;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI|DropNotify")
+	TSubclassOf<UItemDropNotifyWidget> NotifyEntryClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI|DropNotify")
+	float NotifyDuration = 1.0f;
+
+private:
+	UFUNCTION()
+	void OnItemDropped(const TArray<FDroppedMaterialsData>& DroppedMaterials);
+
+	void ShowNextNotify();
+	void OnCurrentNotifyHideFinished();
+
+	// 대기 큐
+	TArray<FDroppedMaterialsData> PendingNotifies;
+
+	// 현재 표시 중인 알림
+	UPROPERTY()
+	TObjectPtr<UItemDropNotifyWidget> CurrentNotify;
+
+	FTimerHandle NotifyTimerHandle;
 };

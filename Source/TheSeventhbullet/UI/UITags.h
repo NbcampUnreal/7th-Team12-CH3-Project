@@ -22,4 +22,6 @@ namespace UITags
 	const FName LoadingScreen  = FName(TEXT("LoadingScreen"));
 	const FName Storage        = FName(TEXT("Storage"));
 	const FName Request        = FName(TEXT("Request"));
+	const FName StageSuccess   = FName(TEXT("StageSuccess"));
+	const FName StageFail      = FName(TEXT("StageFail"));
 }
