@@ -17,7 +17,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
+	virtual void Tick( float DeltaTime ) override;
 public:
 #pragma region Components
 	
@@ -55,4 +55,7 @@ public:
 	void Explode();
 	
 #pragma endregion
+	
+	float RandomPitch;
+	float RandomYaw;
 };

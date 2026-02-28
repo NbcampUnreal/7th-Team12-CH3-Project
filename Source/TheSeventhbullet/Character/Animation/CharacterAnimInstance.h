@@ -24,12 +24,17 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float Direction;
 	
+	UPROPERTY(BlueprintReadOnly, Category = "Aiming")
+	float AimPitch;
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsFalling;
 	UPROPERTY(BlueprintReadOnly, Category = "Action")
 	bool bIsDodging;
 	UPROPERTY(BlueprintReadOnly, Category = "Action")
 	bool bIsAiming;
+	UPROPERTY(BlueprintReadOnly, Category = "Action")
+	bool bIsFiring;
 	
 	UFUNCTION()
 	void AnimNotify_Throw();

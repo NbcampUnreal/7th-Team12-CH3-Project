@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "KismetAnimationLibrary.h"
 #include "Character/Component/CombatComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 void UCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -35,17 +36,25 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsFalling = MovementComp->IsFalling();
 	}
 	
-	// 회피 상태 계산
+	
 	AMainCharacter* MainCharacter = Cast<AMainCharacter>(OwnerCharacter);
 	if (MainCharacter)
 	{
+		// 회피 상태
 		bIsDodging = MainCharacter->IsDodge();
-	}
-	
-	// 조준 상태 계산
-	if (MainCharacter)
-	{
+		
+		// 조준 상태
 		bIsAiming = MainCharacter->IsAiming();
+		
+		// 사격 상태
+		bIsFiring = MainCharacter->IsFiring();
+		
+		// Pitch 값 가져오기
+		FRotator AimRotation = MainCharacter->GetBaseAimRotation();
+		FRotator ActorRotation = MainCharacter->GetActorRotation();
+		
+		FRotator DeltaRotation = UKismetMathLibrary::NormalizedDeltaRotator(AimRotation, ActorRotation);
+		AimPitch = FMath::FInterpTo(AimPitch, DeltaRotation.Pitch, DeltaSeconds, 15.0f);
 	}
 }
 

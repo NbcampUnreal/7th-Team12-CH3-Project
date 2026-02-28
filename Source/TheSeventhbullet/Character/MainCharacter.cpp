@@ -35,9 +35,11 @@ AMainCharacter::AMainCharacter()
 	SprintMultiplier = 1.5f;
 	AimMultiplier = 0.8f;
 	NormalArmLength = 400.0f; 
-	AimingArmLength = 300.0f;
-	NormalSpringArm = FVector(0.0f, 25.0f, 0.0f);
-	AimingSpringArm = FVector(0.0f, 25.0f, 35.0f);
+	AimingArmLength = 200.0f;
+	NormalSpringArm = FVector(0.0f, 30.0f, 60.0f);
+	AimingSpringArm = FVector(0.0f, 90.0f, 80.0f);
+	NormalFOV = 90.0f;
+	AimingFOV = 70.0f;
 	CameraInterpSpeed = 15.0f;
 	MuzzleOffset = FVector(300.0f, 0.0f, 0.0f);
 	HandSocketName = FName("Muzzle_01");
@@ -50,7 +52,7 @@ AMainCharacter::AMainCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 	Camera->bUsePawnControlRotation = false;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f);
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1000.0f, 0.0f);
 	GetCharacterMovement()->MaxWalkSpeed = TotalStatus.Speed;
 	
 	bIsDodge = false;
@@ -180,8 +182,22 @@ void AMainCharacter::ThrowGrenade()
 
 void AMainCharacter::Fire()
 {
+	bIsFire = true;
+	
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
-		
+	
+	UpdateRotationState();
+	
+	float ResetInterval = EquipmentComponent->CurrentWeapon->FireInterval + 0.3;
+	
+	GetWorld()->GetTimerManager().SetTimer(
+		AimFireStateTimerHandle, 
+		this, 
+		&AMainCharacter::ResetFireState, 
+		ResetInterval, 
+		false 
+	);
+	
 	int CurrentAmmo = CombatComponent->GetCurrentAmmo();
 	if (CurrentAmmo <= 0)
 	{
@@ -192,10 +208,15 @@ void AMainCharacter::Fire()
 	
 	UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 	// 남태 : TestWeapon 나중 데이터에셋 변수 바뀌면 수정 해야함
-	TSoftObjectPtr<UAnimMontage> SelectedSoftMontage = bIsAiming ? EquipmentComponent->CurrentWeapon->AimedAttackMontage : EquipmentComponent->CurrentWeapon->AttackMontage;
+	TSoftObjectPtr<UAnimMontage> SelectedSoftMontage;
+	SelectedSoftMontage = EquipmentComponent->CurrentWeapon->AttackMontage;
 	
 	UAnimMontage* MontageToPlay = SelectedSoftMontage.Get();
-	if(!MontageToPlay)	MontageToPlay = EquipmentComponent->CurrentWeapon->AttackMontage.LoadSynchronous();
+	
+	if(!MontageToPlay)
+	{
+		MontageToPlay = EquipmentComponent->CurrentWeapon->AttackMontage.LoadSynchronous();
+	}
 	
 	if (AnimInstance)
 	{
@@ -208,10 +229,10 @@ void AMainCharacter::Fire()
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, MontageToPlay);
 		}
 	}
-	FRotator CharacterRotation = GetBaseAimRotation();
-	CharacterRotation.Pitch = 0.0f;
-	CharacterRotation.Roll = 0.0f;
-	SetActorRotation(CharacterRotation);
+	// FRotator CharacterRotation = GetBaseAimRotation();
+	// CharacterRotation.Pitch = 0.0f;
+	// CharacterRotation.Roll = 0.0f;
+	// SetActorRotation(CharacterRotation);
 	
 	CombatComponent->StartFire(); // 발사 시작
 	
@@ -264,6 +285,16 @@ bool AMainCharacter::IsAiming()
 	return bIsAiming;
 }
 
+bool AMainCharacter::IsFiring()
+{
+	return bIsFire;
+}
+
+bool AMainCharacter::IsFalling()
+{
+	return GetCharacterMovement()->IsFalling();
+}
+
 void AMainCharacter::PlayAnimMotageByState(EAnimState AnimState)
 {
 	if (TObjectPtr<UAnimMontage>* FoundMontage = MontagesMap.Find(AnimState))
@@ -290,18 +321,20 @@ void AMainCharacter::EndedAnimMontage(UAnimMontage* Montage, bool Interrupted)
 	bIsDodge = false;
 	bIsInvicible = false;
 	
-	if (bIsAiming)
-	{
-		// 조준시 카메라 정면을 바라보게 고정
-		bUseControllerRotationYaw = true;
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-	}
-	else
-	{
-		// 비조준시 카메라 고정 해제
-		bUseControllerRotationYaw = false;
-		GetCharacterMovement()->bOrientRotationToMovement = true;
-	}
+	UpdateRotationState();
+	
+	// if (bIsAiming)
+	// {
+	// 	// 조준시 카메라 정면을 바라보게 고정
+	// 	bUseControllerRotationYaw = true;
+	// 	GetCharacterMovement()->bOrientRotationToMovement = false;
+	// }
+	// else
+	// {
+	// 	// 비조준시 카메라 고정 해제
+	// 	bUseControllerRotationYaw = false;
+	// 	GetCharacterMovement()->bOrientRotationToMovement = true;
+	// }
 	
 	UAnimMontage* ReloadMontage = EquipmentComponent->CurrentWeapon->ReloadMontage.Get();
 	if (Montage == ReloadMontage)
@@ -469,12 +502,22 @@ void AMainCharacter::Tick(float DeltaTime)
 	
 	// bIsAming 으로 조준 상태 구분
 	float TargetLength = bIsAiming ? AimingArmLength : NormalArmLength;
+	float TargetFOV = bIsAiming ? AimingFOV : NormalFOV;
 	FVector TargetOffset = bIsAiming ? AimingSpringArm : NormalSpringArm;
+	
 	
 	// Length 보간
 	float NewArmLength = FMath::FInterpTo(
 		SpringArm->TargetArmLength,
 		TargetLength,
+		DeltaTime,
+		CameraInterpSpeed
+	);
+	
+	// 카메라 FOV 보간
+	float NewCameraFOV = FMath::FInterpTo(
+		Camera->FieldOfView,
+		TargetFOV,
 		DeltaTime,
 		CameraInterpSpeed
 	);
@@ -487,7 +530,9 @@ void AMainCharacter::Tick(float DeltaTime)
 		CameraInterpSpeed
 	);
 	
+	
 	SpringArm->TargetArmLength = NewArmLength;
+	Camera->FieldOfView = NewCameraFOV;
 	SpringArm->SocketOffset = NewSocketOffSet;
 }
 
@@ -584,34 +629,54 @@ void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 	PlayAnimMotageByState(EAnimState::Dodge);
 }
 
+void AMainCharacter::UpdateRotationState()
+{
+	if (bIsAiming || bIsFire)
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		bUseControllerRotationYaw = true;
+	}
+	else
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		bUseControllerRotationYaw = false;
+	}
+}
+
+void AMainCharacter::ResetFireState()
+{
+	bIsFire = false;
+	
+	UpdateRotationState();
+}
 
 void AMainCharacter::PlayerAim(const FInputActionValue& value)
 {
+	if (bIsDodge) return;
 	PrimaryActorTick.bCanEverTick = true;	// 보간을 위한 Tick On
-	GetCharacterMovement()->bOrientRotationToMovement = false;
-	bUseControllerRotationYaw = true;		// 카메라와 캐릭터 방향 분리 
+	bIsAiming = true;
+	// GetCharacterMovement()->bOrientRotationToMovement = false;
+	// bUseControllerRotationYaw = true;		// 카메라와 캐릭터 방향 분리 
+	UpdateRotationState();
 	
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = TotalStatus.Speed * AimMultiplier;	// 줌 하는 동안 이동속도 감소
 	}
-	
-	bIsAiming = true;
-	 
 }
 
 void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 {
 	PrimaryActorTick.bCanEverTick = false;	// Tick Off
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 
+	bIsAiming = false;
+	// GetCharacterMovement()->bOrientRotationToMovement = true;
+	// bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 
+	UpdateRotationState();
 	
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = TotalStatus.Speed;	
 	}
-	
-	bIsAiming = false;
 }
 
 void AMainCharacter::PlayerFire(const FInputActionValue& value)
@@ -620,7 +685,7 @@ void AMainCharacter::PlayerFire(const FInputActionValue& value)
 	
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 	
-	if (bIsDodge ||bIsReload)
+	if (bIsDodge || bIsReload || IsFalling())
 	{
 		return;
 	}
@@ -649,6 +714,7 @@ void AMainCharacter::FinishFire(const FInputActionValue& value)
 	
 	GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
 	CombatComponent->StopFire();
+	bIsFire = false;
 }
 
 void AMainCharacter::PlayerSkill(const FInputActionValue& value)
