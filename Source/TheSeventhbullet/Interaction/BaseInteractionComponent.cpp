@@ -28,7 +28,6 @@ void UBaseInteractionComponent::BeginInteract(AActor* Interactor)
 			PC->SetViewTargetWithBlend(GetOwner(),0.5f);
 		}
 	}
-	ProgressInteract(Interactor);
 }
 
 void UBaseInteractionComponent::ProgressInteract(AActor* Interactor)
