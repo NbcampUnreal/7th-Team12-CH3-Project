@@ -45,7 +45,6 @@ EBTNodeResult::Type UBTTask_SetFocus::ExecuteTask(UBehaviorTreeComponent& OwnerC
 		EnemyCharacter->bUseControllerRotationYaw = true;
 		//TargetActor로 시선고정
 		EnemyAIController->SetFocus(TargetActor);
-		UE_LOG(LogTemp,Warning,TEXT("SetFocus"));
 	}
 	//SetFocus 해제
 	else
@@ -54,7 +53,6 @@ EBTNodeResult::Type UBTTask_SetFocus::ExecuteTask(UBehaviorTreeComponent& OwnerC
 		EnemyCharacter->bUseControllerRotationYaw = false;
 		//TargetActor로 시선해제
 		EnemyAIController->ClearFocus(EAIFocusPriority::Gameplay);
-		UE_LOG(LogTemp,Warning,TEXT("EndFocus"));
 	}	
 	return EBTNodeResult::Succeeded;
 }

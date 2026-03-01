@@ -37,28 +37,25 @@ void AEnemyAIControllerBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AEnemyAIControllerBase::SetBT(UBehaviorTree* EnemyBT)
-{
-	
-}
+
 
 void AEnemyAIControllerBase::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-	//bool bSuccess = RunBehaviorTree(EnemyBehaviorTree);
-	//UE_LOG(LogTemp, Warning, TEXT("%s"), bSuccess?TEXT("TRUE"):TEXT("FALSE"));
+	
 	TObjectPtr<AEnemyBase> Enemy = Cast<AEnemyBase>(InPawn);
 	Enemy->OnCharacterHit.AddDynamic(this, &AEnemyAIControllerBase::HitEvent);
 	Enemy->OnCharacterDead.AddDynamic(this, &AEnemyAIControllerBase::DeadEvent);
 	Enemy->OnCharacterReset.AddDynamic(this, &AEnemyAIControllerBase::ResetEvent);
 	Enemy->OnCharacterHeadHit.AddDynamic(this, &AEnemyAIControllerBase::HeadHitEvent);
 	Enemy->OnCharacterSetAI.AddDynamic(this,&AEnemyAIControllerBase::SetAI);
+	Enemy->OnBossCanceled.AddDynamic(this,&AEnemyAIControllerBase::CancelEvent);
 }
 
 void AEnemyAIControllerBase::HitEvent()
 {
 	//헤드샷시 2초 경직
-	UE_LOG(LogTemp, Warning, TEXT("HeadHit"));
+
 	if (BBComp==nullptr) return;
 	BBComp->SetValueAsBool(bIsHitKey, true);
 }
@@ -68,7 +65,6 @@ void AEnemyAIControllerBase::DeadEvent()
 	//사망 애니메이션 처리
 	if (BBComp==nullptr) return;
 	BBComp->SetValueAsBool(bIsDeadKey, true);
-	UE_LOG(LogTemp, Warning, TEXT("DeadEvent"));
 }
 
 void AEnemyAIControllerBase::ResetEvent()
@@ -89,7 +85,6 @@ void AEnemyAIControllerBase::HeadHitEvent()
 
 void AEnemyAIControllerBase::SetAI(UBehaviorTree* ParamBT, float AttackRadius, bool bIsLongRange, float Speed, float StrafeSpeed,float EnemyAttackDelay)
 {
-	UE_LOG(LogTemp, Warning, TEXT("SetAI"));
 	if (ParamBT == nullptr||GetPawn()==nullptr)
 	{
 		return;
@@ -108,7 +103,6 @@ void AEnemyAIControllerBase::SetAI(UBehaviorTree* ParamBT, float AttackRadius, b
 		BBComp->SetValueAsFloat(FName("Speed"),Speed);
 		BBComp->SetValueAsFloat(FName("StrafeSpeed"),StrafeSpeed);
 		BBComp->SetValueAsFloat(FName("EnemyAttackDelayTime"),EnemyAttackDelay);
-		UE_LOG(LogTemp,Warning,TEXT("%f"),EnemyAttackDelay);
 		
 		RunBehaviorTree(EnemyBehaviorTree);
 	}
@@ -132,6 +126,9 @@ void AEnemyAIControllerBase::SetAI(UBehaviorTree* ParamBT, float AttackRadius, b
 			this, &AEnemyAIControllerBase::OnTargetPerceptionUpdated);
 	}
 }
+
+
+
 //퍼셉션 인식 시 콜백 함수
 void AEnemyAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
@@ -154,7 +151,6 @@ void AEnemyAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulu
 			//Prediction 자극을 0.5초 뒤 예상 위치에 남김.
 			UAISense_Prediction::RequestPawnPredictionEvent(GetPawn(),Actor,0.25f);
 			BBComp->ClearValue(TEXT("TargetActor"));
-			UE_LOG(LogTemp,Warning,TEXT("TargetLost"));
 		}
 		
 		return;
@@ -165,7 +161,6 @@ void AEnemyAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulu
 		
 		if (Stimulus.WasSuccessfullySensed())
 		{
-			UE_LOG(LogTemp,Warning,TEXT("SoundDetect"));
 			GetBlackboardComponent()->SetValueAsVector(TEXT("DetectLocation"), Stimulus.StimulusLocation);
 		}
 		return;
@@ -177,13 +172,9 @@ void AEnemyAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulu
 		{
 			GetBlackboardComponent()->SetValueAsVector(TEXT("DetectLocation"), Stimulus.StimulusLocation);
 		}
-		UE_LOG(LogTemp,Warning,TEXT("Prediction %s"), *Stimulus.StimulusLocation.ToString());
+		
 		return;
 	}
-	
-
-	
-	
 }
 
 //발견한 액터가 팀인지, 적인지, 중립인지 태그로 체크
@@ -207,3 +198,8 @@ ETeamAttitude::Type AEnemyAIControllerBase::GetTeamAttitudeTowards(const AActor&
 	return ETeamAttitude::Neutral;
 }
 
+void AEnemyAIControllerBase::CancelEvent()
+{
+	if (BBComp==nullptr) return;
+	BBComp->SetValueAsBool(FName("bIsCanceled"), true);
+}

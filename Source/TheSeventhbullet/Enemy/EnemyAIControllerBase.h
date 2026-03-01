@@ -26,9 +26,6 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	
-	UFUNCTION()
-	void SetBT(UBehaviorTree* EnemyBT);
 
 protected:
 	UPROPERTY(EditAnywhere)
@@ -68,6 +65,8 @@ protected:
 		float StrafeSpeed,
 		float EnemyAttackDelay
 		);
+	UFUNCTION()
+	void CancelEvent();
 	
 	
 	UFUNCTION()

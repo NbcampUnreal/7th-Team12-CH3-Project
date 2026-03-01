@@ -4,6 +4,7 @@
 #include "EnemyComboMoveNotifyState.h"
 
 #include "Enemy/EnemyBase.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 void UEnemyComboMoveNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
                                              float TotalDuration)
@@ -29,10 +30,27 @@ void UEnemyComboMoveNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UA
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime);
 	
 	FHitResult Hit;
-	if (OwnerEnemyBase==nullptr)return;
-	MoveVector=OwnerEnemyBase->GetActorForwardVector()*DashSpeed*FrameDeltaTime;
+	if (OwnerEnemyBase==nullptr)
+	{
+		return;
+	}
+	if (bIsForwardDirection)
+	{
+
+		MoveVector=OwnerEnemyBase->GetActorForwardVector();
+	}
+	else if (bIsZDirection)
+	{
+		UCharacterMovementComponent* EnemyCharacterMovementComponent=OwnerEnemyBase->GetCharacterMovement();
+		if (EnemyCharacterMovementComponent==nullptr)
+		{
+			return;
+		}
+		MoveVector=FVector(0,0,1.0f);
+	}
+	MoveVector*=DashSpeed*FrameDeltaTime;
 	OwnerEnemyBase->AddActorWorldOffset(MoveVector, true, &Hit,ETeleportType::None);
-}
+}	
 
 void UEnemyComboMoveNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {

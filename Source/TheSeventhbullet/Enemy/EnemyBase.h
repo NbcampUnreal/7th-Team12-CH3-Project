@@ -24,6 +24,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnCharacterSetAISignnature,
  * PDA를 통해 로드 완료된 데이터를 가져와서 적 캐릭터 정보를 들고 있고, 피격 등의 이벤트를 진행합니다.
  */
 class UBehaviorTree;
+class UBossPatternDataAsset;
 struct FProjectileStatus;
 UCLASS()
 class THESEVENTHBULLET_API AEnemyBase : public ACharacter
@@ -51,6 +52,8 @@ public:
 	FOnCharacterEventSignnature OnCharacterDead;
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnCharacterReset;
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnCharacterEventSignnature OnBossCanceled;
 	
 	//비헤이비어 트리 초기 세팅을 위한 델리게이트
 	UPROPERTY(BlueprintAssignable, Category="Settings")
@@ -91,6 +94,10 @@ public:
 	// 주현 : DropItem 함수
 	UFUNCTION()
 	void DropItem();
+	
+	UFUNCTION(BlueprintCallable)
+	void SetBoss();
+	
 
 protected:
 #pragma region EnemyStatus
@@ -137,11 +144,21 @@ protected:
 	AActor* DamageCauser
 	);
 	
+	UFUNCTION(BlueprintCallable)
+	virtual float TakeDamage(
+				float DamageAmount, 
+				FDamageEvent const& DamageEvent, 
+				AController* EventInstigator, 
+				AActor* DamageCauser
+		) override;
+	
 	
 	void SetHealth(float NewHealth);
 	void DisplayParticle(FVector HitLocation, UParticleSystem* InParticle);
 	void ReturnToPool();
-
+	
+	virtual void SetPattern(UBossPatternDataAsset* PatternData) PURE_VIRTUAL (AEnemyBase::SetBossPattern,);
+	virtual void PlayPattern(FName PatternName)PURE_VIRTUAL (AEnemyBase::PlayPattern,);;
 private:
 	bool bIsDead;
 	// 주현 : 아이템이 혹시나 중복드랍되는 것을 막기 위한 boolean
