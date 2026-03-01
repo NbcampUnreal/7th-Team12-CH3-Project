@@ -257,6 +257,7 @@ void AEnemyBase::DropItem()
 	{
 		GM->ItemDropFromMonster(EnemyMonsterType);
 	}
+}
 float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
 	AActor* DamageCauser)
 {

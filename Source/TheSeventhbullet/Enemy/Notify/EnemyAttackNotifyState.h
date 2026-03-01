@@ -10,6 +10,7 @@
  *  공격하는 동안 소켓의 경로대로 SphereTrace를 진행하여 공격판정을 진행하는 노티파이 스테이트입니다.
  */
 
+class AMainGameMode;
 class AMainCharacter;
 class AEnemyBase;
 UCLASS()
