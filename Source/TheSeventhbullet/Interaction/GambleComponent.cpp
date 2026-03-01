@@ -53,7 +53,7 @@ void UGambleComponent::ProgressInteract(AActor* Interactor)
 		}
 	}
 	
-	ResultData.TargetGrade = FMath::RandRange(ResultData.TotalGrade - 5, ResultData.TotalGrade + 5);
+	ResultData.TargetGrade = FMath::Max(1, FMath::RandRange(ResultData.TotalGrade - 5, ResultData.TotalGrade + 5));
 	
 	ResultData.bIsWin = (ResultData.PlayerFinalGrade >= ResultData.TargetGrade);
 	
