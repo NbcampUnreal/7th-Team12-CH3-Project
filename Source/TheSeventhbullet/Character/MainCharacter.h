@@ -120,6 +120,7 @@ public:
 	bool bIsReload = false;	// 장전 상태
 	bool bIsFireButtonPressed = false;	// 사격 인풋 
 	bool bIsFire = false;	// 사격 상태
+	
 #pragma endregion
 	
 #pragma region Camera
@@ -179,8 +180,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	FName HandSocketName;
 	
-	void ThrowGrenade();	// 스킬 실행
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Skill")
+	float SkillCoolTime = 5.0f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Skill")
+	float RemainSkillCoolTime;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Skill")
+	bool bCanUseSkill = true;
+	
+	FTimerHandle SkillCoolTimerHandle;
+	
+	void ThrowGrenade();	// 스킬 실행
+	void ResetSkillCoolTime();
+	float GetSkillCoolTime();
 #pragma endregion
 	
 #pragma region Combat
