@@ -252,7 +252,7 @@ void AMainCharacter::Reload()
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 		
 	bIsReload = true;
-	
+	CombatComponent->SpawnReloadSound();
 	UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 		
 	UAnimMontage* MontageToPlay = EquipmentComponent->CurrentWeapon->ReloadMontage.Get();

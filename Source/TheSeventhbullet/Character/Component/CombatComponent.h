@@ -48,6 +48,8 @@ public:
 	void SpawnHitParticles(const FHitResult& Hit);
 	UFUNCTION(BlueprintCallable)
 	void SpawnFireSound();
+	UFUNCTION(BlueprintCallable)
+	void SpawnReloadSound();
 	
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat")

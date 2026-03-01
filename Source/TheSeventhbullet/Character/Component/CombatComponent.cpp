@@ -265,7 +265,6 @@ int UCombatComponent::GetCurrentAmmo() const
 
 void UCombatComponent::Reload()
 {
-
 	UE_LOG(LogTemp, Warning, TEXT("Start Reload"));
 	CurrentAmmo = CurrentWeaponStatus.MaxAmmo;
 }
@@ -374,6 +373,28 @@ void UCombatComponent::SpawnFireSound()
 			break;
 		case EWeaponTypes::ShotGun:
 			SoundMgr->PlaySoundAttached(TEXT("Fire_Shotgun"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::None:
+			return;
+		}
+	}
+}
+
+void UCombatComponent::SpawnReloadSound()
+{
+	USoundManager* SoundMgr = USoundManager::Get(GetWorld());
+	if (SoundMgr)
+	{
+		switch(WeaponDataView->WeaponType)
+		{
+		case EWeaponTypes::HandGun:
+			SoundMgr->PlaySoundAttached(TEXT("Reload_Revolver"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::AssaultRifle:
+			SoundMgr->PlaySoundAttached(TEXT("Reload_Rifle"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::ShotGun:
+			SoundMgr->PlaySoundAttached(TEXT("Reload_Shotgun"), WeaponOwner->WeaponMeshComponent);
 			break;
 		case EWeaponTypes::None:
 			return;
