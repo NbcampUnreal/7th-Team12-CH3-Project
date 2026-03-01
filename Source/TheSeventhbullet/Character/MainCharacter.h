@@ -67,7 +67,7 @@ protected:
 	FCharacterStat TotalStatus;
 	
 	UPROPERTY()
-	int32 Gold = 0;
+	int32 Gold = 10000;
 	
 public:	
 	

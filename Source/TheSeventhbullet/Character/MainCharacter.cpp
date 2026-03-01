@@ -449,7 +449,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			// Interact 바인딩
 			InputComponents->BindAction(
 				PC->InteractAction,
-				ETriggerEvent::Triggered,
+				ETriggerEvent::Started,
 				this,
 				&AMainCharacter::PlayerInteract
 			);
@@ -734,6 +734,7 @@ void AMainCharacter::PlayerInteract(const FInputActionValue& value)
 {
 	if (CurrentInteractable)
 	{
+		UE_LOG(LogTemp,Log,TEXT("PlayerInteract"));
 		CurrentInteractable->Interact(this);
 	}
 }
