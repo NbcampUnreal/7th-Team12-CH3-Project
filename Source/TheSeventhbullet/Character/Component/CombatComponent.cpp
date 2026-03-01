@@ -139,7 +139,7 @@ void UCombatComponent::HitScanFire()
 
 void UCombatComponent::PerformTrace(TArray<FHitResult>& OutHits)
 {
-	// 1) 카메라를 기준으로 타겟지점을 정함.
+	// 카메라를 기준으로 타겟지점을 정함.
 	FVector CameraLocation;
 	FRotator CameraRotation;
 	GetOwner()->GetActorEyesViewPoint(CameraLocation, CameraRotation);
@@ -172,7 +172,7 @@ void UCombatComponent::PerformTrace(TArray<FHitResult>& OutHits)
 	const FVector AimPoint = AimHit.bBlockingHit ? AimHit.ImpactPoint : AimEnd;
 	
 	
-	// 2) 총구에서 실제로 발사하는 트레이스
+	// 총구에서 실제로 발사하는 트레이스
 	FVector MuzzleLoc;
 	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(GetOwner()))
 	{
@@ -231,15 +231,9 @@ FVector UCombatComponent::TraceRandShot(const FVector& TraceStart, const FVector
 	// 실제 목표 지점.
 	FVector EndLocation = SphereCenter + RandomTarget;
 	
-	// 디버그 드로우
-	// 탄 퍼짐 범위
-	//DrawDebugSphere(GetWorld(), SphereCenter, PelletSpreadRadius, 15.f, FColor::Red, bDrawDebugInfinite,FireDebugDuration);
-	// 탄환 목표 지점
-	//DrawDebugSphere(GetWorld(), EndLocation, 2.f, 15.f, FColor::Emerald, bDrawDebugInfinite,FireDebugDuration);
-	// 탄환 경로
-	//DrawDebugLine(GetWorld(), TraceStart, EndLocation, FColor::Magenta, bDrawDebugInfinite,FireDebugDuration);
-	
-	return EndLocation;
+	// 탄 퍼짐 최종 지점의 방향만 사용해서 해당방향으로 사거리만큼 뻗어서 반드시 히트되게 만든다.
+	FVector ShotDirection = (EndLocation - TraceStart).GetSafeNormal();
+	return TraceStart + ShotDirection * CurrentWeaponStatus.Range;
 }
 
 void UCombatComponent::SpreadBullet()
@@ -342,20 +336,36 @@ void UCombatComponent::SpawnFireParticles()
 
 void UCombatComponent::SpawnHitParticles(const FHitResult& Hit)
 {	
+	if (!Hit.bBlockingHit) return;
+	if (!CurrentWeaponStatus.ImpactEffect) return;
+
 	FVector SpawnLocation = Hit.ImpactPoint;
-	FRotator SpawnRotation = Hit.ImpactPoint.Rotation();
-	
-	if (WeaponDataView->ImpactEffect.ToSoftObjectPath().IsValid())
+
+	// 트레이스가 충돌체 내부에서 시작한 케이스 보정
+	if (Hit.bStartPenetrating)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(),
-			CurrentWeaponStatus.ImpactEffect,
-			SpawnLocation,
-			SpawnRotation,
-			FVector(1),
-			true
-		);
+		// Location이 더 안정적인 경우가 많음
+		SpawnLocation = Hit.Location;
+
+		// 혹은 노말 방향으로 살짝 밖으로 빼기(겹침 방지)
+		SpawnLocation += Hit.ImpactNormal * 2.f;
 	}
+	else
+	{
+		// 표면에 살짝 띄우기 (메시 내부 스폰 방지)
+		SpawnLocation += Hit.ImpactNormal * 1.f;
+	}
+
+	const FRotator SpawnRotation = Hit.ImpactNormal.Rotation();
+
+	UGameplayStatics::SpawnEmitterAtLocation(
+		GetWorld(),
+		CurrentWeaponStatus.ImpactEffect,
+		SpawnLocation,
+		SpawnRotation,
+		FVector(1.f),
+		true
+	);
 }
 
 void UCombatComponent::SpawnFireSound()
