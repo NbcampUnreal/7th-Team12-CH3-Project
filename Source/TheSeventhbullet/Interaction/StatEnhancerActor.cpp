@@ -16,8 +16,11 @@ AStatEnhancerActor::AStatEnhancerActor()
 void AStatEnhancerActor::Interact(AActor* Interactor)
 {
 	if (!StatEnhancerComponent) return;
-	
-	if (!bIsUIOpen)
+
+	UUIManager* UI = UUIManager::Get(this);
+	if (!UI) return;
+
+	if (!UI->IsOpen(UITags::StatEnhancer))
 	{
 		StatEnhancerComponent->BeginInteract(Interactor);
 		OpenEnhancerUI();
@@ -31,17 +34,17 @@ void AStatEnhancerActor::Interact(AActor* Interactor)
 
 void AStatEnhancerActor::OpenEnhancerUI()
 {
-	UUIManager* UI = UUIManager::Get(this);
-	if (!UI) return;
-	
-	UUserWidget* Raw = UI->Open(UITags::StatEnhancer);
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (!UIMgr) return;
+	UE_LOG(LogTemp,Log,TEXT("Enhancer Open!!!"));
+	UUserWidget* Raw = UIMgr->Open(UITags::StatEnhancer);
+	if (!Raw) return;
+
 	CachedWidget = Cast<UStatEnhanceWidget>(Raw);
-	
 	if (CachedWidget)
 	{
 		CachedWidget->InitWidget(StatEnhancerComponent);
 	}
-	bIsUIOpen = true;
 }
 
 void AStatEnhancerActor::CloseEnhancerUI()
@@ -50,7 +53,6 @@ void AStatEnhancerActor::CloseEnhancerUI()
 		UI->Close(UITags::StatEnhancer);
 	
 	CachedWidget = nullptr;
-	bIsUIOpen = false;
 }
 
 void AStatEnhancerActor::OnStatUpgraded()

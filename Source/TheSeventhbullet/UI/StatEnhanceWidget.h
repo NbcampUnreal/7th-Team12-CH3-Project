@@ -13,6 +13,7 @@ class THESEVENTHBULLET_API UStatEnhanceWidget : public UUserWidget
 {
 	GENERATED_BODY()
 public:
+	void virtual SetVisibility(ESlateVisibility InVisibility) override;	
 	UFUNCTION(BlueprintCallable, Category = "StatEnhancer")
 	void InitWidget(UStatEnhancerComponent* InComponent);
 
@@ -20,7 +21,7 @@ public:
 	void RefreshAll();
 protected:
 	virtual void NativeConstruct() override;
-	
+	virtual void NativeDestruct() override;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> TitleText;
 

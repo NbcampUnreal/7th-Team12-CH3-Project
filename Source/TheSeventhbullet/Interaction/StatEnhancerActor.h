@@ -32,5 +32,4 @@ private:
 	UPROPERTY()
 	TObjectPtr<UStatEnhanceWidget> CachedWidget;
 	
-	bool bIsUIOpen = false;
 };

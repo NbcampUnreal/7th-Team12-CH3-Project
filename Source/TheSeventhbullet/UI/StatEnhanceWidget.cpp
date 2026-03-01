@@ -7,6 +7,17 @@
 #include "Manager/UIManager.h"
 #include "UI/UITags.h"
 
+void UStatEnhanceWidget::SetVisibility(ESlateVisibility InVisibility)
+{
+	Super::SetVisibility(InVisibility);
+	
+	
+	if (InVisibility == ESlateVisibility::Collapsed)
+	{
+		UE_LOG(LogTemp,Log,TEXT("Stat Enhance widget Destruct"));	
+	}
+}
+
 void UStatEnhanceWidget::InitWidget(UStatEnhancerComponent* InComponent)
 {
 	CachedComponent = InComponent;
@@ -139,4 +150,10 @@ void UStatEnhanceWidget::NativeConstruct()
 	if (DEF_NameText)     DEF_NameText->SetText(FText::FromString(TEXT("방어력")));
 	if (Stamina_NameText) Stamina_NameText->SetText(FText::FromString(TEXT("스태미나")));
 
+}
+
+void UStatEnhanceWidget::NativeDestruct()
+{
+	Super::NativeDestruct();
+	
 }

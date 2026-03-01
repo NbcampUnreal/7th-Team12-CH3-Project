@@ -80,9 +80,7 @@ void UStatEnhancerComponent::BeginInteract(AActor* Interactor)
 }
 
 void UStatEnhancerComponent::ProgressInteract(AActor* Interactor)
-{
-	Super::ProgressInteract(Interactor);
-	
+{	
 }
 
 void UStatEnhancerComponent::EndInteract(AActor* Interactor)

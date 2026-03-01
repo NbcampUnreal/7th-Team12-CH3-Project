@@ -238,6 +238,7 @@ void UUIManager::Toggle(FName Tag)
 bool UUIManager::IsOpen(FName Tag) const
 {
 	const TObjectPtr<UUserWidget>* Found = WidgetCache.Find(Tag);
+	UE_LOG(LogTemp,Log,TEXT("IsOpen"));
 	if (!Found || !Found->Get())
 	{
 		return false;
