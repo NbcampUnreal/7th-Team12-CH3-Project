@@ -13,6 +13,7 @@
 #include "Damage/Modifier/StatusDamageModifier.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Manager/SoundManager.h"
 #include "System/MainGameMode.h"
 
 UCombatComponent::UCombatComponent()
@@ -116,6 +117,7 @@ void UCombatComponent::HitScanFire()
 	SpreadBullet();
 	ConsumeAmmo();
 	SpawnFireParticles();
+	SpawnFireSound();
 	TArray<FHitResult> Hits;
 	PerformTrace(Hits);
 	for (const FHitResult& Hit : Hits)
@@ -354,6 +356,28 @@ void UCombatComponent::SpawnHitParticles(const FHitResult& Hit)
 			FVector(1),
 			true
 		);
+	}
+}
+
+void UCombatComponent::SpawnFireSound()
+{
+	USoundManager* SoundMgr = USoundManager::Get(GetWorld());
+	if (SoundMgr)
+	{
+		switch(WeaponDataView->WeaponType)
+		{
+		case EWeaponTypes::HandGun:
+			SoundMgr->PlaySoundAttached(TEXT("Fire_Revolver"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::AssaultRifle:
+			SoundMgr->PlaySoundAttached(TEXT("Fire_Rifle"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::ShotGun:
+			SoundMgr->PlaySoundAttached(TEXT("Fire_Shotgun"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::None:
+			return;
+		}
 	}
 }
 
