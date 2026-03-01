@@ -3,6 +3,8 @@
 #include "EquipmentComponent.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "AnimNodes/AnimNode_RandomPlayer.h"
+#include "Chaos/Utilities.h"
 #include "Character/MainCharacter.h"
 #include "DataAsset/WeaponDataAsset.h"
 #include "Damage/DamageContext.h"
@@ -52,6 +54,9 @@ void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
 	CurrentWeaponStatus.MaxAmmo = WeaponDataView->MaxAmmo;
 	CurrentWeaponStatus.ReloadTime = WeaponDataView->ReloadTime;
 	CurrentWeaponStatus.MaxAmmo = WeaponDataView->MaxAmmo;
+	
+	CurrentWeaponStatus.MuzzleFlashEffect = WeaponDataView->MuzzleFlashEffect.LoadSynchronous();
+	CurrentWeaponStatus.ImpactEffect = WeaponDataView->ImpactEffect.LoadSynchronous();
 	
 	CurrentAmmo = CurrentWeaponStatus.MaxAmmo;
 }
@@ -320,7 +325,7 @@ void UCombatComponent::SpawnFireParticles()
 	{		
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
-			WeaponDataView->MuzzleFlashEffect.LoadSynchronous(),
+			CurrentWeaponStatus.MuzzleFlashEffect,
 			WeaponOwner->WeaponMeshComponent->GetSocketLocation("WeaponMuzzle"),
 			WeaponOwner->WeaponMeshComponent->GetSocketRotation("WeaponMuzzle"),
 			FVector(1),
@@ -331,13 +336,22 @@ void UCombatComponent::SpawnFireParticles()
 
 void UCombatComponent::SpawnHitParticles(const FHitResult& Hit)
 {	
-	if (WeaponDataView->ImpactEffect.ToSoftObjectPath().IsValid() && !Hit.GetActor()->ActorHasTag("Enemy"))
-	{		
+	FVector SpawnLocation = Hit.ImpactPoint;
+	FRotator SpawnRotation = Hit.ImpactPoint.Rotation();
+	
+	AActor* HitActor = Hit.GetActor();
+	if (HitActor && HitActor->ActorHasTag("Enemy"))
+	{
+		return;
+	}
+	
+	if (WeaponDataView->ImpactEffect.ToSoftObjectPath().IsValid())
+	{
 		UGameplayStatics::SpawnEmitterAtLocation(
 			GetWorld(),
-			WeaponDataView->ImpactEffect.LoadSynchronous(),
-			Hit.ImpactPoint,
-			FRotator::ZeroRotator,
+			CurrentWeaponStatus.ImpactEffect,
+			SpawnLocation,
+			SpawnRotation,
 			FVector(1),
 			true
 		);
