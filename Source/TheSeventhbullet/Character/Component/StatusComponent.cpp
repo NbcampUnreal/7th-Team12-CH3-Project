@@ -8,6 +8,7 @@ UStatusComponent::UStatusComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	CharacterStatus.Speed = 600.0f;
 	CharacterStatus.HP = 100;
+	CharacterStatus.Stamina = 100;
 	CharacterStatus.Attack = 10;
 	CharacterStatus.Defence = 10;
 	CharacterStatus.CriticalChance = 0.15f;

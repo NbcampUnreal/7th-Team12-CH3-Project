@@ -11,6 +11,7 @@ class AMainGameMode;
 class UProjectileMovementComponent;
 class USphereComponent;
 class AEnemyBase;
+class AMainGameMode;
 /**
  * 소환한 대상의 정면 방향으로 날아가며 Sphere Trace를 진행해, 맞으면 데미지를 입힙니다.
  */
@@ -56,7 +57,7 @@ private:
 	TObjectPtr<UStaticMeshComponent> ProjectileStaticMesh;
 	
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
+	TObjectPtr<UProjectileMovementComponent> ProjectileMovement; 
 	
 	UPROPERTY(VisibleAnywhere)
     TObjectPtr<AEnemyBase> Enemy;

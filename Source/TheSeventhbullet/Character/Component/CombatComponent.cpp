@@ -60,6 +60,7 @@ void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
 	CurrentWeaponStatus.ImpactEffect = WeaponDataView->ImpactEffect.LoadSynchronous();
 	
 	CurrentAmmo = CurrentWeaponStatus.MaxAmmo;
+	OnAmmoChanged.Broadcast(CurrentAmmo, CurrentWeaponStatus.MaxAmmo);
 }
 
 void UCombatComponent::HandleWeaponEquipmentChanged(UWeaponDataAsset* NewWeaponData)
@@ -257,16 +258,22 @@ int UCombatComponent::GetCurrentAmmo() const
 	return CurrentAmmo;
 }
 
+int UCombatComponent::GetMaxAmmo() const
+{
+	return CurrentWeaponStatus.MaxAmmo;
+}
+
 void UCombatComponent::Reload()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Start Reload"));
 	CurrentAmmo = CurrentWeaponStatus.MaxAmmo;
+	OnAmmoChanged.Broadcast(CurrentAmmo, CurrentWeaponStatus.MaxAmmo);
 }
 
 void UCombatComponent::ConsumeAmmo()
 {
 	CurrentAmmo = FMath::Clamp(CurrentAmmo - 1, 0, CurrentWeaponStatus.MaxAmmo);
-	UE_LOG(LogTemp, Warning, TEXT("%d / %d"), CurrentAmmo, CurrentWeaponStatus.MaxAmmo);
+	OnAmmoChanged.Broadcast(CurrentAmmo, CurrentWeaponStatus.MaxAmmo);
 }
 
 

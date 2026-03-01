@@ -4,6 +4,9 @@
 #include "Components/Overlay.h"
 #include "ItemDropNotifyWidget.h"
 #include "System/MainGameMode.h"
+#include "Character/MainCharacter.h"
+#include "Character/Component/CombatComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 void UMainHUDWidget::NativeConstruct()
 {
@@ -21,6 +24,21 @@ void UMainHUDWidget::NativeConstruct()
 	{
 		GM->OnMaterialDroppedMonsterKilled.AddDynamic(this, &UMainHUDWidget::OnItemDropped);
 	}
+
+	// 캐릭터 델리게이트 바인딩
+	if (AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
+	{
+		Character->OnHPChanged.AddDynamic(this, &UMainHUDWidget::OnHPChangedHandler);
+
+		// 초기값 반영
+		UpdateHP(Character->GetCurrentHP(), Character->GetMaxHP());
+
+		if (UCombatComponent* Combat = Character->CombatComponent)
+		{
+			Combat->OnAmmoChanged.AddDynamic(this, &UMainHUDWidget::OnAmmoChangedHandler);
+			UpdateAmmo(Combat->GetCurrentAmmo(), Combat->GetMaxAmmo());
+		}
+	}
 }
 
 void UMainHUDWidget::NativeDestruct()
@@ -28,6 +46,16 @@ void UMainHUDWidget::NativeDestruct()
 	if (AMainGameMode* GM = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode()))
 	{
 		GM->OnMaterialDroppedMonsterKilled.RemoveDynamic(this, &UMainHUDWidget::OnItemDropped);
+	}
+
+	if (AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
+	{
+		Character->OnHPChanged.RemoveDynamic(this, &UMainHUDWidget::OnHPChangedHandler);
+
+		if (UCombatComponent* Combat = Character->CombatComponent)
+		{
+			Combat->OnAmmoChanged.RemoveDynamic(this, &UMainHUDWidget::OnAmmoChangedHandler);
+		}
 	}
 
 	if (UWorld* World = GetWorld())
@@ -185,17 +213,44 @@ void UMainHUDWidget::HideWaveInfo()
 	if (MonsterCountText) MonsterCountText->SetVisibility(ESlateVisibility::Collapsed);
 }
 
-//스탯관리하는 부분에서 BroadCast받아 올 예정
 void UMainHUDWidget::UpdateHP(float CurrentHP, float MaxHP)
 {
-	if (HPBar)
+	HPBarTarget = (MaxHP > 0.f) ? FMath::Clamp(CurrentHP / MaxHP, 0.f, 1.f) : 0.f;
+
+	// 초기 상태에서 Lerp 없이 바로 반영
+	if (FMath::IsNearlyEqual(HPBarCurrent, HPBarTarget, 0.001f) && HPBar)
 	{
-		float Ratio = (MaxHP > 0.f) ? FMath::Clamp(CurrentHP / MaxHP, 0.f, 1.f) : 0.f;
-		HPBar->SetPercent(Ratio);
+		HPBarCurrent = HPBarTarget;
+		HPBar->SetPercent(HPBarCurrent);
 	}
 }
 
-//스탯관리하는 부분에서 BroadCast받아 올 예정
+void UMainHUDWidget::OnHPChangedHandler(float CurrentHP, float MaxHP)
+{
+	UpdateHP(CurrentHP, MaxHP);
+}
+
+void UMainHUDWidget::OnAmmoChangedHandler(int32 CurrentAmmo, int32 MaxAmmo)
+{
+	UpdateAmmo(CurrentAmmo, MaxAmmo);
+}
+
+void UMainHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	// HP Bar Lerp
+	if (!FMath::IsNearlyEqual(HPBarCurrent, HPBarTarget, 0.001f))
+	{
+		HPBarCurrent = FMath::FInterpTo(HPBarCurrent, HPBarTarget, InDeltaTime, BarLerpSpeed);
+		if (HPBar)
+		{
+			HPBar->SetPercent(HPBarCurrent);
+		}
+	}
+
+}
+
 void UMainHUDWidget::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
 {
 	if (AmmoText)

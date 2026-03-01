@@ -41,6 +41,7 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	// --- HUD ---
 	UPROPERTY(meta = (BindWidget))
@@ -73,6 +74,11 @@ private:
 	UFUNCTION()
 	void OnItemDropped(const TArray<FDroppedMaterialsData>& DroppedMaterials);
 
+	UFUNCTION()
+	void OnHPChangedHandler(float CurrentHP, float MaxHP);
+	UFUNCTION()
+	void OnAmmoChangedHandler(int32 CurrentAmmo, int32 MaxAmmo);
+
 	void ShowNextNotify();
 	void OnCurrentNotifyHideFinished();
 
@@ -84,4 +90,10 @@ private:
 	TObjectPtr<UItemDropNotifyWidget> CurrentNotify;
 
 	FTimerHandle NotifyTimerHandle;
+
+	// --- Bar Lerp ---
+	float HPBarTarget = 1.f;
+	float HPBarCurrent = 1.f;
+	UPROPERTY(EditDefaultsOnly, Category = "UI|HUD")
+	float BarLerpSpeed = 8.f;
 };
