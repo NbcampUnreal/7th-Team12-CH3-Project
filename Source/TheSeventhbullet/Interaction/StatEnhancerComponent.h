@@ -6,6 +6,7 @@
 #include "Data/StatusTypes.h"
 #include "StatEnhancerComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnStatUpgraded);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class THESEVENTHBULLET_API UStatEnhancerComponent : public UBaseInteractionComponent
@@ -22,6 +23,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enhance")
 	bool TryUpgradeStat(EStatusType StatType);
 	
+	UPROPERTY(BlueprintAssignable, Category = "Enhance")
+	FOnStatUpgraded OnStatUpgraded;
+	
+	UFUNCTION(BlueprintPure, Category = "Enhance")
+	AMainCharacter* GetCachedCharacter() const { return CachedCharacter; }
 protected:
 	virtual void BeginPlay() override;
 	
@@ -32,6 +38,4 @@ public:
 protected:
 	UPROPERTY()
 	AMainCharacter* CachedCharacter;
-	
-	FEnhancerIncreaseStatus IncreaseStat;
 };
