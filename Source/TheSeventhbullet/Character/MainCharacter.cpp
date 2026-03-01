@@ -191,6 +191,14 @@ void AMainCharacter::ResetSkillCoolTime()
 	bCanUseSkill = true;
 }
 
+void AMainCharacter::ShowWeaponMesh()
+{
+	if (WeaponMeshComponent && EquipmentComponent->CurrentWeapon)
+	{
+		WeaponMeshComponent->SetVisibility(true, true);	
+	}
+}
+
 float AMainCharacter::GetSkillCoolTime()
 {
 	if (bCanUseSkill || !GetWorld()) return 0.0f;
@@ -312,6 +320,11 @@ bool AMainCharacter::IsFiring()
 bool AMainCharacter::IsFalling()
 {
 	return GetCharacterMovement()->IsFalling();
+}
+
+bool AMainCharacter::IsUseSkill()
+{
+	return bIsUseSkill;
 }
 
 void AMainCharacter::PlayAnimMotageByState(EAnimState AnimState)
@@ -457,12 +470,20 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 				&AMainCharacter::FinishFire
 			);
 			
-			// SKill 바인딩
+			// Skill 바인딩
 			InputComponents->BindAction(
 				PC->SkillAction,
 				ETriggerEvent::Started,
 				this,
 				&AMainCharacter::PlayerSkill
+			);
+			
+			// FinishSkill 바인딩
+			InputComponents->BindAction(
+				PC->SkillAction,
+				ETriggerEvent::Completed,
+				this,
+				&AMainCharacter::FinishSkill
 			);
 			
 			// Interact 바인딩
@@ -685,7 +706,7 @@ void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 
 void AMainCharacter::UpdateRotationState()
 {
-	if (bIsAiming || bIsFire)
+	if (bIsAiming || bIsFire || bIsUseSkill)
 	{
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		bUseControllerRotationYaw = true;
@@ -784,6 +805,12 @@ void AMainCharacter::PlayerSkill(const FInputActionValue& value)
 	{
 		bCanUseSkill = false;
 		
+		// Skill 사용시 카메라 모드 변경
+		bIsUseSkill = true;
+		UpdateRotationState();
+		
+		WeaponMeshComponent->SetVisibility(false, true);
+		
 		GetWorld()->GetTimerManager().SetTimer(
 			SkillCoolTimerHandle,
 			this,
@@ -804,6 +831,12 @@ void AMainCharacter::PlayerSkill(const FInputActionValue& value)
 		UE_LOG(LogTemp, Error, TEXT("Remain Time : %.1f"), GetSkillCoolTime());
 		
 	}
+}
+
+void AMainCharacter::FinishSkill(const FInputActionValue& value)
+{
+	bIsUseSkill = false;
+	UpdateRotationState();
 }
 
 void AMainCharacter::PlayerInteract(const FInputActionValue& value)

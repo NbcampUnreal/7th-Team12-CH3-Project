@@ -90,6 +90,14 @@ void UCharacterAnimInstance::AnimNotify_Throw()
 	}
 }
 
+void UCharacterAnimInstance::AnimNotify_EndSkill()
+{
+	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(TryGetPawnOwner()))
+	{
+		MainCharacter->ShowWeaponMesh();
+	}
+}
+
 void UCharacterAnimInstance::AnimNotify_RefillAmmo()
 {
 	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(TryGetPawnOwner()))

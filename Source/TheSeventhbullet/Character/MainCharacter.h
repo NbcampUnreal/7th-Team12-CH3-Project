@@ -163,6 +163,7 @@ public:
 	void PlayerFire(const FInputActionValue& value);
 	void FinishFire(const FInputActionValue& value);
 	void PlayerSkill(const FInputActionValue& value);
+	void FinishSkill(const FInputActionValue& value);
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
 	void PlayerStartReload(const FInputActionValue& value);
@@ -192,7 +193,11 @@ public:
 	
 	void ThrowGrenade();	// 스킬 실행
 	void ResetSkillCoolTime();
+	void ShowWeaponMesh();
 	float GetSkillCoolTime();
+	
+	bool bIsUseSkill = false;
+	
 #pragma endregion
 	
 #pragma region Combat
@@ -216,6 +221,7 @@ public:
 	bool IsAiming();
 	bool IsFiring();
 	bool IsFalling();
+	bool IsUseSkill();
 	
 #pragma endregion
 	

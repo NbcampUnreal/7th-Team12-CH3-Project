@@ -70,8 +70,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Animation")
 	TSoftObjectPtr<UAnimMontage> AttackMontage;// 공격 애니메이션
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Animation")
-	TSoftObjectPtr<UAnimMontage> AimedAttackMontage;// 조준사격 애니메이션
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Animation")
 	TSoftObjectPtr<UAnimMontage> ReloadMontage; // 재장전 애니메이션
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Sound")
 	TSoftObjectPtr<USoundBase> ShotSound; // 발사 사운드
