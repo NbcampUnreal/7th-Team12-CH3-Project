@@ -6,8 +6,7 @@
 #include "MaterialRecyclingComponent.generated.h"
 
 struct FItemInstance;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRecyclingMaterialsChanged, const TArray<UMaterialDataAsset*>&, Materials)
-;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRecyclingMaterialsChanged, const TArray<UMaterialDataAsset*>&, Materials);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaterialRecycled, const FItemInstance&, Result);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))

@@ -106,12 +106,12 @@ void UCombatComponent::HitScanFire()
 	
 	// 현재시간 - 마지막 발사시간 < 발사간격인 경우 발사가 불가능
 	// 연사가 아닌 단발사격인 경우에도 무기마다 발사간격(발사속도)을 구현하기 위한 로직.
-	const float Now = GetWorld()->GetTimeSeconds();
-	if (Now - LastFireTime < CurrentWeaponStatus.FireInterval)
-	{
-		return;
-	}
-	LastFireTime = Now;
+	// const float Now = GetWorld()->GetTimeSeconds();
+	// if (Now - LastFireTime < CurrentWeaponStatus.FireInterval)
+	// {
+	// 	return;
+	// }
+	// LastFireTime = Now;
 	
 	SpreadBullet();
 	ConsumeAmmo();
@@ -121,11 +121,16 @@ void UCombatComponent::HitScanFire()
 	for (const FHitResult& Hit : Hits)
 	{
 		SpawnHitParticles(Hit);
+		
+		if (!Hit.bBlockingHit) continue;
+		
 		if (Hit.bBlockingHit && Hit.GetActor()->ActorHasTag("Enemy"))
 		{
-			if (!GM) return;
-			GM->RequestAttack++;
-			ApplyDamageByHit(Hit);
+			if (GM)
+			{
+				GM->RequestAttack++;
+				ApplyDamageByHit(Hit);
+			}	
 		}
 	}
 }
@@ -338,12 +343,6 @@ void UCombatComponent::SpawnHitParticles(const FHitResult& Hit)
 {	
 	FVector SpawnLocation = Hit.ImpactPoint;
 	FRotator SpawnRotation = Hit.ImpactPoint.Rotation();
-	
-	AActor* HitActor = Hit.GetActor();
-	if (HitActor && HitActor->ActorHasTag("Enemy"))
-	{
-		return;
-	}
 	
 	if (WeaponDataView->ImpactEffect.ToSoftObjectPath().IsValid())
 	{
