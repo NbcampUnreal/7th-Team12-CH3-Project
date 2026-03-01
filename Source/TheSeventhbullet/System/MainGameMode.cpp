@@ -105,6 +105,7 @@ void AMainGameMode::OnStageReady()
 	
 	StageElapsedTime = 0.0f;
 	CurrentWaveIndex = 0;
+	bBossDead = false;
 	
 	if (WaveStateMachine)
 	{
@@ -557,6 +558,57 @@ float AMainGameMode::GetWaveStartDelay() const
 void AMainGameMode::ClearStageRewards()
 {
 	StageRewardItems.Reset();
+}
+
+void AMainGameMode::TriggerBossPatternSpawn(int32 PatternWaveIndex)
+{
+	USyncDataManager* DataManager = USyncDataManager::Get(this);
+	if (!DataManager) return;
+	
+	FWaveRowData WaveData = DataManager->GetWaveData(CurrentRequestID, PatternWaveIndex);
+	
+	for (const FWaveMonsterRowData& MonsterInfo : WaveData.Monster)
+	{
+		if (MonsterInfo.EnemyTypes == EMonsterType::None) continue;
+		
+		for (int32 i = 0; i < MonsterInfo.EnemyCount; i++)
+		{
+			SpawnQueue.Add(MonsterInfo.EnemyTypes);
+		}
+	}
+	
+	UE_LOG(LogTemp, Log, TEXT("[BossPattern] Wave %d 잡몹 %d마리 추가"),
+		PatternWaveIndex, SpawnQueue.Num());
+	
+}
+
+void AMainGameMode::NotifyBossDead()
+{
+	bBossDead = true;
+	OnBossWaveCleared.Broadcast();
+}
+
+bool AMainGameMode::IsBossWave() const
+{
+	USyncDataManager* DataManager = USyncDataManager::Get(this);
+	if (!DataManager) return false;
+	
+	FWaveRowData WaveData = DataManager->GetWaveData(CurrentRequestID, CurrentWaveIndex);
+	return WaveData.bIsBossWave;
+}
+
+bool AMainGameMode::IsCurrentWaveManualTrigger() const
+{
+	USyncDataManager* DataManager = USyncDataManager::Get(this);
+	if (!DataManager) return false;
+	
+	FWaveRowData WaveData = DataManager->GetWaveData(CurrentRequestID, CurrentWaveIndex);
+	return WaveData.bManualTriggerOnly;
+}
+
+bool AMainGameMode::IsBossDead() const
+{
+	return bBossDead;
 }
 
 

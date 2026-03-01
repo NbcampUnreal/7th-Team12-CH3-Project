@@ -9,6 +9,7 @@
 #include "Inventory/InventoryComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Manager/UIManager.h"
+#include "System/MonsterManagerSubSystem.h"
 #include "UI/UITags.h"
 #include "UI/LoadingScreenWidget.h"
 #include "TheSeventhbullet/System/MainGameMode.h"
@@ -269,6 +270,77 @@ bool UMainGameInstance::DoesSaveExist() const
 	return UGameplayStatics::DoesSaveGameExist(SaveSlotName, 0);
 }
 
+void UMainGameInstance::RequestBossStage(int32 InRequestID)
+{
+	PendingBossRequestID = InRequestID;
+	ShowLoadingScreen();
+	
+	FLatentActionInfo LatentInfo;
+	LatentInfo.CallbackTarget = this;
+	LatentInfo.ExecutionFunction = FName("OnBossSequenceLevelLoaded");
+	LatentInfo.Linkage = 0;
+	LatentInfo.UUID = GetUniqueID();
+	
+	UGameplayStatics::LoadStreamLevel(this, BossSequenceLevelName,true,false,LatentInfo);
+	
+}
+
+void UMainGameInstance::OnBossSequenceLevelLoaded()
+{
+	HideLoadingScreen();
+	PlayBossSequence();
+}
+
+void UMainGameInstance::OnBossMapLoaded()
+{
+	HideLoadingScreen();
+	
+	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
+	if (SubSystem)
+		SubSystem->CacheSpawners();
+	
+	AMainGameMode* GM = AMainGameMode::Get(this);
+	if (!GM) return;
+	
+	GM->SetTargetRequestID(PendingBossRequestID);
+	GM->PrepareStageAndPreLoad();
+}
+
+void UMainGameInstance::OnBossSequenceFinishedDelegate()
+{
+	//TODO 현석
+	// if (BossSequenceActor)
+	// {
+	// 	if (ULevelSequencePlayer* Player = BossSequenceActor->GetSequencePlayer())
+	// 		Player->OnFinished.RemoveDynamic(
+	// 			this, &UMainGameInstance::OnBossSequenceFinishedDelegate);
+	// }
+	OnBossSequenceFinished();
+}
+
+void UMainGameInstance::PlayBossSequence()
+{
+	//시퀀스 재생 함수
+	//TODO 현석
+}
+
+void UMainGameInstance::OnBossSequenceFinished()
+{
+	FLatentActionInfo UnLoadInfo;
+	UGameplayStatics::UnloadStreamLevel(this,BossSequenceLevelName, UnLoadInfo, false);
+	
+	//TODO 현석
+	//시퀀스 보스 액터 끄기?
+	ShowLoadingScreen();
+	
+	FLatentActionInfo LatentActionInfo;
+	LatentActionInfo.CallbackTarget = this;
+	LatentActionInfo.ExecutionFunction = FName("OnBossMapLoaded");
+	LatentActionInfo.Linkage = 0;
+	LatentActionInfo.UUID = GetUniqueID()+1;
+	
+	UGameplayStatics::LoadStreamLevel(this, BossMapLevelName,true,false,LatentActionInfo);
+}
 
 
 void UMainGameInstance::PollLoadingProgress()

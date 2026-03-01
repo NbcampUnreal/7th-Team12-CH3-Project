@@ -12,7 +12,12 @@ void UProgressWaveState::Enter()
 	
 	GM = GetGameMode();
 	if (!GM) return;
-
+	
+	if (GM->IsBossWave())
+	{
+		GM->OnBossWaveStarted.Broadcast();
+	}
+	
 	//TODO 영섭 : 타이머, 남은 몬스터 수, 웨이브 번호 등등 UI띄우기
 	// UUIManager* UIMgr = UUIManager::Get(this);
 	// if (UIMgr)
@@ -41,6 +46,10 @@ void UProgressWaveState::Tick(float DeltaTime)
 	}
 	if (GM->IsWaveClear())
 	{
+		if (GM->IsCurrentWaveManualTrigger() && !GM->IsBossDead())
+		{
+			return;
+		}
 		ChangeState(EWaveState::End);
 	}
 }

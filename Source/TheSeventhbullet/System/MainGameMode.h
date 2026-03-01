@@ -11,7 +11,8 @@ class UWaveStateMachine;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaterialDroppedMonsterKilled, const TArray<FDroppedMaterialsData>&, DroppedMaterials);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStageRewardItemsChanged, const TArray<FDroppedMaterialsData>&, Rewards);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossWaveStarted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossWaveCleared);
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* [MainGameMode Guide]
  *
@@ -125,6 +126,22 @@ public:
 	UFUNCTION()
 	void ClearStageRewards();
 	
+	UFUNCTION(BlueprintCallable, Category = "Wave")
+	void TriggerBossPatternSpawn(int32 PatternWaveIndex);
+	
+	UFUNCTION(BlueprintCallable, Category = "Wave")
+	void NotifyBossDead();
+	
+	bool IsBossWave() const;
+	bool IsCurrentWaveManualTrigger() const;
+	bool IsBossDead() const;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnBossWaveStarted  OnBossWaveStarted;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnBossWaveCleared OnBossWaveCleared;
+	
 	int32 RequestAttack = 0;// 한 의뢰에서 총을 맞힌 횟수
 	int32 RequestHit = 0;// 한 의뢰에서 공격을 당한 횟수
 protected:
@@ -156,6 +173,8 @@ private:
 	float StageElapsedTime = 0.0f;
 	
 	EStageResult CurrentStageResult = EStageResult::None;
+	
+	bool bBossDead = false;
 	
 public:
 	// 주현 : DELEGATE METHOD : 몬스터를 죽이고 아이템이 드랍된 경우

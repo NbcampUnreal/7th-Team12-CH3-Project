@@ -15,7 +15,7 @@ class THESEVENTHBULLET_API UBossPatternComponent : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	UBossPatternComponent();
-
+	void BossMonsterTriggerPattern();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

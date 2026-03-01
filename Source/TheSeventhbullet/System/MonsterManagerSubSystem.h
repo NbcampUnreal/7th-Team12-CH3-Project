@@ -100,6 +100,9 @@ private:
 	FSimpleDelegate OnPoolInitializationComplete;
 	/** 로딩 도중 데이터 손실 방지를 위한 임시 저장소 */
 	TMap<EMonsterType, int32> PendingPoolRequirements;
+
+	bool IsBossStage() const;
+	bool IsBossType(EMonsterType Type) const;
 private:
 	UPROPERTY()
 	TMap<EMonsterType, FMonsterPoolList> MonsterPool;
