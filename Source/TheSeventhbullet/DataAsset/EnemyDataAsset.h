@@ -9,7 +9,7 @@
 
 
 /**
- * EnemyBase를 값을 주입합니다.
+ * Enemy에 필요한 데이터를 외부에서 주입하는 PDA입니다.
  */
 
 UCLASS()

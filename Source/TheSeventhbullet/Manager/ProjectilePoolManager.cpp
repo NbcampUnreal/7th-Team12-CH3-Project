@@ -33,7 +33,6 @@ TObjectPtr<AActor> UProjectilePoolManager::GetProjectile()
 	{
 		if (ProjectilePool[i]->IsHidden())
 		{
-			UE_LOG(LogTemp,Warning,TEXT("GetPool"));
 			return ProjectilePool[i];
 		}
 	}
@@ -42,7 +41,6 @@ TObjectPtr<AActor> UProjectilePoolManager::GetProjectile()
 
 void UProjectilePoolManager::ReturnToPool(TObjectPtr<AActor> Projectile)
 {
-	UE_LOG(LogTemp,Warning,TEXT("ReturnPool %s"),*Projectile->GetName());
 	TObjectPtr<AProjectileActor> ProjectileActor = Cast<AProjectileActor>(Projectile);
 	if (ProjectileActor == nullptr)
 	{

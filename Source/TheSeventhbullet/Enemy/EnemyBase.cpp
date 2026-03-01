@@ -11,6 +11,7 @@
 #include "AnimInstance/EnemyAnimInstance.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Character/DamageType/PlayerSkillDamageType.h"
 #include "Components/CapsuleComponent.h"
 #include "DataAsset/EnemyDataAsset.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -18,6 +19,7 @@
 #include "Data/TableRowTypes.h"
 #include "System/MonsterManagerSubSystem.h"
 #include "Data/TableRowTypes.h"
+#include "Engine/DamageEvents.h"
 #include "Projectile/ProjectileStat.h"
 #include "System/MainGameMode.h"
 
@@ -27,7 +29,8 @@ AEnemyBase::AEnemyBase()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	
+	
 	//별도로 데이터를 주입하지 않은 캐릭터의 기본 스테이터스
 	MaxHealth = 100.0f;
 	NowHealth = MaxHealth;
@@ -100,7 +103,6 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 		{
 			SpawnDefaultController();
 		}
-		UE_LOG(LogTemp,Warning,TEXT("%f EnemyBase"),EnemyData->Speed);
 		//BehaviorTree 및 AttackRadius, bIsLongRange, Speed BB키 세팅
 		OnCharacterSetAI.Broadcast(EnemyData->EnemyBT.Get(),AttackRadius,EnemyData->bIsLongRange,EnemyData->Speed,EnemyData->StrafeSpeed,EnemyData->EnemyAttackDelay);
 		
@@ -168,6 +170,22 @@ void AEnemyBase::SetMonsterType(EMonsterType InEnemyMonsterType)
 	EnemyMonsterType=InEnemyMonsterType;
 }
 
+void AEnemyBase::SetBoss()
+{
+	//별도의 콜리전 사용
+	UCapsuleComponent* EnemyCapsuleComponent=GetCapsuleComponent();
+	if (EnemyCapsuleComponent!=nullptr)
+	{
+		EnemyCapsuleComponent->SetCollisionObjectType(ECC_GameTraceChannel1);
+	}
+	//태그 Boss로 변경
+	Tags.Empty();
+	Tags.Add(FName("Boss"));
+	//카메라에 막히지 않도록 카메라 콜리전 Ignore
+	EnemyCapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+}
+
+
 void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy,
                                       FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName,
                                       FVector ShotFromDirection,
@@ -182,7 +200,6 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 
 	//데미지 처리- 헤드샷 1.5배 데미지
 	SetHealth(NowHealth + ArmorPoint - (bIsHeadShot ? Damage * 1.5f : Damage));
-	UE_LOG(LogTemp, Warning, TEXT("LineTraceHit, %s, %f"), *BoneName.ToString(), NowHealth);
 
 	// 적 캐릭터가 처음 죽었을 경우
 	if (!bIsDead && FMath::IsNearlyZero(NowHealth))
@@ -228,6 +245,7 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 			DisplayParticle(HitLocation, HitParticle);
 		}
 	}
+	
 }
 
 void AEnemyBase::DropItem()
@@ -239,6 +257,19 @@ void AEnemyBase::DropItem()
 	{
 		GM->ItemDropFromMonster(EnemyMonsterType);
 	}
+float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	SetHealth(NowHealth + ArmorPoint - DamageAmount);
+	//TODO: 보스 몬스터 상속을 위해 리팩토링
+	if (DamageEvent.DamageTypeClass==UPlayerSkillDamageType::StaticClass())
+	{
+		OnBossCanceled.Broadcast();
+		UE_LOG(LogTemp,Warning,TEXT("PlayerSkillHit"));
+	}
+	
+	
+	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
 
 
@@ -279,7 +310,7 @@ void AEnemyBase::DisplayParticle(FVector HitLocation, UParticleSystem* InParticl
 
 void AEnemyBase::ReturnToPool()
 {
-	UE_LOG(LogTemp,Warning,TEXT("ReturnToPool"));
+
 	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
 	if (SubSystem)
 	{

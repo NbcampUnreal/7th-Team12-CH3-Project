@@ -62,5 +62,4 @@ void UEnemyProjectileAttackNotify::Notify(USkeletalMeshComponent* MeshComp, UAni
 	//발사체를 날아가게 합니다
 	ProjectileActor->SetActiveAndCollision(true);
 	
-	UE_LOG(LogTemp,Warning,TEXT("Shoot Projectile"));
 }

@@ -1,5 +1,6 @@
 #include "PlayerSkill.h"
 #include "Components/SphereComponent.h"
+#include "DamageType/PlayerSkillDamageType.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -103,7 +104,7 @@ void APlayerSkill::Explode()
 	// 감지된 액터 처리
 	for (AActor* HitActor : OverlapActors)
 	{
-		if (HitActor && HitActor->ActorHasTag(FName("Enemy")))
+		if (HitActor && (HitActor->ActorHasTag(FName("Enemy"))||HitActor->ActorHasTag(FName("Boss"))))
 		{
 			// 데미지 적용
 			UGameplayStatics::ApplyDamage(
@@ -111,9 +112,15 @@ void APlayerSkill::Explode()
 				DamageAmount,
 				GetInstigatorController(),
 				this,
-				UDamageType::StaticClass()
+				UPlayerSkillDamageType::StaticClass()
 			);
 			
+			//현석 : 보스는 넉백 제외
+			if (HitActor->ActorHasTag(FName("Boss")))
+			{
+				UE_LOG(LogTemp,Warning,TEXT("Boss hit"));
+				continue;
+			}
 			// 넉백 적용
 			ACharacter* HitCharacter = Cast<ACharacter>(HitActor);
 			if (HitCharacter)

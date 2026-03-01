@@ -29,7 +29,15 @@ protected:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Attack")
 	bool bShowDebug;
+		
+	//XY방향으로 날리는 힘
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Attack")
+	float LaunchPowerXY;
+	//Z방향으로 날리는 힘
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Attack")
+	float LaunchPowerZ;
 	
+
 	
 private:
 	FVector PresentAttackSocketLocation=FVector::ZeroVector;
@@ -46,9 +54,11 @@ private:
 	//맞은 액터를 메인 캐릭터로 형변환
 	UPROPERTY()
 	TObjectPtr<AMainCharacter> HittedCharacter;
+	//중복 타격 방지를 위해 TArray에 저장
 	UPROPERTY()	
 	TArray<TObjectPtr<AActor>> HittedCharacterArray;
 	
 	AMainGameMode* GM = nullptr;
 	
+	FVector KnockBackDirection=FVector::ZeroVector;
 };

@@ -108,6 +108,14 @@ void UEnemyAttackNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 	OwnerEnemyBase,
 			UDamageType::StaticClass()
 			);
+		
+		//넉백 추가
+		KnockBackDirection=HittedCharacter->GetActorLocation()-OwnerEnemyBase->GetActorLocation();
+		KnockBackDirection=FVector(KnockBackDirection.X,KnockBackDirection.Y,0.f);
+		KnockBackDirection.Normalize();
+		KnockBackDirection*=LaunchPowerXY;
+		KnockBackDirection=FVector(KnockBackDirection.X,KnockBackDirection.Y,LaunchPowerZ);
+		HittedCharacter->LaunchCharacter(KnockBackDirection,true,true);
 	}
 }
 

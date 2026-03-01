@@ -63,7 +63,6 @@ void AProjectileActor::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor
 		UGameplayStatics::ApplyDamage(MainCharacter,AttackPoint,nullptr,this,UDamageType::StaticClass());
 	}
 	GetWorld()->GetSubsystem<UProjectilePoolManager>()->ReturnToPool(this);
-	UE_LOG(LogTemp,Warning,TEXT("Destroyed by %s"), *OtherActor->GetName());
 }
 
 
@@ -120,7 +119,6 @@ void AProjectileActor::SetActiveAndCollision(bool InActive)
 		ProjectileMovement->Velocity = GetActorForwardVector() * ProjectileMovement->InitialSpeed;
 
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle,this,&AProjectileActor::LifeTimeEnd,5.0f,false);
-		UE_LOG(LogTemp,Warning,TEXT("Activated"));
 		
 	}
 	else
@@ -130,7 +128,6 @@ void AProjectileActor::SetActiveAndCollision(bool InActive)
 		ProjectileMovement->StopMovementImmediately();
 		ProjectileMovement->Deactivate();
 		GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
-		UE_LOG(LogTemp,Warning,TEXT("DeActivated"));
 	}
 	
 }
@@ -142,7 +139,6 @@ void AProjectileActor::LifeTimeEnd()
 		return;
 	}
 	GetWorld()->GetSubsystem<UProjectilePoolManager>()->ReturnToPool(this);
-	UE_LOG(LogTemp,Warning,TEXT("TimeEnd"));
 }
 
 void AProjectileActor::BeginPlay()
