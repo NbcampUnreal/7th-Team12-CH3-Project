@@ -19,7 +19,7 @@ enum class EMonsterType : uint8
 	Sparrow,
 	Kwang,
 	Rampage,
-	Sevarog // Boss
+	Boss
 };
 
 USTRUCT()
@@ -41,6 +41,12 @@ struct FWaveRowData : public FTableRowBase
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FWaveMonsterRowData> Monster;
+	
+	UPROPERTY(EditAnywhere, Category = "Boss")
+	bool bIsBossWave = false;
+	
+	UPROPERTY(EditAnywhere, Category = "Boss")
+	bool bManualTriggerOnly = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DifficultyMultiplier = 1.f;

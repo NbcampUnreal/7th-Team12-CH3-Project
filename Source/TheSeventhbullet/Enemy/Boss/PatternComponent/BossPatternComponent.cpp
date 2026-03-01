@@ -3,6 +3,7 @@
 
 #include "BossPatternComponent.h"
 
+#include "System/MainGameMode.h"
 
 // Sets default values for this component's properties
 UBossPatternComponent::UBossPatternComponent()
@@ -12,6 +13,13 @@ UBossPatternComponent::UBossPatternComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
+}
+
+void UBossPatternComponent::BossMonsterTriggerPattern()
+{
+	AMainGameMode* GM = AMainGameMode::Get(this);
+	if (!GM) return;
+	GM->TriggerBossPatternSpawn(1);
 }
 
 

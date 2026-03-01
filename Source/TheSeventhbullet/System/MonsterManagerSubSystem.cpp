@@ -1,5 +1,6 @@
 #include "MonsterManagerSubSystem.h"
 
+#include "MainGameMode.h"
 #include "DataAsset/EnemyDataAsset.h"
 #include "DSP/LFO.h"
 #include "Enemy/EnemyBase.h"
@@ -37,6 +38,7 @@ void UMonsterManagerSubSystem::OnWorldBeginPlay(UWorld& InWorld)
 
 void UMonsterManagerSubSystem::CacheSpawners()
 {
+	CachedSpawners.Empty();
 	//맵에 있는 스포너를 Array에 담음
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(),ASpawner::StaticClass(),FoundActors);
@@ -151,6 +153,11 @@ void UMonsterManagerSubSystem::SpawnMonster(EMonsterType MonsterType, int32 Spaw
 		EnemyToSpawn->SetActorHiddenInGame(false); // 끄면 숨김
 		EnemyToSpawn->SetActorTickEnabled(true);   // 끄면 멈춤
 		EnemyToSpawn->SetActorEnableCollision(true);
+		
+		if (IsBossStage() && !IsBossType(MonsterType))
+		{
+			EnemyToSpawn->SetHealth(1);
+		}
 	}
 	
 }
@@ -229,4 +236,30 @@ void UMonsterManagerSubSystem::OnAssetsLoadedForPool()
 	}
 	UE_LOG(LogTemp, Log, TEXT("Pool Initialization Complete"));
 	OnPoolInitializationComplete.ExecuteIfBound();
+}
+
+bool UMonsterManagerSubSystem::IsBossStage() const
+{
+	AMainGameMode* GM = AMainGameMode::Get(this);
+	if (!GM) return false;
+	
+	USyncDataManager* DataManager = USyncDataManager::Get(this);
+	if (!DataManager) return false;
+	
+	int32 RequestID = GM->GetCurrentRequestID();
+	if (RequestID == INDEX_NONE) return false;
+	
+	const FRequestRowData& RequestData = DataManager->GetRequestData(RequestID);
+	for (const FWaveRowData& Wave : RequestData.Waves)
+	{
+		if (Wave.bIsBossWave)
+			return true;
+	}
+	return false;
+}
+
+bool UMonsterManagerSubSystem::IsBossType(EMonsterType Type) const
+{
+	if (Type == EMonsterType::Boss) return true;
+	else return false;
 }

@@ -70,6 +70,8 @@ public:
 
 	bool DoesSaveExist() const;
 	
+	//Town에서 보스 의뢰 수락 시 호출
+	void RequestBossStage(int32 InRequestID);
 private:
 	void OnSaveDataLoadFinished(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData);
 	UFUNCTION()
@@ -79,6 +81,16 @@ private:
 	void ShowLoadingScreen();
 	void HideLoadingScreen();
 	void PollLoadingProgress();
+	
+	UFUNCTION()
+	void OnBossSequenceLevelLoaded();//시퀄스 로드 완료
+	UFUNCTION()
+	void OnBossMapLoaded();//보스맵 로드 완료 -> 웨이브 시작
+	UFUNCTION()
+	void OnBossSequenceFinishedDelegate();//시퀀스 종료 -> 보스맵 로드
+	
+	void PlayBossSequence();//시퀀스 재생
+	void OnBossSequenceFinished();//시퀀스 종료 델리게이트 수신
 
 private:
 	static const FString SaveSlotName;
@@ -97,4 +109,13 @@ private:
 	
 	float DisplayProgress = 0.0f;
 	float TargetProgress = 0.0f;
+	
+	int32 PendingBossRequestID = INDEX_NONE;
+	
+	//TODO 현석
+	//UPROPERTY()
+	//TObjectPtr<ALevelSequenceActor> BossSequenceActor;
+	
+	FName BossSequenceLevelName = FName(TEXT("L_BossSequence"));
+	FName BossMapLevelName = FName(TEXT("L_Boss"));
 };

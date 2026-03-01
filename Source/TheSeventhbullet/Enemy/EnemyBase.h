@@ -42,7 +42,7 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	
+	void SetHealth(float NewHealth);
 #pragma region DELEGATE METHOD
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnCharacterHit;
@@ -153,7 +153,7 @@ protected:
 		) override;
 	
 	
-	void SetHealth(float NewHealth);
+	
 	void DisplayParticle(FVector HitLocation, UParticleSystem* InParticle);
 	void ReturnToPool();
 	

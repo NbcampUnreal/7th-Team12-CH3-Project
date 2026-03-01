@@ -25,18 +25,23 @@ void UEndWaveState::Enter()
 void UEndWaveState::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
 	if (bHasDecided) return;
+	
 	ClearDelayTimer -= DeltaTime;
 	if (ClearDelayTimer > 0.0f) return;
 	
 	AMainGameMode* GM = GetGameMode();
 	if (!GM) return;
 	
+	bHasDecided = true;
 	GM->IncreaseCurrentWaveIndex();
+	
 	if (GM->HasNextWave())
 	{
-		ChangeState(EWaveState::Intermission);
+		if (GM->IsBossWave())
+			ChangeState(EWaveState::Begin);
+		else
+			ChangeState(EWaveState::Intermission);
 	}
 	else
 	{

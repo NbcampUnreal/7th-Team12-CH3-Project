@@ -315,6 +315,13 @@ void AEnemyBase::ReturnToPool()
 	UMonsterManagerSubSystem* SubSystem = UMonsterManagerSubSystem::Get(this);
 	if (SubSystem)
 	{
+		if (EnemyMonsterType == EMonsterType::Boss)
+		{
+			AMainGameMode* GM = AMainGameMode::Get(this);
+			if (!GM) return;
+			
+			GM->NotifyBossDead();
+		}
 		SubSystem->ReturnToPool(this);
 	}
 	else
