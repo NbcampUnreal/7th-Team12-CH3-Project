@@ -3,6 +3,8 @@
 #include "EquipmentComponent.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "AnimNodes/AnimNode_RandomPlayer.h"
+#include "Chaos/Utilities.h"
 #include "Character/MainCharacter.h"
 #include "DataAsset/WeaponDataAsset.h"
 #include "Damage/DamageContext.h"
@@ -11,6 +13,7 @@
 #include "Damage/Modifier/StatusDamageModifier.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Manager/SoundManager.h"
 #include "System/MainGameMode.h"
 
 UCombatComponent::UCombatComponent()
@@ -52,6 +55,9 @@ void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
 	CurrentWeaponStatus.MaxAmmo = WeaponDataView->MaxAmmo;
 	CurrentWeaponStatus.ReloadTime = WeaponDataView->ReloadTime;
 	CurrentWeaponStatus.MaxAmmo = WeaponDataView->MaxAmmo;
+	
+	CurrentWeaponStatus.MuzzleFlashEffect = WeaponDataView->MuzzleFlashEffect.LoadSynchronous();
+	CurrentWeaponStatus.ImpactEffect = WeaponDataView->ImpactEffect.LoadSynchronous();
 	
 	CurrentAmmo = CurrentWeaponStatus.MaxAmmo;
 }
@@ -101,26 +107,32 @@ void UCombatComponent::HitScanFire()
 	
 	// 현재시간 - 마지막 발사시간 < 발사간격인 경우 발사가 불가능
 	// 연사가 아닌 단발사격인 경우에도 무기마다 발사간격(발사속도)을 구현하기 위한 로직.
-	const float Now = GetWorld()->GetTimeSeconds();
-	if (Now - LastFireTime < CurrentWeaponStatus.FireInterval)
-	{
-		return;
-	}
-	LastFireTime = Now;
+	// const float Now = GetWorld()->GetTimeSeconds();
+	// if (Now - LastFireTime < CurrentWeaponStatus.FireInterval)
+	// {
+	// 	return;
+	// }
+	// LastFireTime = Now;
 	
 	SpreadBullet();
 	ConsumeAmmo();
 	SpawnFireParticles();
+	SpawnFireSound();
 	TArray<FHitResult> Hits;
 	PerformTrace(Hits);
 	for (const FHitResult& Hit : Hits)
 	{
 		SpawnHitParticles(Hit);
+		
+		if (!Hit.bBlockingHit) continue;
+		
 		if (Hit.bBlockingHit && Hit.GetActor()->ActorHasTag("Enemy"))
 		{
-			if (!GM) return;
-			GM->RequestAttack++;
-			ApplyDamageByHit(Hit);
+			if (GM)
+			{
+				GM->RequestAttack++;
+				ApplyDamageByHit(Hit);
+			}	
 		}
 	}
 }
@@ -253,7 +265,6 @@ int UCombatComponent::GetCurrentAmmo() const
 
 void UCombatComponent::Reload()
 {
-
 	UE_LOG(LogTemp, Warning, TEXT("Start Reload"));
 	CurrentAmmo = CurrentWeaponStatus.MaxAmmo;
 }
@@ -320,7 +331,7 @@ void UCombatComponent::SpawnFireParticles()
 	{		
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
-			WeaponDataView->MuzzleFlashEffect.LoadSynchronous(),
+			CurrentWeaponStatus.MuzzleFlashEffect,
 			WeaponOwner->WeaponMeshComponent->GetSocketLocation("WeaponMuzzle"),
 			WeaponOwner->WeaponMeshComponent->GetSocketRotation("WeaponMuzzle"),
 			FVector(1),
@@ -331,16 +342,63 @@ void UCombatComponent::SpawnFireParticles()
 
 void UCombatComponent::SpawnHitParticles(const FHitResult& Hit)
 {	
-	if (WeaponDataView->ImpactEffect.ToSoftObjectPath().IsValid() && !Hit.GetActor()->ActorHasTag("Enemy"))
-	{		
+	FVector SpawnLocation = Hit.ImpactPoint;
+	FRotator SpawnRotation = Hit.ImpactPoint.Rotation();
+	
+	if (WeaponDataView->ImpactEffect.ToSoftObjectPath().IsValid())
+	{
 		UGameplayStatics::SpawnEmitterAtLocation(
 			GetWorld(),
-			WeaponDataView->ImpactEffect.LoadSynchronous(),
-			Hit.ImpactPoint,
-			FRotator::ZeroRotator,
+			CurrentWeaponStatus.ImpactEffect,
+			SpawnLocation,
+			SpawnRotation,
 			FVector(1),
 			true
 		);
+	}
+}
+
+void UCombatComponent::SpawnFireSound()
+{
+	USoundManager* SoundMgr = USoundManager::Get(GetWorld());
+	if (SoundMgr)
+	{
+		switch(WeaponDataView->WeaponType)
+		{
+		case EWeaponTypes::HandGun:
+			SoundMgr->PlaySoundAttached(TEXT("Fire_Revolver"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::AssaultRifle:
+			SoundMgr->PlaySoundAttached(TEXT("Fire_Rifle"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::ShotGun:
+			SoundMgr->PlaySoundAttached(TEXT("Fire_Shotgun"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::None:
+			return;
+		}
+	}
+}
+
+void UCombatComponent::SpawnReloadSound()
+{
+	USoundManager* SoundMgr = USoundManager::Get(GetWorld());
+	if (SoundMgr)
+	{
+		switch(WeaponDataView->WeaponType)
+		{
+		case EWeaponTypes::HandGun:
+			SoundMgr->PlaySoundAttached(TEXT("Reload_Revolver"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::AssaultRifle:
+			SoundMgr->PlaySoundAttached(TEXT("Reload_Rifle"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::ShotGun:
+			SoundMgr->PlaySoundAttached(TEXT("Reload_Shotgun"), WeaponOwner->WeaponMeshComponent);
+			break;
+		case EWeaponTypes::None:
+			return;
+		}
 	}
 }
 

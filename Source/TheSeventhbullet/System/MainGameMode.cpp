@@ -344,7 +344,7 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 	for (int32 i = 0; i <DropData.DropRollsCount; i++)
 	{		
 		// 아이템 드랍확률에 따라서 드랍이 발생했는지 여부를 검사. (0~1 사이의 값을 임의로 가져와서 드랍확률보다 높은지 판단하는 방식)
-		if (FMath::FRand() > DropData.DropChance) continue;
+		if (FMath::FRand() >= DropData.DropChance) continue;
 		
 		float TotalWeight = 0.0f;
 		for (const FDropPool& Pool : DropPool)

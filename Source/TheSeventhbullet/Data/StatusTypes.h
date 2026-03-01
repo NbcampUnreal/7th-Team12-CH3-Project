@@ -2,6 +2,8 @@
 #include "CoreMinimal.h"
 #include "StatusTypes.generated.h"
 
+class UNiagaraSystem;
+
 UENUM(BlueprintType)
 enum class EStatusType : uint8
 {
@@ -162,6 +164,11 @@ struct FWeaponStat
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
 	float ReloadTime; // 재장전 시간
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	TObjectPtr<UNiagaraSystem> MuzzleFlashEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	TObjectPtr<UParticleSystem> ImpactEffect;
+	
 	//기본 생성자 (초기값 세팅)
 	FWeaponStat()
 	{
@@ -174,5 +181,8 @@ struct FWeaponStat
 		FireInterval = 0.f;
 		MaxAmmo = 0;
 		ReloadTime = 0.f;
+		
+		MuzzleFlashEffect = nullptr;
+		ImpactEffect = nullptr;
 	}
 };
