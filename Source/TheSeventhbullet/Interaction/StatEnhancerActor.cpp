@@ -1,6 +1,7 @@
 #include "StatEnhancerActor.h"
 
 #include "StatEnhancerComponent.h"
+#include "Character/Component/StatusComponent.h"
 #include "Manager/UIManager.h"
 
 
@@ -57,6 +58,8 @@ void AStatEnhancerActor::CloseEnhancerUI()
 
 void AStatEnhancerActor::OnStatUpgraded()
 {
+	if (StatEnhancerComponent)
+		StatEnhancerComponent->GetCachedCharacter()->StatusComponent->UpdateTotalStat();
 	if (CachedWidget)
 		CachedWidget->RefreshAll();
 }
