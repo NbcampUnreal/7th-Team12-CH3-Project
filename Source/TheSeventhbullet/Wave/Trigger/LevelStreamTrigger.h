@@ -48,7 +48,7 @@ public:
 protected:
 	virtual bool CanActivate() const;
 	virtual void HandleLevelLoaded();
-
+	virtual void ActivateTrigger();
 	void ShowLoadingScreen();
 	void HideLoadingScreen();
 

@@ -52,7 +52,27 @@ void ALevelStreamTrigger::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, 
 		*LevelToLoad.ToString());
 
 	bIsTriggered = true;
+	ActivateTrigger();
+}
 
+bool ALevelStreamTrigger::CanActivate() const
+{
+	return true;
+}
+
+void ALevelStreamTrigger::OnLevelLoaded()
+{
+	bIsTriggered = false;
+	HandleLevelLoaded();
+}
+
+void ALevelStreamTrigger::HandleLevelLoaded()
+{
+	HideLoadingScreen();
+}
+
+void ALevelStreamTrigger::ActivateTrigger()
+{
 	if (bShowLoadingScreen)
 	{
 		ShowLoadingScreen();
@@ -79,22 +99,6 @@ void ALevelStreamTrigger::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, 
 
 		UGameplayStatics::UnloadStreamLevel(this, LevelToUnload, UnloadLatentInfo, false);
 	}
-}
-
-bool ALevelStreamTrigger::CanActivate() const
-{
-	return true;
-}
-
-void ALevelStreamTrigger::OnLevelLoaded()
-{
-	bIsTriggered = false;
-	HandleLevelLoaded();
-}
-
-void ALevelStreamTrigger::HandleLevelLoaded()
-{
-	HideLoadingScreen();
 }
 
 void ALevelStreamTrigger::ShowLoadingScreen()

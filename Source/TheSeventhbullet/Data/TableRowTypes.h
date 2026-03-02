@@ -73,10 +73,10 @@ struct FRequestRowData : public FTableRowBase
 	float StageTimeLimit = 180.0f;// 초 단위, 0이면 무제한
     
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float WaveStartDelay = 3.0f;//웨이브 시작 전 딜레이
+	float WaveStartDelay = 2.0f;//웨이브 시작 전 딜레이
     
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float IntermissionDuration = 10.0f;// 쉬는 시간
+	float IntermissionDuration = 3.0f;// 쉬는 시간
     
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SpawnInterval = 0.5f; // 각 몬스터 스폰 딜레이
