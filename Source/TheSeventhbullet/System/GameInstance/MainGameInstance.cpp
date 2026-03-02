@@ -285,12 +285,13 @@ void UMainGameInstance::RequestBossStage(int32 InRequestID)
 	UGameplayStatics::LoadStreamLevel(this, BossSequenceLevelName,true,false,LatentInfo);
 	
 	//현석 : 기존 타운맵 언로드
-	ULevelStreaming* LevelToUnload = UGameplayStatics::GetStreamingLevel(this, TownMapLevelName);
-	if (LevelToUnload)
-	{
-		LevelToUnload->SetShouldBeLoaded(false);
-		LevelToUnload->SetShouldBeVisible(false);
-	}
+	FLatentActionInfo UnloadLatentInfo;
+	UnloadLatentInfo.CallbackTarget = this;
+	UnloadLatentInfo.ExecutionFunction = NAME_None;
+	UnloadLatentInfo.Linkage = 1;
+	UnloadLatentInfo.UUID = GetUniqueID() + 1;
+    
+	UGameplayStatics::UnloadStreamLevel(this, TownMapLevelName, UnloadLatentInfo, false);
 }
 
 void UMainGameInstance::OnBossSequenceLevelLoaded()

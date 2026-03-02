@@ -56,6 +56,7 @@ void USaveComponent::OnWakeAnimComplete()
 void USaveComponent::HandleNextDay()
 {
 	GI->CurrentDay++;
+	UE_LOG(LogTemp,Log,TEXT("CurrentDay = %d"),GI->CurrentDay);
 }
 
 void USaveComponent::SetPlayerInputEnabled(AActor* Interactor, bool bEnabled)
