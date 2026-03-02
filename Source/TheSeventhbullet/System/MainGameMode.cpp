@@ -12,6 +12,8 @@
 #include "TheSeventhbullet/Wave/WaveStateMachine.h"
 #include "TheSeventhbullet/Manager/UIManager.h"
 #include "TheSeventhbullet/UI/UITags.h"
+#include "Engine/AssetManager.h"
+#include "Inventory/InventoryComponent.h"
 #include "Windows/WindowsApplication.h"
 
 AMainGameMode::AMainGameMode()
@@ -292,10 +294,7 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 	// Grade에 따른 가중치를 가져옴.
 	auto GetGradeWeight = [&](int32 Grade) -> float
 	{
-		if (Grade <= 0)
-		{
-			return 0.0f;
-		}
+		if (Grade <= 0)	return 0.0f;
 		const int32 Index = Grade - 1;
 		
 		// GradeWeight를 설정 안해두면 0으로 처리해서 해당 Grade의 아이템을 드랍하지 않음.
@@ -309,6 +308,7 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 	{
 		const FMaterialDropEntry* DropEntry = nullptr;
 		float Weight = 0.0f;
+		FPrimaryAssetId AssetId; //AssetId 보관
 	};
 	
 	// 이 함수를 호출하는 몬스터에게서 얻은 아이템을 저장할 배열.
@@ -319,7 +319,7 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 	{
 		if (!DropEntry.Material.ToSoftObjectPath().IsValid()) continue;
 		
-		const UMaterialDataAsset* MaterialData = DropEntry.Material.LoadSynchronous();
+		UMaterialDataAsset* MaterialData = DropEntry.Material.LoadSynchronous();
 		if (!MaterialData) continue;
 		
 		const int32 Grade = MaterialData->Grade;
@@ -331,10 +331,26 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 		const float FinalWeight = BaseWeight*GradeWeight; // 최종가중치 = 기본가중치*Grade에 따른 가중치
 		if (FinalWeight <= 0.f) continue;
 		
-		DropPool.Add({ &DropEntry, FinalWeight});
+		//FPrimaryAssetId AssetId = UAssetManager::Get().GetPrimaryAssetIdForObject(MaterialData);
+		FPrimaryAssetId AssetId = MaterialData->GetPrimaryAssetId(); 
+
+		// 만약 위 코드로도 안 된다면 강제로 "Item" 타입으로 조립합니다.
+		if (!AssetId.IsValid())
+		{
+			AssetId = FPrimaryAssetId(FPrimaryAssetType("Item"), MaterialData->GetFName());
+		}
+
+		// 확인용 로그
+		UE_LOG(LogTemp, Warning, TEXT("Created AssetId: %s, IsValid: %d"), *AssetId.ToString(), AssetId.IsValid());
+		DropPool.Add({ &DropEntry, FinalWeight, AssetId});
 	}
 	
 	if (DropPool.Num() == 0) return;
+	
+	AMainCharacter* MainCharacter = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this,0));
+	if (!MainCharacter) return;
+	UInventoryComponent* Inventory = MainCharacter->GetComponentByClass<UInventoryComponent>();
+	if (!Inventory) return;
 	
 	// 이번 몬스터의 드랍결과를 임시로 저장하는 배열.
 	TArray<FDroppedMaterialsData> DroppedItemFromMonster;
@@ -354,23 +370,32 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 		if (TotalWeight <= 0.0f) continue;
 		
 		float Rolling = FMath::FRandRange(0.f, TotalWeight);
-		const FMaterialDropEntry* PickFromPool = nullptr;
-		
-		// 가중치에 따라서 
+		const FDropPool* PickedPool = nullptr;
+
 		for (const FDropPool& Pool : DropPool)
 		{
 			Rolling -= Pool.Weight;
 			if (Rolling <= 0.f)
 			{
-				PickFromPool = Pool.DropEntry;
+				PickedPool = &Pool;
 				break;
 			}
 		}
-		
-		if (!PickFromPool) continue;
-		
-		// 이번에 획득한 아이템을 DroppedItemFromMonster 배열에 추가.
-		StackItem(DroppedItemFromMonster, PickFromPool->Material, 1);
+
+		if (!PickedPool) continue;
+
+		// StageRewardItems / 브로드캐스트용 누적
+		StackItem(DroppedItemFromMonster, PickedPool->DropEntry->Material, 1);
+
+		// ★ DropPool에 저장해둔 AssetId로 즉시 인벤토리에 추가
+		if (Inventory && PickedPool->AssetId.IsValid())
+		{
+			bool bAdded = Inventory->AddItem(PickedPool->AssetId, 1);
+			if (!bAdded)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("인벤토리가 가득 차서 아이템(%s)을 획득할 수 없습니다!"), *PickedPool->AssetId.ToString());
+			}
+		}
 	}
 	
 	// 이번에 획득한 아이템을 브로드캐스트

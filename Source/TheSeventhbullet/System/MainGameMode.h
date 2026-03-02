@@ -165,9 +165,8 @@ private:
 	UPROPERTY()
 	TArray<EMonsterType> SpawnQueue;
 	
-	// 주현 : 스테이지 결과 보상 아이템 배열.
 	UPROPERTY()
-	TArray<FDroppedMaterialsData> StageRewardItems;
+	TArray<FDroppedMaterialsData> StageRewardItems;//스테이지 결과 보상 아이템 배열. UI에 보여주기용 데이터
 	
 	float SpawnTimer = 0.0f;
 	float SpawnInterval = 0.0f;

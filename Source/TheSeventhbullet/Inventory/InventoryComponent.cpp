@@ -11,6 +11,7 @@ UInventoryComponent::UInventoryComponent()
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	Items.SetNum(MaxSlots);
 }
 
 bool UInventoryComponent::AddItem(FPrimaryAssetId ItemID, int32 Count)
@@ -42,6 +43,39 @@ bool UInventoryComponent::AddItem(FPrimaryAssetId ItemID, int32 Count)
 void UInventoryComponent::LoadData(TArray<FItemInstance>& InventoryItem)
 {
 	Items = InventoryItem;
+	
+	UAsyncDataManager* Mgr = UAsyncDataManager::Get(this);
+	if (!Mgr) return;
+	
+	TArray<FPrimaryAssetId> IDsToLoad;
+	for (const FItemInstance& Item : Items)
+	{
+		if (Item.IsValid() && !Mgr->IsAssetLoaded(Item.ItemID))
+		{
+			IDsToLoad.AddUnique(Item.ItemID);
+		}
+	}
+	
+	if (IDsToLoad.Num() > 0)
+	{
+		FOnBundleLoadComplete OnLoaded;
+		OnLoaded.BindLambda([this]()
+		{
+			for (int32 i =0; i < Items.Num();++i)
+			{
+				OnItemAdded.Broadcast(Items[i],i);
+			}
+		});
+		Mgr->LoadAssetsByID(IDsToLoad,{},OnLoaded);
+	}
+	else
+	{
+		for (int32 i = 0; i < Items.Num(); ++i)
+		{
+			OnItemAdded.Broadcast(Items[i], i);
+		}
+	}
+	
 }
 
 bool UInventoryComponent::AddItemInternal(FPrimaryAssetId ItemID, int32 Count)
@@ -52,9 +86,18 @@ bool UInventoryComponent::AddItemInternal(FPrimaryAssetId ItemID, int32 Count)
 		return false;
 	}
 
-	UItemDataAsset* ItemData = Cast<UItemDataAsset>(Mgr->GetLoadedAsset(ItemID));
+	UObject* LoadedObj = Mgr->GetLoadedAsset(ItemID);
+	if (!LoadedObj)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Inventory] 에셋이 로드되지 않았습니다! ID: %s"), *ItemID.ToString());
+		return false;
+	}
+
+	UItemDataAsset* ItemData = Cast<UItemDataAsset>(LoadedObj);
 	if (!ItemData)
 	{
+		UE_LOG(LogTemp, Error, TEXT("[Inventory] UItemDataAsset으로 캐스팅 실패! ID: %s, 실제 클래스: %s"), 
+			*ItemID.ToString(), *LoadedObj->GetClass()->GetName());
 		return false;
 	}
 	
@@ -85,6 +128,18 @@ bool UInventoryComponent::AddItemInternal(FPrimaryAssetId ItemID, int32 Count)
 		OnItemAdded.Broadcast(NewItem, NewSlot);
 	}
 	
+	for (int32 i = 0; i < Items.Num()&& Remaining > 0 ; ++i)
+	{
+		if (!Items[i].IsValid())
+		{
+			int32 AddCount = FMath::Min(Remaining, MaxStack);
+			Items[i] = FItemInstance(ItemID,AddCount);
+			Remaining -= AddCount;
+			
+			OnItemAdded.Broadcast(Items[i],i);
+		}
+	}
+	
 	return Remaining == 0;
 }
 
@@ -102,7 +157,8 @@ bool UInventoryComponent::RemoveItemByIndex(int32 SlotIndex, int32 Count)
 
 	if (Slot.StackCount <= 0)
 	{
-		Items.RemoveAt(SlotIndex);
+		//Items.RemoveAt(SlotIndex);
+		Items[SlotIndex] = FItemInstance();
 	}
 
 	OnItemRemoved.Broadcast(RemovedItem, SlotIndex);
@@ -127,7 +183,8 @@ bool UInventoryComponent::RemoveItemByID(FPrimaryAssetId ItemID, int32 Count)
 
 		if (Items[i].StackCount <= 0)
 		{
-			Items.RemoveAt(i);
+			//Items.RemoveAt(i);
+			Items[i] = FItemInstance();
 		}
 
 		OnItemRemoved.Broadcast(RemovedItem, i);
@@ -140,12 +197,6 @@ bool UInventoryComponent::SwapSlots(int32 FromIndex, int32 ToIndex)
 {
 	if (FromIndex == ToIndex) return false;
 	if (FromIndex < 0 || FromIndex >= MaxSlots || ToIndex < 0 || ToIndex >= MaxSlots) return false;
-
-	// 배열을 ToIndex까지 빈 슬롯으로 확장
-	while (Items.Num() <= FMath::Max(FromIndex, ToIndex))
-	{
-		Items.Add(FItemInstance());
-	}
 
 	Items.Swap(FromIndex, ToIndex);
 
@@ -180,17 +231,11 @@ bool UInventoryComponent::MoveItemTo(int32 FromIndex, UInventoryComponent* Targe
 	}
 	else
 	{
-		// 대상 슬롯이 비어있으면 이동
-		while (TargetInventory->Items.Num() <= ToIndex && TargetInventory->Items.Num() < TargetInventory->MaxSlots)
-		{
-			TargetInventory->Items.Add(FItemInstance());
-		}
-
 		if (!TargetInventory->Items.IsValidIndex(ToIndex)) return false;
 
 		TargetInventory->Items[ToIndex] = SourceItem;
-		Items.RemoveAt(FromIndex);
-
+		Items[FromIndex] = FItemInstance();
+		
 		OnItemRemoved.Broadcast(SourceItem, FromIndex);
 		TargetInventory->OnItemAdded.Broadcast(SourceItem, ToIndex);
 	}
