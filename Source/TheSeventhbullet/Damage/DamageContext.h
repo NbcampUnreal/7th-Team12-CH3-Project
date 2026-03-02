@@ -17,11 +17,16 @@ struct FDamageContext
 	UPROPERTY()
 	float CurrentDamage = 0.0f; // 현재 실제 데미지
 	UPROPERTY()
+	float CurrentCritChance = 0.0f; // 현재 크리티컬 확률
+	UPROPERTY()
 	float CurrentCritDamage = 0.0f; // 현재 크리티컬 데미지
 	
 	
 	UPROPERTY()
-	float WeaponDamage = 0.0f; // 무기 공격력	
+	float WeaponCritChanceBalance = 0.0f;
+	UPROPERTY()
+	float WeaponCritDamageBalance = 0.0f; // 무기 크리티컬데미지	
+	
 	
 	UPROPERTY()
 	float StatusDamage = 0.0f; // 스탯에 기반한 캐릭터 공격력

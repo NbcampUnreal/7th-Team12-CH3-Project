@@ -31,8 +31,8 @@ void UCombatComponent::BeginPlay()
 		EC->OnWeaponEquipmentChanged.AddDynamic(this, &UCombatComponent::HandleWeaponEquipmentChanged);
 	}
 	
-	DamageModifiersPipeline.Add(NewObject<UWeaponDamageModifier>(this));
 	DamageModifiersPipeline.Add(NewObject<UStatusDamageModifier>(this));
+	DamageModifiersPipeline.Add(NewObject<UWeaponDamageModifier>(this));
 	GM = AMainGameMode::Get(this);
 }
 
@@ -45,8 +45,9 @@ void UCombatComponent::InitializeWeaponData(UWeaponDataAsset* Weapon)
 	
 	WeaponOwner = Cast<AMainCharacter>(GetOwner());
 	WeaponDataView = Weapon;
-	CurrentWeaponStatus.WeaponBaseDamage = WeaponDataView->BaseDamage;
 	CurrentWeaponStatus.WeaponDamageMultiplier = WeaponDataView->WeaponDamageMultiplier;
+	CurrentWeaponStatus.WeaponCritChance = WeaponDataView->WeaponCritChanceBalance;
+	CurrentWeaponStatus.WeaponCritDamage = WeaponDataView->WeaponCritDamageBalance;
 	CurrentWeaponStatus.Range = WeaponDataView->Range;
 	CurrentWeaponStatus.AmountOfPellets = WeaponDataView->PelletsCount;
 	CurrentWeaponStatus.PelletSpreadRadius = WeaponDataView->SpreadRadius;
@@ -282,21 +283,23 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 	FDamageContext Context;
 	Context.Attacker = GetOwner();
 	Context.Target = Hit.GetActor();
-	Context.HitResult = Hit;
-	Context.WeaponDamage = CurrentWeaponStatus.WeaponBaseDamage;
+	Context.HitResult = Hit;;
+	Context.WeaponCritChanceBalance = CurrentWeaponStatus.WeaponCritChance;
+	Context.WeaponCritDamageBalance = CurrentWeaponStatus.WeaponCritDamage;
 	Context.DamageMultiplier = CurrentWeaponStatus.WeaponDamageMultiplier;
 	
 	ExecutePipeline(Context);
 	
 	Context.CurrentDamage *= Context.DamageMultiplier;
-	Context.CurrentCritDamage = Context.CurrentDamage*Context.StatusCritDamage;
+	Context.CurrentCritChance = Context.CurrentCritChance + Context.StatusCritChance;
+	Context.CurrentCritDamage = Context.CurrentDamage*(Context.CurrentCritDamage+Context.StatusCritDamage);
 	
 	float IsCritValue = FMath::FRand();
 	bool bIsCrit = false;
 	
-	if (IsCritValue <= Context.StatusCritChance)
+	if (IsCritValue <= Context.CurrentCritChance)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Critical!"));
+		UE_LOG(LogTemp, Warning, TEXT("[Critical] CritChance = %f, CritDamage = %f"), Context.CurrentCritChance, Context.CurrentCritDamage);
 		Context.CurrentDamage = Context.CurrentCritDamage;
 		bIsCrit = true;
 	}
