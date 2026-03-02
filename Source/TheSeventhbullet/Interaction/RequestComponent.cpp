@@ -5,6 +5,7 @@
 #include "UI/RequestWidget.h"
 #include "UI/UITags.h"
 #include "System/MainGameMode.h"
+#include "System/TownPhase.h"
 #include "System/GameInstance/MainGameInstance.h"
 
 URequestComponent::URequestComponent()
@@ -22,6 +23,7 @@ void URequestComponent::SelectRequest(int32 SelectedRequestID)
 	if (!GM) return;
 
 	GM->SetTargetRequestID(SelectedRequestID);
+	GM->SetTownPhase(ETownPhase::RequestAccepted);
 }
 
 void URequestComponent::BeginInteract(AActor* Interactor)

@@ -411,6 +411,52 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 	}
 }
 
+void AMainGameMode::SetTownPhase(ETownPhase NewPhase)
+{
+	if (CurrentTownPhase == NewPhase) return;
+	CurrentTownPhase = NewPhase;
+
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		if (NewPhase != ETownPhase::None)
+		{
+			UIMgr->Open(UITags::TownHUD);
+		}
+		else
+		{
+			UIMgr->Close(UITags::TownHUD);
+		}
+	}
+
+	OnTownPhaseChanged.Broadcast(NewPhase);
+}
+
+ETownPhase AMainGameMode::GetTownPhase() const
+{
+	return CurrentTownPhase;
+}
+
+bool AMainGameMode::CanTownInteract(ETownPhase RequiredPhase) const
+{
+	return CurrentTownPhase == RequiredPhase;
+}
+
+FText AMainGameMode::GetTownPhaseMessage() const
+{
+	switch (CurrentTownPhase)
+	{
+	case ETownPhase::AcceptRequest:
+		return FText::FromString(TEXT("의뢰를 받으세요"));
+	case ETownPhase::RequestAccepted:
+		return FText::FromString(TEXT("의뢰를 받았습니다"));
+	case ETownPhase::WaitForNextDay:
+		return FText::FromString(TEXT("다음날을 기다리세요"));
+	default:
+		return FText::GetEmpty();
+	}
+}
+
 void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -442,10 +488,13 @@ void AMainGameMode::StartGamePlay()
 		UIMgr->Close(UITags::MainMenu);
 	}
 
+	SetTownPhase(ETownPhase::AcceptRequest);
 }
 
 void AMainGameMode::ReturnToTown()
 {
+	SetTownPhase(ETownPhase::None);
+
 	// 웨이브 상태 리셋
 	if (WaveStateMachine)
 	{
@@ -538,11 +587,14 @@ void AMainGameMode::OnTownLevelLoaded()
 	if (!EquipmentComponent) return;
 	
 	EquipmentComponent->CurrentWeapon = nullptr;
-	
+
+	SetTownPhase(ETownPhase::WaitForNextDay);
 }
 
 void AMainGameMode::ReturnToMainMenu()
 {
+	SetTownPhase(ETownPhase::None);
+
 	// 웨이브 상태 리셋
 	if (WaveStateMachine)
 	{

@@ -20,6 +20,7 @@ void UBeginWaveState::Enter()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
+		UIMgr->Close(UITags::TownHUD);
 		UIMgr->Open(UITags::HUD);
 		UIMgr->Open(UITags::Crosshair);
 

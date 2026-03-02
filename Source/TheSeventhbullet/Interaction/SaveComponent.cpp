@@ -3,6 +3,8 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
+#include "System/MainGameMode.h"
+#include "System/TownPhase.h"
 
 USaveComponent::USaveComponent()
 {
@@ -56,7 +58,12 @@ void USaveComponent::OnWakeAnimComplete()
 void USaveComponent::HandleNextDay()
 {
 	GI->CurrentDay++;
-	UE_LOG(LogTemp,Log,TEXT("CurrentDay = %d"),GI->CurrentDay);
+
+	AMainGameMode* GM = AMainGameMode::Get(this);
+	if (GM)
+	{
+		GM->SetTownPhase(ETownPhase::AcceptRequest);
+	}
 }
 
 void USaveComponent::SetPlayerInputEnabled(AActor* Interactor, bool bEnabled)
