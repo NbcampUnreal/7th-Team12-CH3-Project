@@ -35,4 +35,6 @@ public:
 	void SetCharacterStatus(FCharacterStat& Status);
 	void SetCharacterEnhanceStatus(FEnhancerStatus& Status);
 	FEnhancerStatus GetCharacterEnhanceStatus() const;
+	
+	void AddHpStatus(float amount);
 };

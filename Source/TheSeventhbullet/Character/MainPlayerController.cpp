@@ -11,6 +11,8 @@ AMainPlayerController::AMainPlayerController()
 	AimAction(nullptr),
 	FireAction(nullptr),
 	SkillAction(nullptr),
+	ReloadAction(nullptr),
+	PotionAction(nullptr),
 	EscMenuAction(nullptr)
 {
 }

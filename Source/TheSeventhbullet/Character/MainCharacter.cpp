@@ -355,19 +355,6 @@ void AMainCharacter::EndedAnimMontage(UAnimMontage* Montage, bool Interrupted)
 	
 	UpdateRotationState();
 	
-	// if (bIsAiming)
-	// {
-	// 	// 조준시 카메라 정면을 바라보게 고정
-	// 	bUseControllerRotationYaw = true;
-	// 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	// }
-	// else
-	// {
-	// 	// 비조준시 카메라 고정 해제
-	// 	bUseControllerRotationYaw = false;
-	// 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	// }
-	
 	UAnimMontage* ReloadMontage = EquipmentComponent->CurrentWeapon->ReloadMontage.Get();
 	if (Montage == ReloadMontage)
 	{
@@ -516,6 +503,14 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 				ETriggerEvent::Started,
 				this,
 				&AMainCharacter::PlayerFinishReload
+			);
+			
+			// PlayerPotion 바인딩
+			InputComponents->BindAction(
+				PC->PotionAction,
+				ETriggerEvent::Started,
+				this,
+				&AMainCharacter::PlayerPotion
 			);
 			
 			// EscMenu 바인딩
@@ -731,7 +726,6 @@ void AMainCharacter::PlayerAim(const FInputActionValue& value)
 	
 	if (bIsDodge) return;
 	
-	PrimaryActorTick.bCanEverTick = true;	// 보간을 위한 Tick On
 	bIsAiming = true;
 	// GetCharacterMovement()->bOrientRotationToMovement = false;
 	// bUseControllerRotationYaw = true;		// 카메라와 캐릭터 방향 분리 
@@ -745,7 +739,6 @@ void AMainCharacter::PlayerAim(const FInputActionValue& value)
 
 void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 {
-	PrimaryActorTick.bCanEverTick = false;	// Tick Off
 	bIsAiming = false;
 	// GetCharacterMovement()->bOrientRotationToMovement = true;
 	// bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 
@@ -894,6 +887,11 @@ void AMainCharacter::PlayerStartReload(const FInputActionValue& value)
 void AMainCharacter::PlayerFinishReload(const FInputActionValue& value)
 {
 	//bIsReload = false;
+}
+
+void AMainCharacter::PlayerPotion(const FInputActionValue& value)
+{
+	HealHP();
 }
 
 void AMainCharacter::ToggleEscMenu(const FInputActionValue& value)
