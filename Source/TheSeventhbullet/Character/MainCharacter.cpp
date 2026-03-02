@@ -828,9 +828,6 @@ void AMainCharacter::PlayerFinishReload(const FInputActionValue& value)
 
 void AMainCharacter::ToggleEscMenu(const FInputActionValue& value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[ESC] CurrentHP: %.1f / %.1f | CurrentStamina: %.1f / %.1f"),
-		CurrentHP, GetMaxHP(), CurrentStamina, GetMaxStamina());
-
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
