@@ -11,6 +11,7 @@
 #include "Damage/Modifier/DamageModifier.h"
 #include "Damage/Modifier/WeaponDamageModifier.h"
 #include "Damage/Modifier/StatusDamageModifier.h"
+#include "Enemy/EnemyBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/DamageNumberActor.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -319,12 +320,26 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 
 	if (DamageNumberActorClass)
 	{
-		FVector SpawnLocation = Hit.ImpactPoint + FVector(0.f, 0.f, 30.f);
-		ADamageNumberActor* DamageNumber = GetWorld()->SpawnActor<ADamageNumberActor>(
-			DamageNumberActorClass, SpawnLocation, FRotator::ZeroRotator);
-		if (DamageNumber)
+		AEnemyBase* Enemy = Cast<AEnemyBase>(Context.Target);
+		if (Enemy && Enemy->IsDead()) { /* 이미 죽은 적은 데미지 표시 안 함 */ }
+		else
 		{
-			DamageNumber->Init(Context.CurrentDamage, bIsCrit);
+			float DisplayDamage = Context.CurrentDamage;
+			bool bIsHeadShot = (Hit.BoneName == TEXT("head"));
+
+			if (Enemy)
+			{
+				float FinalDamage = bIsHeadShot ? Context.CurrentDamage * 1.5f : Context.CurrentDamage;
+				DisplayDamage = FMath::Max(FinalDamage - Enemy->GetArmorPoint(), 0.f);
+			}
+
+			FVector SpawnLocation = Hit.ImpactPoint + FVector(0.f, 0.f, 30.f);
+			ADamageNumberActor* DamageNumber = GetWorld()->SpawnActor<ADamageNumberActor>(
+				DamageNumberActorClass, SpawnLocation, FRotator::ZeroRotator);
+			if (DamageNumber)
+			{
+				DamageNumber->Init(DisplayDamage, bIsCrit);
+			}
 		}
 	}
 

@@ -69,6 +69,8 @@ public:
 	void SetupEnemy(UEnemyDataAsset* LoadedData);
 	//공격력을 반환합니다.
 	float GetAttackPoint();
+	float GetArmorPoint() const { return ArmorPoint; }
+	bool IsDead() const { return bIsDead; }
 	
 	
 	//발사체의 정보를 담고 있습니다.
