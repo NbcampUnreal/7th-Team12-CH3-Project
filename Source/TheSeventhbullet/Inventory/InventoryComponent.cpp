@@ -52,9 +52,18 @@ bool UInventoryComponent::AddItemInternal(FPrimaryAssetId ItemID, int32 Count)
 		return false;
 	}
 
-	UItemDataAsset* ItemData = Cast<UItemDataAsset>(Mgr->GetLoadedAsset(ItemID));
+	UObject* LoadedObj = Mgr->GetLoadedAsset(ItemID);
+	if (!LoadedObj)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Inventory] 에셋이 로드되지 않았습니다! ID: %s"), *ItemID.ToString());
+		return false;
+	}
+
+	UItemDataAsset* ItemData = Cast<UItemDataAsset>(LoadedObj);
 	if (!ItemData)
 	{
+		UE_LOG(LogTemp, Error, TEXT("[Inventory] UItemDataAsset으로 캐스팅 실패! ID: %s, 실제 클래스: %s"), 
+			*ItemID.ToString(), *LoadedObj->GetClass()->GetName());
 		return false;
 	}
 	
