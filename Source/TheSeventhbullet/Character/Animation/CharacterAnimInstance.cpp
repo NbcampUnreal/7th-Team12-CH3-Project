@@ -105,3 +105,21 @@ void UCharacterAnimInstance::AnimNotify_RefillAmmo()
 		MainCharacter->CombatComponent->Reload();
 	}
 }
+
+void UCharacterAnimInstance::AnimNotify_Start_Invicible()
+{
+	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(TryGetPawnOwner()))
+	{
+		MainCharacter->bIsDodge = true;
+		MainCharacter->bIsInvicible = true;
+	}
+}
+
+void UCharacterAnimInstance::AnimNotify_End_Invicible()
+{
+	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(TryGetPawnOwner()))
+	{
+		MainCharacter->bIsDodge = false;
+		MainCharacter->bIsInvicible = false;
+	}
+}

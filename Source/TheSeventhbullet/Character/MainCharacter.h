@@ -82,13 +82,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Stamina")
 	float StaminaRegenDelay = 1.f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Stat")
-	float HealAmount;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Potion")
+	float HealAmount = 50.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Potion")
+	int32 MaxPotion = 7;
+	
+	int32 CurrentPotion =MaxPotion;
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	
 	void HealHP();
-	
+	void ResetPotion();
+
 #pragma endregion
 
 #pragma region Components
@@ -243,7 +249,7 @@ private:
 	IInteractableInterface* CurrentInteractable = nullptr;
 public:
 #pragma endregion
-
+	
 	// Inventory
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Inventory")
 	TObjectPtr<UInventoryComponent> InventoryComponent;
