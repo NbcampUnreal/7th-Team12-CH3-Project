@@ -37,7 +37,7 @@ AMainCharacter::AMainCharacter()
 	AimMultiplier = 0.8f;
 	NormalArmLength = 400.0f; 
 	AimingArmLength = 200.0f;
-	NormalSpringArm = FVector(0.0f, 30.0f, 60.0f);
+	NormalSpringArm = FVector(0.0f, 50.0f, 60.0f);
 	AimingSpringArm = FVector(0.0f, 90.0f, 80.0f);
 	NormalFOV = 90.0f;
 	AimingFOV = 70.0f;
@@ -76,7 +76,6 @@ AMainCharacter::AMainCharacter()
 	//현석 : AI 퍼셉션 감지 대상 컴포넌트 추가, 태그 추가
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
 	Tags.Add(FName("Player"));
-
 }
 
 void AMainCharacter::BeginPlay()
@@ -185,6 +184,27 @@ void AMainCharacter::ThrowGrenade()
 			World->SpawnActor<APlayerSkill>(PlayerSkillClass, SpawnLocation, SpawnRotation, SpawnParams);
 		}
 	}
+}
+
+void AMainCharacter::ResetSkillCoolTime()
+{
+	bCanUseSkill = true;
+}
+
+void AMainCharacter::ShowWeaponMesh()
+{
+	if (WeaponMeshComponent && EquipmentComponent->CurrentWeapon)
+	{
+		WeaponMeshComponent->SetVisibility(true, true);	
+	}
+}
+
+float AMainCharacter::GetSkillCoolTime()
+{
+	if (bCanUseSkill || !GetWorld()) return 0.0f;
+	
+	RemainSkillCoolTime = GetWorld()->GetTimerManager().GetTimerRemaining(SkillCoolTimerHandle);
+	return RemainSkillCoolTime;
 }
 
 void AMainCharacter::Fire()
@@ -302,6 +322,11 @@ bool AMainCharacter::IsFalling()
 	return GetCharacterMovement()->IsFalling();
 }
 
+bool AMainCharacter::IsUseSkill()
+{
+	return bIsUseSkill;
+}
+
 void AMainCharacter::PlayAnimMotageByState(EAnimState AnimState)
 {
 	if (TObjectPtr<UAnimMontage>* FoundMontage = MontagesMap.Find(AnimState))
@@ -329,19 +354,6 @@ void AMainCharacter::EndedAnimMontage(UAnimMontage* Montage, bool Interrupted)
 	bIsInvicible = false;
 	
 	UpdateRotationState();
-	
-	// if (bIsAiming)
-	// {
-	// 	// 조준시 카메라 정면을 바라보게 고정
-	// 	bUseControllerRotationYaw = true;
-	// 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	// }
-	// else
-	// {
-	// 	// 비조준시 카메라 고정 해제
-	// 	bUseControllerRotationYaw = false;
-	// 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	// }
 	
 	UAnimMontage* ReloadMontage = EquipmentComponent->CurrentWeapon->ReloadMontage.Get();
 	if (Montage == ReloadMontage)
@@ -445,12 +457,20 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 				&AMainCharacter::FinishFire
 			);
 			
-			// SKill 바인딩
+			// Skill 바인딩
 			InputComponents->BindAction(
 				PC->SkillAction,
 				ETriggerEvent::Started,
 				this,
 				&AMainCharacter::PlayerSkill
+			);
+			
+			// FinishSkill 바인딩
+			InputComponents->BindAction(
+				PC->SkillAction,
+				ETriggerEvent::Completed,
+				this,
+				&AMainCharacter::FinishSkill
 			);
 			
 			// Interact 바인딩
@@ -483,6 +503,14 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 				ETriggerEvent::Started,
 				this,
 				&AMainCharacter::PlayerFinishReload
+			);
+			
+			// PlayerPotion 바인딩
+			InputComponents->BindAction(
+				PC->PotionAction,
+				ETriggerEvent::Started,
+				this,
+				&AMainCharacter::PlayerPotion
 			);
 			
 			// EscMenu 바인딩
@@ -606,7 +634,7 @@ void AMainCharacter::PlayerLook(const FInputActionValue& value)
 
 void AMainCharacter::PlayerStartSprint(const FInputActionValue& value)
 {
-	if (bIsAiming) return;
+	if (bIsAiming || bIsFire) return;
 	
 	if (GetCharacterMovement())
 	{
@@ -624,11 +652,14 @@ void AMainCharacter::PlayerStopSprint(const FInputActionValue& value)
 
 void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 {
-	if (CurrentState != EAnimState::None|| bIsDodge || GetCharacterMovement()->IsFalling())
+	
+	if (!EquipmentComponent->CurrentWeapon) return;
+	
+	if (CurrentState != EAnimState::None || bIsDodge || GetCharacterMovement()->IsFalling())
 	{
 		return;
 	}
-
+	
 	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 	if (CharacterAnimInstance && CharacterAnimInstance->IsAnyMontagePlaying())
 	{
@@ -670,7 +701,7 @@ void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 
 void AMainCharacter::UpdateRotationState()
 {
-	if (bIsAiming || bIsFire)
+	if (bIsAiming || bIsFire || bIsUseSkill)
 	{
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		bUseControllerRotationYaw = true;
@@ -691,8 +722,10 @@ void AMainCharacter::ResetFireState()
 
 void AMainCharacter::PlayerAim(const FInputActionValue& value)
 {
+	if (!EquipmentComponent->CurrentWeapon) return;
+	
 	if (bIsDodge) return;
-	PrimaryActorTick.bCanEverTick = true;	// 보간을 위한 Tick On
+	
 	bIsAiming = true;
 	// GetCharacterMovement()->bOrientRotationToMovement = false;
 	// bUseControllerRotationYaw = true;		// 카메라와 캐릭터 방향 분리 
@@ -706,7 +739,6 @@ void AMainCharacter::PlayerAim(const FInputActionValue& value)
 
 void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 {
-	PrimaryActorTick.bCanEverTick = false;	// Tick Off
 	bIsAiming = false;
 	// GetCharacterMovement()->bOrientRotationToMovement = true;
 	// bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 
@@ -758,15 +790,46 @@ void AMainCharacter::FinishFire(const FInputActionValue& value)
 
 void AMainCharacter::PlayerSkill(const FInputActionValue& value)
 {
+	if (!EquipmentComponent->CurrentWeapon) return;
+	
 	if (CurrentState != EAnimState::None) return;
 	
-	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
-		
-	if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
+	if (bCanUseSkill)
 	{
-		PlayAnimMotageByState(EAnimState::Skill);
+		bCanUseSkill = false;
+		
+		// Skill 사용시 카메라 모드 변경
+		bIsUseSkill = true;
+		UpdateRotationState();
+		
+		WeaponMeshComponent->SetVisibility(false, true);
+		
+		GetWorld()->GetTimerManager().SetTimer(
+			SkillCoolTimerHandle,
+			this,
+			&AMainCharacter::ResetSkillCoolTime,
+			SkillCoolTime,
+			false
+		);
+		
+		UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
+		
+		if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
+		{
+			PlayAnimMotageByState(EAnimState::Skill);
+		}
 	}
-	
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Remain Time : %.1f"), GetSkillCoolTime());
+		
+	}
+}
+
+void AMainCharacter::FinishSkill(const FInputActionValue& value)
+{
+	bIsUseSkill = false;
+	UpdateRotationState();
 }
 
 void AMainCharacter::PlayerInteract(const FInputActionValue& value)
@@ -824,6 +887,11 @@ void AMainCharacter::PlayerStartReload(const FInputActionValue& value)
 void AMainCharacter::PlayerFinishReload(const FInputActionValue& value)
 {
 	//bIsReload = false;
+}
+
+void AMainCharacter::PlayerPotion(const FInputActionValue& value)
+{
+	HealHP();
 }
 
 void AMainCharacter::ToggleEscMenu(const FInputActionValue& value)

@@ -92,7 +92,14 @@ public:
 	// 스태미나: 소모 후 회복 시작까지 대기 시간(초)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Stamina")
 	float StaminaRegenDelay = 1.f;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Stat")
+	float HealAmount;
+	
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	
+	void HealHP();
+	
 #pragma endregion
 
 #pragma region Components
@@ -120,6 +127,7 @@ public:
 	bool bIsReload = false;	// 장전 상태
 	bool bIsFireButtonPressed = false;	// 사격 인풋 
 	bool bIsFire = false;	// 사격 상태
+	
 #pragma endregion
 	
 #pragma region Camera
@@ -162,10 +170,12 @@ public:
 	void PlayerFire(const FInputActionValue& value);
 	void FinishFire(const FInputActionValue& value);
 	void PlayerSkill(const FInputActionValue& value);
+	void FinishSkill(const FInputActionValue& value);
 	void PlayerInteract(const FInputActionValue& value);
 	void PlayerOpenInventory(const FInputActionValue& value);
 	void PlayerStartReload(const FInputActionValue& value);
 	void PlayerFinishReload(const FInputActionValue& value);
+	void PlayerPotion(const FInputActionValue& value);
 	void ToggleEscMenu(const FInputActionValue& value);
 
 #pragma endregion
@@ -179,7 +189,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	FName HandSocketName;
 	
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Skill")
+	float SkillCoolTime = 5.0f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Skill")
+	float RemainSkillCoolTime;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Skill")
+	bool bCanUseSkill = true;
+	
+	FTimerHandle SkillCoolTimerHandle;
+	
 	void ThrowGrenade();	// 스킬 실행
+	void ResetSkillCoolTime();
+	void ShowWeaponMesh();
+	float GetSkillCoolTime();
+	
+	bool bIsUseSkill = false;
 	
 #pragma endregion
 	
@@ -204,6 +229,7 @@ public:
 	bool IsAiming();
 	bool IsFiring();
 	bool IsFalling();
+	bool IsUseSkill();
 	
 #pragma endregion
 	
@@ -211,7 +237,6 @@ public:
 	void EndedAnimMontage(UAnimMontage* Montage, bool Interrupted);
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void Tick(float DeltaTime) override;
 	
 	// 주현 : 테스트용 무기 슬롯
@@ -237,8 +262,8 @@ public:
 	//현석 : AI 퍼셉션 감지 대상용 컴포넌트
 	UPROPERTY(VisibleAnywhere, Category = "AI")
 	class UAIPerceptionStimuliSourceComponent* StimuliSource;
-
-UFUNCTION(BlueprintPure, Category = "Status")
+	
+	UFUNCTION(BlueprintPure, Category = "Status")
 	const FCharacterStat& GetTotalStatus() const;
 	void SetTotalStatus(const FCharacterStat& NewStatus);
 

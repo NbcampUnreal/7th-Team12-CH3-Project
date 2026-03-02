@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "KismetAnimationLibrary.h"
 #include "Character/Component/CombatComponent.h"
+#include "Character/Component/EquipmentComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void UCharacterAnimInstance::NativeInitializeAnimation()
@@ -40,6 +41,29 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	AMainCharacter* MainCharacter = Cast<AMainCharacter>(OwnerCharacter);
 	if (MainCharacter)
 	{
+		
+		if(MainCharacter->EquipmentComponent->CurrentWeapon)
+		{
+			EWeaponTypes WeaponType = MainCharacter->EquipmentComponent->CurrentWeapon->WeaponType;
+
+			switch (WeaponType)
+			{
+			case EWeaponTypes::HandGun:
+				CurrentWeaponType = EAnimWeaponType::HandGun;
+				break;
+			case EWeaponTypes::AssaultRifle:
+				CurrentWeaponType = EAnimWeaponType::AssaultRifle;
+				break;
+			case EWeaponTypes::ShotGun:
+				CurrentWeaponType = EAnimWeaponType::ShotGun;
+				break;
+			}
+		}
+		else
+		{
+			CurrentWeaponType = EAnimWeaponType::None;
+		}
+		
 		// 회피 상태
 		bIsDodging = MainCharacter->IsDodge();
 		
@@ -63,6 +87,14 @@ void UCharacterAnimInstance::AnimNotify_Throw()
 	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(TryGetPawnOwner()))
 	{
 		MainCharacter->ThrowGrenade();
+	}
+}
+
+void UCharacterAnimInstance::AnimNotify_EndSkill()
+{
+	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(TryGetPawnOwner()))
+	{
+		MainCharacter->ShowWeaponMesh();
 	}
 }
 
