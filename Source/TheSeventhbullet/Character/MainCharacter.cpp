@@ -546,6 +546,11 @@ float AMainCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& 
 	return FinalDamage;
 }
 
+void AMainCharacter::HealHP()
+{
+	CurrentHP = FMath::Clamp(CurrentHP + HealAmount, 0.f, TotalStatus.HP);
+}
+
 void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -958,6 +963,9 @@ void AMainCharacter::OnDeath()
 	if (GM)
 	{
 		GM->OnPlayerDead();
+		
+		PlayAnimMotageByState(EAnimState::Death);
+		
 	}
 }
 

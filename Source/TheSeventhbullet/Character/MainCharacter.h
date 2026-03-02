@@ -28,19 +28,8 @@ enum class EAnimState : uint8
 {
 	None,
 	Skill,				
-	Aim_Rifle,
-	Aim_Shotun,
-	Aim_Pistol,
-	Fire_Rifle,  
-	Fire_ShotGun,
-	Fire_Pistol,
-	Fire_Aim_Rifle,  
-	Fire_Aim_ShotGun,
-	Fire_Aim_Pistol, 
-	Reload_Rifle,  
-	Reload_ShotGun,
-	Reload_Pistol, 
-	Dodge
+	Dodge,
+	Death
 };
 
 
