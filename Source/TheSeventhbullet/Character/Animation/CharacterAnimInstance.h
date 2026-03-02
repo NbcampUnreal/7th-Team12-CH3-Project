@@ -51,6 +51,10 @@ protected:
 	void AnimNotify_EndSkill();
 	UFUNCTION()
 	void AnimNotify_RefillAmmo();
+	UFUNCTION()
+	void AnimNotify_Start_Invicible();
+	UFUNCTION()
+	void AnimNotify_End_Invicible();
 private:
 	UPROPERTY()
 	TObjectPtr<class ACharacter> OwnerCharacter;

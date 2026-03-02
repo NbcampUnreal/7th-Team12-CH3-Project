@@ -537,7 +537,7 @@ float AMainCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& 
 
 	CurrentHP = FMath::Clamp(CurrentHP - FinalDamage, 0.f, static_cast<float>(TotalStatus.HP));
 	OnHPChanged.Broadcast(CurrentHP, static_cast<float>(TotalStatus.HP));
-
+	UE_LOG(LogTemp, Error,TEXT("Current HP : %f"), CurrentHP);
 	if (CurrentHP <= 0.f)
 	{
 		OnDeath();
@@ -549,6 +549,13 @@ float AMainCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& 
 void AMainCharacter::HealHP()
 {
 	CurrentHP = FMath::Clamp(CurrentHP + HealAmount, 0.f, TotalStatus.HP);
+	UE_LOG(LogTemp, Error, TEXT("Healing HP: %f/ Current HP : %f"), HealAmount, CurrentHP);
+	UE_LOG(LogTemp, Error, TEXT("Potion %d / %d"), CurrentPotion, MaxPotion );
+}
+
+void AMainCharacter::ResetPotion()
+{
+	CurrentPotion = MaxPotion;
 }
 
 void AMainCharacter::Tick(float DeltaTime)
@@ -681,9 +688,6 @@ void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 	CurrentStamina = FMath::Max(CurrentStamina - DodgeStaminaCost, 0.f);
 	OnStaminaChanged.Broadcast(CurrentStamina, GetMaxStamina());
 	StartStaminaRegenCooldown();
-
-	bIsDodge = true;
-	bIsInvicible = true;
 	
 	// 입력 방향 벡터 가져오기
 	FVector InputDirection = GetLastMovementInputVector();
@@ -896,6 +900,15 @@ void AMainCharacter::PlayerFinishReload(const FInputActionValue& value)
 
 void AMainCharacter::PlayerPotion(const FInputActionValue& value)
 {
+	if (bIsDodge || bIsReload || bIsFire) return;
+
+	if (CurrentPotion <= 0 || CurrentHP == TotalStatus.HP)
+	{
+		UE_LOG(LogTemp, Error, TEXT("MaxHP"));
+		return;
+	}
+	
+	CurrentPotion -= 1;
 	HealHP();
 }
 
