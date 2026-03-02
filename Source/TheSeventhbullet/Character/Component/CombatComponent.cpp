@@ -12,6 +12,7 @@
 #include "Damage/Modifier/WeaponDamageModifier.h"
 #include "Damage/Modifier/StatusDamageModifier.h"
 #include "Kismet/GameplayStatics.h"
+#include "UI/DamageNumberActor.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Manager/SoundManager.h"
 #include "System/MainGameMode.h"
@@ -315,6 +316,18 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 		Context.Attacker,
 		UDamageType::StaticClass()
 	);
+
+	if (DamageNumberActorClass)
+	{
+		FVector SpawnLocation = Hit.ImpactPoint + FVector(0.f, 0.f, 30.f);
+		ADamageNumberActor* DamageNumber = GetWorld()->SpawnActor<ADamageNumberActor>(
+			DamageNumberActorClass, SpawnLocation, FRotator::ZeroRotator);
+		if (DamageNumber)
+		{
+			DamageNumber->Init(Context.CurrentDamage, bIsCrit);
+		}
+	}
+
 	OnCurrentDamageBroadcast.Broadcast(Context.CurrentDamage, bIsCrit);
 }
 
