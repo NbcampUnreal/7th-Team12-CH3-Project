@@ -10,6 +10,7 @@ void UCharacterInfoWidget::NativeConstruct()
 	RefreshInfo();
 }
 
+
 void UCharacterInfoWidget::RefreshInfo()
 {
 	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
@@ -19,7 +20,7 @@ void UCharacterInfoWidget::RefreshInfo()
 	}
 
 	const FCharacterStat& Stat = Character->GetTotalStatus();
-
+	
 	if (HPText)
 	{
 		HPText->SetText(FText::FromString(FString::Printf(TEXT("체력 : %d"), Stat.HP)));
