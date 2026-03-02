@@ -8,7 +8,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossEventSignnature);
 
-class UBossPatternComponent;
+class UBossPatternComponentBase;
 UCLASS()
 class THESEVENTHBULLET_API ABossCharacter : public AEnemyBase
 {
@@ -19,7 +19,7 @@ public:
 	ABossCharacter();
 
 protected:
-	TObjectPtr<UBossPatternComponent> BossPatternComponent;
+	TObjectPtr<UBossPatternComponentBase> BossPatternComponent;
 	TObjectPtr<UBossPatternDataAsset> BossData;
 	
 	FOnBossEventSignnature OnBossEvent;

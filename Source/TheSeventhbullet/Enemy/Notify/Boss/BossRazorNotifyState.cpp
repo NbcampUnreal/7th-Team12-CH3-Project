@@ -25,7 +25,9 @@ void UBossRazorNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimS
 	}
 	if (RazorParticleSystem != nullptr)
 	{
+		FVector EmitterSpawnLocation=OwnerEnemyBase->GetActorLocation()+FVector(0,0,100.0f)+OwnerEnemyBase->GetActorForwardVector()*1000.0f;
 		RazorParticleActor = MeshComp->GetWorld()->SpawnActor<AEmitter>(AEmitter::StaticClass(),OwnerEnemyBase->GetActorLocation(), OwnerEnemyBase->GetActorRotation());
+		RazorParticleActor->SetActorScale3D(FVector(100.0f,100.0f,100.0f));
 		RazorParticleActor->SetTemplate(RazorParticleSystem);
 	}
 }
@@ -41,7 +43,7 @@ void UBossRazorNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 	//레이저 파티클 회전
 	if (RazorParticleActor != nullptr)
 	{
-		RazorParticleActor->SetActorRotation(OwnerEnemyBase->GetActorRotation());
+		RazorParticleActor->SetActorRotation(OwnerEnemyBase->GetActorRotation()+FRotator(0,180.0f,0));
 	}
 	
 	//Sphere Trace

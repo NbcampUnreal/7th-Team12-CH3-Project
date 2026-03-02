@@ -2,6 +2,7 @@
 
 #include "MainGameInstance.h"
 
+#include "LevelSequencePlayer.h"
 #include "Character/Component/EquipmentComponent.h"
 #include "Character/Component/StatusComponent.h"
 #include "Data/SaveAndLoadGame.h"
@@ -283,6 +284,13 @@ void UMainGameInstance::RequestBossStage(int32 InRequestID)
 	
 	UGameplayStatics::LoadStreamLevel(this, BossSequenceLevelName,true,false,LatentInfo);
 	
+	//현석 : 기존 타운맵 언로드
+	ULevelStreaming* LevelToUnload = UGameplayStatics::GetStreamingLevel(this, TownMapLevelName);
+	if (LevelToUnload)
+	{
+		LevelToUnload->SetShouldBeLoaded(false);
+		LevelToUnload->SetShouldBeVisible(false);
+	}
 }
 
 void UMainGameInstance::OnBossSequenceLevelLoaded()
@@ -308,20 +316,32 @@ void UMainGameInstance::OnBossMapLoaded()
 
 void UMainGameInstance::OnBossSequenceFinishedDelegate()
 {
-	//TODO 현석
-	// if (BossSequenceActor)
-	// {
-	// 	if (ULevelSequencePlayer* Player = BossSequenceActor->GetSequencePlayer())
-	// 		Player->OnFinished.RemoveDynamic(
-	// 			this, &UMainGameInstance::OnBossSequenceFinishedDelegate);
-	// }
+	//현석 : 바인딩 해제
+	if (BossSequencePlayer)
+	{
+		BossSequencePlayer->OnFinished.RemoveDynamic(
+			this, &UMainGameInstance::OnBossSequenceFinishedDelegate);
+	}
 	OnBossSequenceFinished();
 }
 
 void UMainGameInstance::PlayBossSequence()
 {
-	//시퀀스 재생 함수
-	//TODO 현석
+	//현석 : BossMeetSequence를 플레이
+	FString SequencePath=TEXT("/Game/TheSeventhBullet/Blueprints/Enemy/Boss/Sequence/BossMeetSequence.BossMeetSequence");
+	ULevelSequence* BossMeetSequence=Cast<ULevelSequence>(StaticLoadObject(ULevelSequence::StaticClass(),nullptr,*SequencePath));
+	if (BossMeetSequence)
+	{
+		ALevelSequenceActor* OutActor;
+		FMovieSceneSequencePlaybackSettings Settings;
+		BossSequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), BossMeetSequence, Settings, OutActor);
+		if (BossSequencePlayer)
+		{
+			//현석 : 시퀀스 재생 종료를 위한 콜백함수 바인딩
+			BossSequencePlayer->OnFinished.AddDynamic(this,&UMainGameInstance::OnBossSequenceFinishedDelegate);
+			BossSequencePlayer->Play();
+		}
+	}
 }
 
 void UMainGameInstance::OnBossSequenceFinished()
@@ -329,8 +349,6 @@ void UMainGameInstance::OnBossSequenceFinished()
 	FLatentActionInfo UnLoadInfo;
 	UGameplayStatics::UnloadStreamLevel(this,BossSequenceLevelName, UnLoadInfo, false);
 	
-	//TODO 현석
-	//시퀀스 보스 액터 끄기?
 	ShowLoadingScreen();
 	
 	FLatentActionInfo LatentActionInfo;

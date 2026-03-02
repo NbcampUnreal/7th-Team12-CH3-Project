@@ -36,7 +36,7 @@ void UEnemyAttackNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAni
 	PresentAttackSocketLocation = OwnerEnemyBase->GetMesh()->GetSocketTransform(FName("Attack_Socket"), RTS_World).
 	                                              GetLocation();
 	
-	GM = AMainGameMode::Get(this);
+	GM = AMainGameMode::Get(MeshComp);
 }
 
 void UEnemyAttackNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,

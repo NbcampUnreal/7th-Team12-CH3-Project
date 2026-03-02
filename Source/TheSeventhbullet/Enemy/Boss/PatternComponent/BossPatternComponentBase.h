@@ -4,17 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "BossPatternComponent.generated.h"
+#include "BossPatternComponentBase.generated.h"
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class THESEVENTHBULLET_API UBossPatternComponent : public UActorComponent
+class THESEVENTHBULLET_API UBossPatternComponentBase : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this component's properties
-	UBossPatternComponent();
+	UBossPatternComponentBase();
 	void BossMonsterTriggerPattern();
 protected:
 	// Called when the game starts
