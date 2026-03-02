@@ -9,6 +9,6 @@ public class TheSeventhbullet : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicIncludePaths.AddRange([ModuleDirectory]);
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput","NavigationSystem","AIModule", "Niagara", "GameplayTasks", "UMG", "Slate", "SlateCore","AIModule", "AnimGraphRuntime", });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput","NavigationSystem","AIModule", "Niagara", "GameplayTasks", "UMG", "Slate", "SlateCore","AIModule", "AnimGraphRuntime","LevelSequence","MovieScene",  });
 	}
 }

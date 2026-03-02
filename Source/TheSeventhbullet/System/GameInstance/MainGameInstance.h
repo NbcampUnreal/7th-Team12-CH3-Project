@@ -7,6 +7,7 @@
 #include "Engine/GameInstance.h"
 #include "MainGameInstance.generated.h"
 
+class ULevelSequencePlayer;
 class USaveGame;
 class UUIManager;
 class ULoadingScreenWidget;
@@ -71,6 +72,8 @@ public:
 	bool DoesSaveExist() const;
 	
 	//Town에서 보스 의뢰 수락 시 호출
+	//현석 : 블루프린트 테스트용으로 추가
+	UFUNCTION(BlueprintCallable)
 	void RequestBossStage(int32 InRequestID);
 private:
 	void OnSaveDataLoadFinished(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData);
@@ -112,10 +115,13 @@ private:
 	
 	int32 PendingBossRequestID = INDEX_NONE;
 	
-	//TODO 현석
-	//UPROPERTY()
-	//TObjectPtr<ALevelSequenceActor> BossSequenceActor;
+	//현석 : SequencePlayer 캐싱 및 GC에서 메모리 해제 방지
+	UPROPERTY()
+	TObjectPtr<ULevelSequencePlayer> BossSequencePlayer;
 	
 	FName BossSequenceLevelName = FName(TEXT("L_BossSequence"));
 	FName BossMapLevelName = FName(TEXT("L_Boss"));
+	
+	//현석 : 기존 맵 언로드를 위해 추가
+	FName TownMapLevelName=FName(TEXT("L_Town"));
 };

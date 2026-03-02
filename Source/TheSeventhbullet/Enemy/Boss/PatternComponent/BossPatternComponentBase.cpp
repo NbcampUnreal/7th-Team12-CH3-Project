@@ -1,12 +1,12 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BossPatternComponent.h"
+#include "BossPatternComponentBase.h"
 
 #include "System/MainGameMode.h"
 
 // Sets default values for this component's properties
-UBossPatternComponent::UBossPatternComponent()
+UBossPatternComponentBase::UBossPatternComponentBase()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -15,7 +15,7 @@ UBossPatternComponent::UBossPatternComponent()
 	// ...
 }
 
-void UBossPatternComponent::BossMonsterTriggerPattern()
+void UBossPatternComponentBase::BossMonsterTriggerPattern()
 {
 	AMainGameMode* GM = AMainGameMode::Get(this);
 	if (!GM) return;
@@ -24,7 +24,7 @@ void UBossPatternComponent::BossMonsterTriggerPattern()
 
 
 // Called when the game starts
-void UBossPatternComponent::BeginPlay()
+void UBossPatternComponentBase::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -34,7 +34,7 @@ void UBossPatternComponent::BeginPlay()
 
 
 // Called every frame
-void UBossPatternComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+void UBossPatternComponentBase::TickComponent(float DeltaTime, ELevelTick TickType,
                                           FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
