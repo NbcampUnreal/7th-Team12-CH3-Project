@@ -143,10 +143,16 @@ void UCombatComponent::HitScanFire()
 
 void UCombatComponent::PerformTrace(TArray<FHitResult>& OutHits)
 {
-	// 카메라를 기준으로 타겟지점을 정함.
+	// 실제 카메라 위치를 기준으로 타겟지점을 정함.
 	FVector CameraLocation;
 	FRotator CameraRotation;
-	GetOwner()->GetActorEyesViewPoint(CameraLocation, CameraRotation);
+	if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
+	{
+		if (APlayerController* PC = OwnerPawn->GetController<APlayerController>())
+		{
+			PC->GetPlayerViewPoint(CameraLocation, CameraRotation);
+		}
+	}
 	
 	FVector AimStart = CameraLocation;
 	FVector AimEnd = AimStart + (CameraRotation.Vector() * CurrentWeaponStatus.Range);
@@ -176,31 +182,14 @@ void UCombatComponent::PerformTrace(TArray<FHitResult>& OutHits)
 	const FVector AimPoint = AimHit.bBlockingHit ? AimHit.ImpactPoint : AimEnd;
 	
 	
-	// 총구에서 실제로 발사하는 트레이스
-	FVector MuzzleLoc;
-	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(GetOwner()))
-	{
-		if (MainCharacter->WeaponMeshComponent->DoesSocketExist(TEXT("WeaponMuzzle")))
-		{
-			// 소켓이 있으면 소켓 위치로
-			MuzzleLoc = MainCharacter->WeaponMeshComponent->GetSocketLocation(TEXT("WeaponMuzzle"));
-		}
-		else
-		{
-			// 없으면 일단 무기 위치로
-			MuzzleLoc = MainCharacter->WeaponMeshComponent->GetComponentLocation();
-		}
-	}
-	
-	// 펠릿 수 만큼 트레이스
+	// 펠릿 수 만큼 트레이스 (카메라 위치에서 발사)
 	for (int32 i = 0; i < CurrentWeaponStatus.AmountOfPellets; i++)
 	{
-		// Muzzle 위치에서 AimPoint까지 트레이스
-		FVector End = TraceRandShot(MuzzleLoc, AimPoint);
+		FVector End = TraceRandShot(AimStart, AimPoint);
 		FHitResult PelletHit;
 		bool bHit = UKismetSystemLibrary::LineTraceSingle(
 			GetWorld(),
-			MuzzleLoc,
+			AimStart,
 			End,
 			TraceType,
 			true,
