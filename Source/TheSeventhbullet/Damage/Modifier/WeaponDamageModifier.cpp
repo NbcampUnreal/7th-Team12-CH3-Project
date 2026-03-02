@@ -4,5 +4,6 @@ void UWeaponDamageModifier::ModifyDamage(FDamageContext& Context)
 {
 	Super::ModifyDamage(Context);
 	
-	Context.CurrentDamage += Context.WeaponDamage;
+	Context.CurrentCritChance += Context.WeaponCritChanceBalance;
+	Context.CurrentCritDamage += Context.WeaponCritDamageBalance;
 }

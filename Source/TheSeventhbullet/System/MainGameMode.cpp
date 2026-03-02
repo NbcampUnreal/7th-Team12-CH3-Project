@@ -1,5 +1,6 @@
 #include "MainGameMode.h"
 
+#include "IPropertyTable.h"
 #include "MonsterManagerSubSystem.h"
 #include "Character/Component/EquipmentComponent.h"
 #include "DataAsset/MaterialDataAsset.h"
@@ -279,8 +280,10 @@ void AMainGameMode::ItemDropFromMonster(EMonsterType MonsterType)
 	USyncDataManager*  DataManager = USyncDataManager::Get(this);
 	if (!DataManager) return;
 	// Request Index 를 현재 Request Index에 따라서 보상표가 달라지기 때문에 현재 Request Index로 가져오기.
-	const int32 StageIndex = CurrentRequestID;
+	UMainGameInstance* GI = GetGameInstance<UMainGameInstance>();
+	if (!GI) return;
 	FMonsterDropRowData Row =  DataManager->GetDropMaterialData(MonsterType);
+	const int32 StageIndex = FMath::Clamp(GI->CurrentDay - 1, 0, Row.Stages.Num() - 1);
 	if (!Row.Stages.IsValidIndex(StageIndex)) return;
 
 	const FStageDropData& DropData = Row.Stages[StageIndex];

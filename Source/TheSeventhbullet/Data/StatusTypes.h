@@ -146,9 +146,11 @@ struct FWeaponStat
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
-	float WeaponBaseDamage; // 무기 베이스 데미지.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
 	float WeaponDamageMultiplier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	float WeaponCritChance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
+	float WeaponCritDamage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
 	float Range; // 사거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponStat")
@@ -172,7 +174,6 @@ struct FWeaponStat
 	//기본 생성자 (초기값 세팅)
 	FWeaponStat()
 	{
-		WeaponBaseDamage = 0.f;
 		WeaponDamageMultiplier = 1.0f;
 		Range = 0.f;
 		AmountOfPellets = 0;

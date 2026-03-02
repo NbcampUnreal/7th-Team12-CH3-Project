@@ -36,9 +36,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	EWeaponTypes WeaponType; // 무기타입
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	float BaseDamage; // 기본 데미지
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float WeaponDamageMultiplier; // 무기별 데미지 밸런싱 계수
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	float WeaponCritChanceBalance; // 무기별 크리티컬 확률 밸런싱 계수 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	float WeaponCritDamageBalance; // 무기별 크리티컬 데미지 밸런싱 계수
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float FireInterval; // 발사간격(발사속도)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
