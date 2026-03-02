@@ -7,6 +7,8 @@
 struct FDroppedMaterialsData;
 class UButton;
 class UTextBlock;
+class UVerticalBox;
+class URewardEntryWidget;
 
 UCLASS()
 class THESEVENTHBULLET_API UStageSuccessWidget : public UUserWidget
@@ -23,7 +25,16 @@ protected:
 	TObjectPtr<UTextBlock> ResultTitleText;
 
 	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UVerticalBox> RewardListBox;
+
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ReturnButton;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<URewardEntryWidget> RewardEntryClass;
+
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	TObjectPtr<UWidgetAnimation> ShowAnimation;
 
 private:
 	UFUNCTION()

@@ -5,6 +5,7 @@
 
 #include "Manager/UIManager.h"
 #include "UI/UITags.h"
+#include "UI/MainHUDWidget.h"
 
 void UBeginWaveState::Enter()
 {
@@ -21,24 +22,28 @@ void UBeginWaveState::Enter()
 	{
 		UIMgr->Open(UITags::HUD);
 		UIMgr->Open(UITags::Crosshair);
-	}
 
-	//TODO 영섭 : 위젯에 웨이브 번호와 카운트다운 시간 전달
-	//예시
-	// if (UIMgr)
-	// {
-	// 	UIMgr->Open(UITags::WaveStartCountdown);
-	// 	CountdownWidget->SetWaveNumber(GM->GetCurrentWaveIndex() + 1);
-	// 	CountdownWidget->StartCountdown(DelayTimer);
-	// }
+		if (UMainHUDWidget* HUD = Cast<UMainHUDWidget>(UIMgr->GetWidget(UITags::HUD)))
+		{
+			HUD->ShowWaveInfo(GM->GetCurrentWaveIndex() + 1, DelayTimer);
+		}
+	}
 }
 
 void UBeginWaveState::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+
 	DelayTimer -= DeltaTime;
-	
+
+	if (UUIManager* UIMgr = UUIManager::Get(this))
+	{
+		if (UMainHUDWidget* HUD = Cast<UMainHUDWidget>(UIMgr->GetWidget(UITags::HUD)))
+		{
+			HUD->UpdateWaveTimer(FMath::Max(DelayTimer, 0.f));
+		}
+	}
+
 	if (DelayTimer <= 0.0f)
 	{
 		ChangeState(EWaveState::Progress);
@@ -48,12 +53,4 @@ void UBeginWaveState::Tick(float DeltaTime)
 void UBeginWaveState::Exit()
 {
 	Super::Exit();
-	
-	//TODO 영섭 : 카운트 다운 UI 숨김
-	// UUIManager* UIMgr = UUIManager::Get(this);
-	// if (UIMgr)
-	// {
-	// 	UIMgr->HideByTag(UITags::WaveStartCountdown);
-	// }
-	
 }

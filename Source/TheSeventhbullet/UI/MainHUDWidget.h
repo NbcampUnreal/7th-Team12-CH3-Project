@@ -30,9 +30,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|HUD")
 	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
 
+	// --- Wave Info ---
+	void ShowWaveInfo(int32 WaveNumber, float Countdown);
+	void UpdateWaveTimer(float RemainingTime);
+	void UpdateMonsterCount(int32 AliveCount);
+	void ShowWaveClear();
+	void ShowIntermission(float RemainingTime);
+	void HideWaveInfo();
+
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	// --- HUD ---
 	UPROPERTY(meta = (BindWidget))
@@ -40,6 +49,16 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> AmmoText;
+
+	// --- Wave Info ---
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> WaveInfoText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> WaveTimerText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> MonsterCountText;
 
 	// --- 드랍 알림 ---
 	UPROPERTY(meta = (BindWidget))
@@ -55,6 +74,11 @@ private:
 	UFUNCTION()
 	void OnItemDropped(const TArray<FDroppedMaterialsData>& DroppedMaterials);
 
+	UFUNCTION()
+	void OnHPChangedHandler(float CurrentHP, float MaxHP);
+	UFUNCTION()
+	void OnAmmoChangedHandler(int32 CurrentAmmo, int32 MaxAmmo);
+
 	void ShowNextNotify();
 	void OnCurrentNotifyHideFinished();
 
@@ -66,4 +90,10 @@ private:
 	TObjectPtr<UItemDropNotifyWidget> CurrentNotify;
 
 	FTimerHandle NotifyTimerHandle;
+
+	// --- Bar Lerp ---
+	float HPBarTarget = 1.f;
+	float HPBarCurrent = 1.f;
+	UPROPERTY(EditDefaultsOnly, Category = "UI|HUD")
+	float BarLerpSpeed = 8.f;
 };

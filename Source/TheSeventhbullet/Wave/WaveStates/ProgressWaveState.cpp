@@ -4,26 +4,31 @@
 #include "ProgressWaveState.h"
 
 #include "Manager/UIManager.h"
+#include "UI/UITags.h"
+#include "UI/MainHUDWidget.h"
 
 void UProgressWaveState::Enter()
 {
 	Super::Enter();
 	UE_LOG(LogTemp,Log,TEXT("Progress Wave"));
-	
+
 	GM = GetGameMode();
 	if (!GM) return;
+
+	if (UUIManager* UIMgr = UUIManager::Get(this))
+	{
+		if (UMainHUDWidget* HUD = Cast<UMainHUDWidget>(UIMgr->GetWidget(UITags::HUD)))
+		{
+			HUD->ShowWaveInfo(GM->GetCurrentWaveIndex() + 1, GM->GetStageRemainingTime());
+			HUD->UpdateMonsterCount(GM->GetAliveMonsterCount());
+		}
+	}
 	
 	if (GM->IsBossWave())
 	{
 		GM->OnBossWaveStarted.Broadcast();
 	}
 	
-	//TODO 영섭 : 타이머, 남은 몬스터 수, 웨이브 번호 등등 UI띄우기
-	// UUIManager* UIMgr = UUIManager::Get(this);
-	// if (UIMgr)
-	// {
-	// 	UIMgr->ShowByTag(UITags::StageCountdown);
-	// }
 }
 
 void UProgressWaveState::Tick(float DeltaTime)
@@ -36,7 +41,17 @@ void UProgressWaveState::Tick(float DeltaTime)
 	
 	//스테이지 타이머
 	GM->UpdateStageTimer(DeltaTime);
-	
+
+	// HUD 업데이트
+	if (UUIManager* UIMgr = UUIManager::Get(this))
+	{
+		if (UMainHUDWidget* HUD = Cast<UMainHUDWidget>(UIMgr->GetWidget(UITags::HUD)))
+		{
+			HUD->UpdateWaveTimer(GM->GetStageRemainingTime());
+			HUD->UpdateMonsterCount(GM->GetAliveMonsterCount());
+		}
+	}
+
 	//시간 초과 체크
 	if (GM->IsStageTimeOver())
 	{

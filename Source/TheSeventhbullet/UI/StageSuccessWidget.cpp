@@ -1,8 +1,8 @@
 #include "StageSuccessWidget.h"
+#include "RewardEntryWidget.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "Manager/UIManager.h"
-#include "UITags.h"
+#include "Components/VerticalBox.h"
 #include "System/MainGameMode.h"
 #include "Data/TableRowTypes.h"
 
@@ -12,7 +12,7 @@ void UStageSuccessWidget::NativeConstruct()
 
 	if (ResultTitleText)
 	{
-		ResultTitleText->SetText(FText::FromString(TEXT("스테이지 클리어!")));
+		ResultTitleText->SetText(FText::FromString(TEXT("Mission Clear!")));
 	}
 
 	if (ReturnButton && !ReturnButton->OnClicked.IsAlreadyBound(this, &UStageSuccessWidget::OnReturnClicked))
@@ -23,11 +23,24 @@ void UStageSuccessWidget::NativeConstruct()
 
 void UStageSuccessWidget::SetRewards(const TArray<FDroppedMaterialsData>& Rewards)
 {
-	UE_LOG(LogTemp, Log, TEXT("StageSuccessWidget: Received %d reward entries"), Rewards.Num());
+	if (!RewardListBox || !RewardEntryClass) return;
+
+	RewardListBox->ClearChildren();
+
 	for (const FDroppedMaterialsData& Reward : Rewards)
 	{
-		UE_LOG(LogTemp, Log, TEXT("  - Material: %s x%d"),
-			*Reward.Material.GetAssetName(), Reward.Count);
+		URewardEntryWidget* Entry = CreateWidget<URewardEntryWidget>(this, RewardEntryClass);
+		if (Entry)
+		{
+			Entry->SetData(Reward);
+			RewardListBox->AddChildToVerticalBox(Entry);
+		}
+	}
+
+	// 2회차 이후 캐시 재사용 시에도 애니메이션 재생
+	if (ShowAnimation)
+	{
+		PlayAnimation(ShowAnimation);
 	}
 }
 

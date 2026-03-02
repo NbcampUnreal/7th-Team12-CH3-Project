@@ -20,6 +20,9 @@ class IInteractableInterface;
 
 struct FInputActionValue;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHPChanged, float, CurrentHP, float, MaxHP);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float, CurrentStamina, float, MaxStamina);
+
 UENUM(BlueprintType)
 enum class EAnimState : uint8
 {
@@ -77,7 +80,19 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	float AimMultiplier;
-	
+
+	// 스태미나: Dodge 소모량
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Stamina")
+	float DodgeStaminaCost = 20.f;
+
+	// 스태미나: 초당 회복량
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Stamina")
+	float StaminaRegenRate = 10.f;
+
+	// 스태미나: 소모 후 회복 시작까지 대기 시간(초)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Stamina")
+	float StaminaRegenDelay = 1.f;
+
 #pragma endregion
 
 #pragma region Components
@@ -222,20 +237,41 @@ public:
 	//현석 : AI 퍼셉션 감지 대상용 컴포넌트
 	UPROPERTY(VisibleAnywhere, Category = "AI")
 	class UAIPerceptionStimuliSourceComponent* StimuliSource;
-	
-	UFUNCTION(BlueprintPure, Category = "Status")
+
+UFUNCTION(BlueprintPure, Category = "Status")
 	const FCharacterStat& GetTotalStatus() const;
-	
 	void SetTotalStatus(const FCharacterStat& NewStatus);
-	
+
+	UPROPERTY(BlueprintAssignable, Category = "Status")
+	FOnHPChanged OnHPChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Status")
+	FOnStaminaChanged OnStaminaChanged;
+
+	float GetCurrentHP() const { return CurrentHP; }
+	float GetMaxHP() const { return static_cast<float>(TotalStatus.HP); }
+	float GetCurrentStamina() const { return CurrentStamina; }
+	float GetMaxStamina() const { return static_cast<float>(TotalStatus.Stamina); }
+
 	UFUNCTION()
 	void OnDeath();
-	
+
 	UFUNCTION()
 	void LoadData(FCharacterStat& LoadTotalCharacterStatus, int32 CharacterGold);
-public:
+
 	UFUNCTION()
 	int32 GetGold();
 	UFUNCTION()
 	void AddGold(int32 Amount);
+
+private:
+	float CurrentHP = 0.f;
+	float CurrentStamina = 0.f;
+
+	// 스태미나 회복 딜레이 타이머
+	FTimerHandle StaminaRegenTimerHandle;
+	bool bCanRegenStamina = true;
+
+	void StartStaminaRegenCooldown();
+	void OnStaminaRegenReady();
 };

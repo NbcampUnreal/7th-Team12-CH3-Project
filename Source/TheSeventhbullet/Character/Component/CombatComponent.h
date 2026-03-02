@@ -13,6 +13,7 @@ class UDamageModifier;
 class AWeaponBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentDamageBroadcast, float, Damage, bool, bIsCrit);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, CurrentAmmo, int32, MaxAmmo);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class THESEVENTHBULLET_API UCombatComponent : public UActorComponent
@@ -36,6 +37,7 @@ public:
 	void ResetSpreadRadius();
 
 	int GetCurrentAmmo() const;
+	int GetMaxAmmo() const;
 	void Reload();
 	void ConsumeAmmo();
 	
@@ -54,6 +56,9 @@ public:
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat")
 	FOnCurrentDamageBroadcast OnCurrentDamageBroadcast;
+
+	UPROPERTY(BlueprintAssignable, Category = "Combat")
+	FOnAmmoChanged OnAmmoChanged;
 	
 protected:
 	virtual void BeginPlay() override;

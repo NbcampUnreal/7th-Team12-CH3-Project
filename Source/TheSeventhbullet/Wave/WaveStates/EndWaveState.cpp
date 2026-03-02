@@ -4,34 +4,37 @@
 #include "EndWaveState.h"
 
 #include "Manager/UIManager.h"
+#include "UI/UITags.h"
+#include "UI/MainHUDWidget.h"
 
 void UEndWaveState::Enter()
 {
 	Super::Enter();
 	UE_LOG(LogTemp,Log,TEXT("End Wave"));
-	
+
 	ClearDelayTimer = 2.0f;
 	bHasDecided = false;
-	
-	//TODO 영섭 :  Wave Clear! UI 표시
-	// UUIManager* UIMgr = UUIManager::Get(this);
-	// if (UIMgr)
-	// {
-	// 	UIMgr->ShowByTag(UITags::WaveClearBanner);
-	// }
-	
+
+	if (UUIManager* UIMgr = UUIManager::Get(this))
+	{
+		if (UMainHUDWidget* HUD = Cast<UMainHUDWidget>(UIMgr->GetWidget(UITags::HUD)))
+		{
+			HUD->ShowWaveClear();
+		}
+	}
 }
 
 void UEndWaveState::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 	if (bHasDecided) return;
-	
 	ClearDelayTimer -= DeltaTime;
 	if (ClearDelayTimer > 0.0f) return;
-	
+
 	AMainGameMode* GM = GetGameMode();
 	if (!GM) return;
+
 	
 	bHasDecided = true;
 	GM->IncreaseCurrentWaveIndex();
@@ -49,18 +52,17 @@ void UEndWaveState::Tick(float DeltaTime)
 		GM->SetStageResult(EStageResult::Success);
 		ChangeState(EWaveState::StageResult);
 	}
-	
 }
 
 void UEndWaveState::Exit()
 {
 	Super::Exit();
-	
-	//TODO 영섭 :  UI 끄기
-	// UUIManager* UIMgr = UUIManager::Get(this);
-	// if (UIMgr)
-	// {
-	// 	UIMgr->HideByTag(UITags::WaveClearBanner);
-	// }
-	
+
+	if (UUIManager* UIMgr = UUIManager::Get(this))
+	{
+		if (UMainHUDWidget* HUD = Cast<UMainHUDWidget>(UIMgr->GetWidget(UITags::HUD)))
+		{
+			HUD->HideWaveInfo();
+		}
+	}
 }

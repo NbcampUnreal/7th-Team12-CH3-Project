@@ -27,6 +27,7 @@ AMainCharacter::AMainCharacter()
 	
 	TotalStatus.Speed = 600.0f;
 	TotalStatus.HP = 100;
+	TotalStatus.Stamina = 100;
 	TotalStatus.Attack = 100;
 	TotalStatus.Defence = 10;
 	TotalStatus.CriticalChance = 0.15f;
@@ -75,6 +76,7 @@ AMainCharacter::AMainCharacter()
 	//현석 : AI 퍼셉션 감지 대상 컴포넌트 추가, 태그 추가
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
 	Tags.Add(FName("Player"));
+
 }
 
 void AMainCharacter::BeginPlay()
@@ -110,6 +112,11 @@ void AMainCharacter::BeginPlay()
 		FPrimaryAssetId PotionID(FPrimaryAssetType("Item"), FName("DA_HealthPotion"));
 		InventoryComponent->AddItem(PotionID, 3);
 	}
+
+	// CurrentHP / CurrentStamina 초기화
+	CurrentHP = static_cast<float>(TotalStatus.HP);
+	CurrentStamina = static_cast<float>(TotalStatus.Stamina);
+
 }
 
 void AMainCharacter::ThrowGrenade()
@@ -493,7 +500,22 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 float AMainCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
-	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	if (bIsInvicible) return 0.f;
+
+	// 적 데미지 계산이랑 동일하게 유지
+	float FinalDamage = FMath::Max(ActualDamage - static_cast<float>(TotalStatus.Defence), 0.f);
+
+	CurrentHP = FMath::Clamp(CurrentHP - FinalDamage, 0.f, static_cast<float>(TotalStatus.HP));
+	OnHPChanged.Broadcast(CurrentHP, static_cast<float>(TotalStatus.HP));
+
+	if (CurrentHP <= 0.f)
+	{
+		OnDeath();
+	}
+
+	return FinalDamage;
 }
 
 void AMainCharacter::Tick(float DeltaTime)
@@ -534,6 +556,13 @@ void AMainCharacter::Tick(float DeltaTime)
 	SpringArm->TargetArmLength = NewArmLength;
 	Camera->FieldOfView = NewCameraFOV;
 	SpringArm->SocketOffset = NewSocketOffSet;
+
+	// 스태미나 자연 회복
+	if (bCanRegenStamina && CurrentStamina < GetMaxStamina())
+	{
+		CurrentStamina = FMath::Min(CurrentStamina + StaminaRegenRate * DeltaTime, GetMaxStamina());
+		OnStaminaChanged.Broadcast(CurrentStamina, GetMaxStamina());
+	}
 }
 
 void AMainCharacter::PlayerMove(const FInputActionValue& value)
@@ -599,14 +628,24 @@ void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 	{
 		return;
 	}
-	
+
 	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 	if (CharacterAnimInstance && CharacterAnimInstance->IsAnyMontagePlaying())
 	{
 		return;
 	}
-	
-	//CurrentStamina -= DodgeCost;	// 소모 스테미나
+
+	// 스태미나 부족 시 Dodge 불가
+	if (CurrentStamina < DodgeStaminaCost)
+	{
+		return;
+	}
+
+	// 스태미나 소모
+	CurrentStamina = FMath::Max(CurrentStamina - DodgeStaminaCost, 0.f);
+	OnStaminaChanged.Broadcast(CurrentStamina, GetMaxStamina());
+	StartStaminaRegenCooldown();
+
 	bIsDodge = true;
 	bIsInvicible = true;
 	
@@ -815,10 +854,34 @@ const FCharacterStat& AMainCharacter::GetTotalStatus() const
 
 void AMainCharacter::SetTotalStatus(const FCharacterStat& NewStatus)
 {
+	float OldMaxHP = static_cast<float>(TotalStatus.HP);
+	float OldMaxStamina = static_cast<float>(TotalStatus.Stamina);
+
 	TotalStatus = NewStatus;
-	
-	//TODO : 만약 UI(체력바, 스탯창)를 업데이트해야 한다면 여기서 Delegate를 호출
-	//OnTotalStatChanged.Broadcast(TotalStatus);
+
+	float NewMaxHP = static_cast<float>(TotalStatus.HP);
+	float NewMaxStamina = static_cast<float>(TotalStatus.Stamina);
+
+	// MaxHP가 변경되면 CurrentHP도 비율 유지
+	if (OldMaxHP > 0.f && !FMath::IsNearlyEqual(OldMaxHP, NewMaxHP))
+	{
+		CurrentHP = FMath::Clamp(CurrentHP * (NewMaxHP / OldMaxHP), 0.f, NewMaxHP);
+	}
+	else if (OldMaxHP <= 0.f)
+	{
+		CurrentHP = NewMaxHP;
+	}
+	OnHPChanged.Broadcast(CurrentHP, NewMaxHP);
+
+	if (OldMaxStamina > 0.f && !FMath::IsNearlyEqual(OldMaxStamina, NewMaxStamina))
+	{
+		CurrentStamina = FMath::Clamp(CurrentStamina * (NewMaxStamina / OldMaxStamina), 0.f, NewMaxStamina);
+	}
+	else if (OldMaxStamina <= 0.f)
+	{
+		CurrentStamina = NewMaxStamina;
+	}
+	OnStaminaChanged.Broadcast(CurrentStamina, NewMaxStamina);
 }
 
 void AMainCharacter::OnDeath()
@@ -844,4 +907,22 @@ int32 AMainCharacter::GetGold()
 void AMainCharacter::AddGold(int32 Amount)
 {
 	Gold += Amount;
+}
+
+void AMainCharacter::StartStaminaRegenCooldown()
+{
+	bCanRegenStamina = false;
+	GetWorldTimerManager().ClearTimer(StaminaRegenTimerHandle);
+	GetWorldTimerManager().SetTimer(
+		StaminaRegenTimerHandle,
+		this,
+		&AMainCharacter::OnStaminaRegenReady,
+		StaminaRegenDelay,
+		false
+	);
+}
+
+void AMainCharacter::OnStaminaRegenReady()
+{
+	bCanRegenStamina = true;
 }
