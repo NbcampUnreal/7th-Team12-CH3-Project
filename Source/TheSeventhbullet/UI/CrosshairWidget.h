@@ -29,17 +29,24 @@ public:
 	void SetCrosshairVisible(bool bVisible);
 
 	UFUNCTION(BlueprintCallable, Category = "UI|Crosshair")
-	void ShowHitMarker();
-	
+	void ShowHitMarker(bool bIsHeadShot = false);
+
 	UPROPERTY(EditDefaultsOnly, Category = "UI|Crosshair")
 	float HitMarkerDuration = 0.15f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Crosshair")
+	FLinearColor NormalHitColor = FLinearColor::White;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Crosshair")
+	FLinearColor HeadShotColor = FLinearColor::Red;
+
 protected:
 	virtual void NativeConstruct() override;
-	
+	virtual void NativeDestruct() override;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> CrosshairImage;
-	
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> HitMarkerImage;
 

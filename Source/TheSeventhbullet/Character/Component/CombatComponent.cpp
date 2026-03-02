@@ -329,6 +329,9 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 	}
 
 	OnCurrentDamageBroadcast.Broadcast(Context.CurrentDamage, bIsCrit);
+
+	bool bIsHeadShot = (Hit.BoneName == TEXT("head"));
+	OnHitConfirm.Broadcast(bIsHeadShot);
 }
 
 void UCombatComponent::ExecutePipeline(FDamageContext& Context)
