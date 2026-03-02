@@ -43,6 +43,39 @@ bool UInventoryComponent::AddItem(FPrimaryAssetId ItemID, int32 Count)
 void UInventoryComponent::LoadData(TArray<FItemInstance>& InventoryItem)
 {
 	Items = InventoryItem;
+	
+	UAsyncDataManager* Mgr = UAsyncDataManager::Get(this);
+	if (!Mgr) return;
+	
+	TArray<FPrimaryAssetId> IDsToLoad;
+	for (const FItemInstance& Item : Items)
+	{
+		if (Item.IsValid() && !Mgr->IsAssetLoaded(Item.ItemID))
+		{
+			IDsToLoad.AddUnique(Item.ItemID);
+		}
+	}
+	
+	if (IDsToLoad.Num() > 0)
+	{
+		FOnBundleLoadComplete OnLoaded;
+		OnLoaded.BindLambda([this]()
+		{
+			for (int32 i =0; i < Items.Num();++i)
+			{
+				OnItemAdded.Broadcast(Items[i],i);
+			}
+		});
+		Mgr->LoadAssetsByID(IDsToLoad,{},OnLoaded);
+	}
+	else
+	{
+		for (int32 i = 0; i < Items.Num(); ++i)
+		{
+			OnItemAdded.Broadcast(Items[i], i);
+		}
+	}
+	
 }
 
 bool UInventoryComponent::AddItemInternal(FPrimaryAssetId ItemID, int32 Count)
