@@ -71,6 +71,8 @@ public:
 	
 	UFUNCTION()
 	void LoadData(TArray<FItemInstance>& InventoryItem);
+	
+	void ClearAllItems();
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FItemInstance> Items;

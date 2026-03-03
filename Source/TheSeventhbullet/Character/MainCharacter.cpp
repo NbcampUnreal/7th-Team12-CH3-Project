@@ -359,6 +359,8 @@ void AMainCharacter::EndedAnimMontage(UAnimMontage* Montage, bool Interrupted)
 	
 	UpdateRotationState();
 	
+	if (!EquipmentComponent || !EquipmentComponent->CurrentWeapon) return;
+	
 	UAnimMontage* ReloadMontage = EquipmentComponent->CurrentWeapon->ReloadMontage.Get();
 	if (Montage == ReloadMontage)
 	{
@@ -617,6 +619,23 @@ void AMainCharacter::Tick(float DeltaTime)
 		CurrentStamina = FMath::Min(CurrentStamina + StaminaRegenRate * DeltaTime, GetMaxStamina());
 		OnStaminaChanged.Broadcast(CurrentStamina, GetMaxStamina());
 	}
+	
+#if !UE_BUILD_SHIPPING
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (PC->WasInputKeyJustPressed(EKeys::F1))
+		{
+			if (CurrentHP > 0.f)   // 이미 사망 상태면 중복 호출 방지
+			{
+				CurrentHP = 0.f;
+				OnHPChanged.Broadcast(CurrentHP, static_cast<float>(TotalStatus.HP));
+				OnDeath();
+			}
+		}
+	}
+#endif
+	
+
 }
 
 void AMainCharacter::PlayerMove(const FInputActionValue& value)
@@ -1024,6 +1043,9 @@ void AMainCharacter::OnDeath()
 
 void AMainCharacter::Revive()
 {
+	bIsInvicible = false;
+	bIsDodge = false;
+	
 	CurrentHP = TotalStatus.HP;
 	CurrentStamina = TotalStatus.Stamina;
 	
@@ -1053,6 +1075,12 @@ void AMainCharacter::LoadData(FCharacterStat& LoadTotalCharacterStatus, int32 Ch
 {
 	TotalStatus = LoadTotalCharacterStatus;
 	Gold = CharacterGold;
+	
+	CurrentHP = static_cast<float>(TotalStatus.HP);
+	CurrentStamina = static_cast<float>(TotalStatus.Stamina);
+
+	OnHPChanged.Broadcast(CurrentHP, static_cast<float>(TotalStatus.HP));
+	OnStaminaChanged.Broadcast(CurrentStamina, static_cast<float>(TotalStatus.Stamina));
 }
 
 int32 AMainCharacter::GetGold()
@@ -1063,6 +1091,11 @@ int32 AMainCharacter::GetGold()
 void AMainCharacter::AddGold(int32 Amount)
 {
 	Gold += Amount;
+}
+
+void AMainCharacter::ResetGold()
+{
+	Gold = 0;
 }
 
 void AMainCharacter::StartStaminaRegenCooldown()

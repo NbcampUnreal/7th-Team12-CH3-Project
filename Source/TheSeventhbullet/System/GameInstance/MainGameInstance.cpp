@@ -114,9 +114,10 @@ void UMainGameInstance::ReturnToMainMenu()
 	AMainGameMode* GM = AMainGameMode::Get(this);
 	if (GM)
 	{
-		
 		GM->ReturnToMainMenu();
 	}
+	
+	
 }
 
 void UMainGameInstance::GameStartMapLoad()
@@ -269,6 +270,40 @@ void UMainGameInstance::HideLoadingScreen()
 bool UMainGameInstance::DoesSaveExist() const
 {
 	return UGameplayStatics::DoesSaveGameExist(SaveSlotName, 0);
+}
+
+void UMainGameInstance::ResetGameData()
+{
+	CurrentDay = 1;
+    
+	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+	if (!Character) return;
+    
+	Character->ResetGold();
+    
+	UInventoryComponent* CharacterInventory = Character->GetComponentByClass<UInventoryComponent>();
+	if (!CharacterInventory) return;
+	CharacterInventory->ClearAllItems();
+    
+	UEquipmentComponent* Equipment = Character->GetComponentByClass<UEquipmentComponent>();
+	if (!Equipment) return;
+	Equipment->EquippedSoulGems.Empty();
+	Equipment->OnGemEquipmentChanged.Broadcast();
+
+	if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, 0))
+	{
+		bool bIsDeleted = UGameplayStatics::DeleteGameInSlot(SaveSlotName, 0);
+		if (bIsDeleted)
+		{
+			UE_LOG(LogTemp, Log, TEXT("세이브 파일이 성공적으로 삭제되었습니다."));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("세이브 파일 삭제에 실패했습니다."));
+		}
+	}
+    
+	CurrentSaveData = nullptr;
 }
 
 void UMainGameInstance::RequestBossStage(int32 InRequestID)

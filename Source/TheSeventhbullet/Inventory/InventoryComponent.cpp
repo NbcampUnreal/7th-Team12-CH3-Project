@@ -78,6 +78,21 @@ void UInventoryComponent::LoadData(TArray<FItemInstance>& InventoryItem)
 	
 }
 
+void UInventoryComponent::ClearAllItems()
+{
+	for (int32 i = 0; i < Items.Num(); ++i)
+	{
+		if (Items[i].IsValid())
+		{
+			FItemInstance RemovedItem = Items[i];
+			Items[i] = FItemInstance();
+			OnItemRemoved.Broadcast(RemovedItem, i);
+		}
+	}
+	Items.Empty();
+	Items.SetNum(MaxSlots);
+}
+
 bool UInventoryComponent::AddItemInternal(FPrimaryAssetId ItemID, int32 Count)
 {
 	UAsyncDataManager* Mgr = UAsyncDataManager::Get(this);

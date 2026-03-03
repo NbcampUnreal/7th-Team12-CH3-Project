@@ -71,6 +71,8 @@ public:
 
 	bool DoesSaveExist() const;
 	
+	void ResetGameData();
+	
 	//Town에서 보스 의뢰 수락 시 호출
 	//현석 : 블루프린트 테스트용으로 추가
 	UFUNCTION(BlueprintCallable)
