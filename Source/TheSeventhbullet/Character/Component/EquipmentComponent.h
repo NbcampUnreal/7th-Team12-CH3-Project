@@ -39,14 +39,24 @@ public:
 	void CollectStatusModifiers(TArray<FStatusModifier>& Mod) const;
 
 public:
+	FCharacterStat GetTotalGemStats() const;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
+	TObjectPtr<UWeaponDataAsset> PendingWeapon = nullptr;
+	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void EquipWeaponData(UWeaponDataAsset* Weapon);
+	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	bool FindSpecialOption(ESpecialOptions Option);
 	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void SetPendingWeapon(UWeaponDataAsset* Weapon);
+	
 public:
-	FCharacterStat GetTotalGemStats() const;
-
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void ApplyWeapon();
+	
 	UFUNCTION()
 	void LoadData(TArray<FSoulGemInstance>& LoadEquippedSoulGems);
 public:

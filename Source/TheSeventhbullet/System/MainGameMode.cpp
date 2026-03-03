@@ -95,6 +95,16 @@ void AMainGameMode::OnStageReady()
 {
 	UE_LOG(LogTemp, Log, TEXT("Stage Preparation Complete!"));
 	
+	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this,0));
+	if (Character)
+	{
+		UEquipmentComponent* EquipmentComponent = Character->GetComponentByClass<UEquipmentComponent>();
+		if (EquipmentComponent)
+		{
+			EquipmentComponent->ApplyWeapon();
+		}
+	}
+	
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
@@ -512,7 +522,6 @@ void AMainGameMode::ReturnToTown()
 	// 스테이지 데이터 초기화
 	CurrentWaveIndex = 0;
 	CurrentRequestID = INDEX_NONE;
-	
 
 	SpawnQueue.Empty();
 	SpawnTimer = 0.0f;
@@ -587,7 +596,8 @@ void AMainGameMode::OnTownLevelLoaded()
 	if (!EquipmentComponent) return;
 	
 	EquipmentComponent->CurrentWeapon = nullptr;
-
+	Character->WeaponMeshComponent->SetStaticMesh(nullptr);
+	
 	SetTownPhase(ETownPhase::WaitForNextDay);
 }
 
