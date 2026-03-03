@@ -279,7 +279,6 @@ void AMainCharacter::Fire()
 		  this,          // Instigator
 		   2000.0f             // MaxRange
 	   );
-	UE_LOG(LogTemp,Warning,TEXT("Hearing Event Accured!"));
 }
 
 void AMainCharacter::Reload()

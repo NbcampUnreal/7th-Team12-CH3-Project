@@ -4,6 +4,7 @@
 #include "DataAsset/EnemyDataAsset.h"
 #include "DSP/LFO.h"
 #include "Enemy/EnemyBase.h"
+#include "Enemy/Boss/BossEnemyActorComponent.h"
 #include "Engine/AssetManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Manager/AsyncDataManager.h"
@@ -108,7 +109,9 @@ int32 UMonsterManagerSubSystem::GetCachedSpawnerCount()
 void UMonsterManagerSubSystem::SpawnMonster(EMonsterType MonsterType, int32 SpawnPointIndex)
 {
 	AEnemyBase* EnemyToSpawn = nullptr;
+	UEnemyDataAsset* PDA=nullptr;
 	
+	UE_LOG(LogTemp,Warning,TEXT("SpawnMosnter"));
 	if (MonsterPool.Contains(MonsterType))
 	{
 		TArray<AEnemyBase*>& Pool = MonsterPool[MonsterType].Enemys;
@@ -126,7 +129,7 @@ void UMonsterManagerSubSystem::SpawnMonster(EMonsterType MonsterType, int32 Spaw
 		USyncDataManager* SyncData = USyncDataManager::Get(this);
 		FMonsterRowData RowData = SyncData->GetMonsterData(MonsterType);
 		FPrimaryAssetId AssetId("Enemy", RowData.MonsterPDAId);
-		UEnemyDataAsset* PDA = UAssetManager::Get().GetPrimaryAssetObject<UEnemyDataAsset>(AssetId); // 로드 되어있다고 가정
+		PDA = UAssetManager::Get().GetPrimaryAssetObject<UEnemyDataAsset>(AssetId); // 로드 되어있다고 가정
         
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -136,7 +139,10 @@ void UMonsterManagerSubSystem::SpawnMonster(EMonsterType MonsterType, int32 Spaw
 		{
 			EnemyToSpawn->SetupEnemy(PDA);
 			EnemyToSpawn->SetMonsterType(MonsterType);
+			
 		}
+		UE_LOG(LogTemp,Warning,TEXT("!EnemyToSpawn"));
+	
 	}
 	
 	if (EnemyToSpawn)
@@ -144,19 +150,37 @@ void UMonsterManagerSubSystem::SpawnMonster(EMonsterType MonsterType, int32 Spaw
 		if (CachedSpawners.IsValidIndex(SpawnPointIndex))
 		{
 			ASpawner* SelectedSpawner = CachedSpawners[SpawnPointIndex];
+			
 			EnemyToSpawn->SetActorLocationAndRotation(
-				SelectedSpawner->GetRandomPointInVolume(), 
-				SelectedSpawner->GetActorRotation()
+			SelectedSpawner->GetRandomPointInVolume(), 
+			SelectedSpawner->GetActorRotation()
 			);
+			
+			EnemyToSpawn->ResetEnemy();
+			EnemyToSpawn->SetActorHiddenInGame(false); // 끄면 숨김
+			EnemyToSpawn->SetActorTickEnabled(true);   // 끄면 멈춤
+			EnemyToSpawn->SetActorEnableCollision(true);
+			
+			//현석 : 보스 컴포넌트 추가
+			if (IsBossStage() && IsBossType(MonsterType))
+			{
+				UE_LOG(LogTemp,Warning,TEXT("BOSS"));
+				UBossEnemyActorComponent* BossEnemyActorComponent=NewObject<UBossEnemyActorComponent>(EnemyToSpawn, UBossEnemyActorComponent::StaticClass());
+				BossEnemyActorComponent->RegisterComponent();
+				EnemyToSpawn->AddInstanceComponent(BossEnemyActorComponent);
+				BossEnemyActorComponent->SetBoss();
+			}
+			
+
 		}
-		EnemyToSpawn->ResetEnemy();
-		EnemyToSpawn->SetActorHiddenInGame(false); // 끄면 숨김
-		EnemyToSpawn->SetActorTickEnabled(true);   // 끄면 멈춤
-		EnemyToSpawn->SetActorEnableCollision(true);
+		
+		
+
 		
 		if (IsBossStage() && !IsBossType(MonsterType))
 		{
-			EnemyToSpawn->SetHealth(1);
+			//현석 : 0으로 놓아도, HP의 변화가 있어야 죽기 때문에, 1대 맞으면 무조건 죽음.
+			EnemyToSpawn->SetHealth(0);
 		}
 	}
 	

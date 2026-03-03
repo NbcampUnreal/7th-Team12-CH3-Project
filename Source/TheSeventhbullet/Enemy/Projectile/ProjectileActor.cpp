@@ -24,6 +24,7 @@ AProjectileActor::AProjectileActor()
 	SphereComponent->SetCollisionProfileName(TEXT("BlockAll"));
 	SphereComponent->OnComponentHit.AddDynamic(this, &AProjectileActor::OnProjectileHit);
 	SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility,ECR_Ignore);
+	SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera,ECR_Ignore);
 	//스태틱 메시 설정 및 콜리전 해제
 	ProjectileStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	ProjectileStaticMesh->SetupAttachment(SphereComponent);

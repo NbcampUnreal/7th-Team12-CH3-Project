@@ -7,6 +7,7 @@
 #include "TheSeventhbullet/Enemy/Boss/BossPatternInfoDataAsset.h"
 #include "BossPatternDataAsset.generated.h"
 
+class UBossPatternComponentInterface;
 /**
  * Boss의 패턴 정보를 외부에서 주입하는 PDA입니다.
  */
@@ -28,5 +29,5 @@ public:
 	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data", meta=(AssetBundles="Enemy"))
-	TMap<FName,TSoftObjectPtr<UBossPatternInfoDataAsset>> PatternMap;
+	TMap<FString, TSubclassOf<UBossPatternComponentInterface>> PatternClasses;
 };

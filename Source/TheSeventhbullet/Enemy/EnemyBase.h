@@ -7,6 +7,9 @@
 #include "GameFramework/Character.h"
 #include "EnemyBase.generated.h"
 
+class UBossPatternComponentInterface;
+class UMainGameInstance;
+
 #pragma region DELEGATE
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterEventSignnature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnCharacterSetAISignnature,
@@ -42,7 +45,7 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	void SetHealth(float NewHealth);
+
 #pragma region DELEGATE METHOD
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnCharacterHit;
@@ -52,13 +55,13 @@ public:
 	FOnCharacterEventSignnature OnCharacterDead;
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnCharacterReset;
-	UPROPERTY(BlueprintAssignable, Category="Events")
-	FOnCharacterEventSignnature OnBossCanceled;
 	
 	//비헤이비어 트리 초기 세팅을 위한 델리게이트
 	UPROPERTY(BlueprintAssignable, Category="Settings")
 	FOnCharacterSetAISignnature OnCharacterSetAI;
-
+	
+	//가져온 PDA를 캐싱하기 위한 변수
+	TObjectPtr<UEnemyDataAsset> EnemyData;
 	
 #pragma endregion
 	
@@ -97,9 +100,9 @@ public:
 	UFUNCTION()
 	void DropItem();
 	
-	UFUNCTION(BlueprintCallable)
-	void SetBoss();
-	
+	virtual void SetHealth(float NewHealth);
+	float GetHealth();
+	float GetMaxHealth();
 
 protected:
 #pragma region EnemyStatus
@@ -123,8 +126,7 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy|Hit")
     UParticleSystem* HeadShotParticle;
 	
-	//가져온 PDA를 캐싱하기 위한 변수
-	TObjectPtr<UEnemyDataAsset> EnemyData;
+
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Enemy")
 	EMonsterType EnemyMonsterType;
@@ -160,10 +162,22 @@ protected:
 	void ReturnToPool();
 	
 	virtual void SetPattern(UBossPatternDataAsset* PatternData) PURE_VIRTUAL (AEnemyBase::SetBossPattern,);
-	virtual void PlayPattern(FName PatternName)PURE_VIRTUAL (AEnemyBase::PlayPattern,);;
+	virtual void PlayPattern(FString PatternName)PURE_VIRTUAL (AEnemyBase::PlayPattern,);
 private:
 	bool bIsDead;
 	// 주현 : 아이템이 혹시나 중복드랍되는 것을 막기 위한 boolean
 	bool bDroppedItem = false;
+	
+	float FinalDamage;
+	
+	//게임인스턴스
+	UPROPERTY()
+	TObjectPtr<UMainGameInstance> GI;
+	
+	//일차 캐싱
+	UPROPERTY()
+	int32 CurrentDay;
+	
+	
 	
 };

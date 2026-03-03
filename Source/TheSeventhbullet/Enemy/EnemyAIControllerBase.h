@@ -7,6 +7,7 @@
 #include "BehaviorTree/BehaviorTreeTypes.h"
 #include "EnemyAIControllerBase.generated.h"
 
+class AEnemyBase;
 /**
  * 적 AIController입니다.
  */
@@ -40,6 +41,7 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BehaviorTree|BBKey")
 	FName bIsHeadHitKey="bIsHeadHit";
 	
+	TObjectPtr<AEnemyBase> Enemy;
 	
 	//AI퍼셉션
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
@@ -65,8 +67,7 @@ protected:
 		float StrafeSpeed,
 		float EnemyAttackDelay
 		);
-	UFUNCTION()
-	void CancelEvent();
+
 	
 	
 	UFUNCTION()

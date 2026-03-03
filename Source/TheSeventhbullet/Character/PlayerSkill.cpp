@@ -104,7 +104,7 @@ void APlayerSkill::Explode()
 	// 감지된 액터 처리
 	for (AActor* HitActor : OverlapActors)
 	{
-		if (HitActor && (HitActor->ActorHasTag(FName("Enemy"))||HitActor->ActorHasTag(FName("Boss"))))
+		if (HitActor && (HitActor->ActorHasTag(FName("Enemy"))))
 		{
 			// 데미지 적용
 			UGameplayStatics::ApplyDamage(
