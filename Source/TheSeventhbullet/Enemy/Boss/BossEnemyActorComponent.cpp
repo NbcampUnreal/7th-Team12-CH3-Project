@@ -123,7 +123,7 @@ void UBossEnemyActorComponent::SetBoss()
 void UBossEnemyActorComponent::PlayPattern(FString PatternName)
 {
 	UE_LOG(LogTemp,Warning,TEXT("PlayPattern"));
-	if (SpawnedBossPattern.Find(PatternName)==nullptr)
+	if (SpawnedBossPattern.Find(PatternName)==nullptr||SpawnedBossPattern[PatternName]==nullptr)
 	{
 		return;
 	}
