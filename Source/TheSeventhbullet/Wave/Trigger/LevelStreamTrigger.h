@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "LevelStreamTrigger.generated.h"
 
+class UNiagaraComponent;
 class UBoxComponent;
 class ULoadingScreenWidget;
 
@@ -32,6 +33,8 @@ protected:
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trigger")
 	UBoxComponent* OverlapVolume;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trigger")
+	UNiagaraComponent* PortalEffectComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LevelStream")
 	FName LevelToLoad;
