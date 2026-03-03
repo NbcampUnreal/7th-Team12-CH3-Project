@@ -26,8 +26,7 @@ void UGemSocketSlotWidget::InitSlot(UEquipmentComponent* InEquipComp, UInventory
 		FSoulGemInstance Gem = EquipmentComp->GetSoulGemAt(SlotIndex);
 		if (Gem.IsValid())
 		{
-			CachedSoulGem = Gem;
-			UpdateTooltip(Gem, FPrimaryAssetId());
+			UpdateSlot(Gem, Gem.ItemID);
 		}
 		else
 		{

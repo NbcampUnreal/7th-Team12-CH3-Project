@@ -1,6 +1,8 @@
 #include "EquipmentComponent.h"
 #include "Character/MainCharacter.h"
 #include "DataAsset/WeaponDataAsset.h"
+#include "Manager/AsyncDataManager.h"
+#include "Manager/AsyncDataManager.h"
 
 void UEquipmentComponent::EquipSoulGem(const FSoulGemInstance& SoulGem, int32 SlotIndex)
 {
@@ -169,5 +171,32 @@ void UEquipmentComponent::ApplyWeapon()
 void UEquipmentComponent::LoadData(TArray<FSoulGemInstance>& LoadEquippedSoulGems)
 {
 	EquippedSoulGems = LoadEquippedSoulGems;
+
+	// InventoryComponent::LoadData 패턴: 소울젬 DA를 비동기 로드 후 UI 갱신
+	UAsyncDataManager* Mgr = UAsyncDataManager::Get(this);
+	if (!Mgr) return;
+
+	TArray<FPrimaryAssetId> IDsToLoad;
+	for (const FSoulGemInstance& Gem : EquippedSoulGems)
+	{
+		if (Gem.IsValid() && Gem.ItemID.IsValid() && !Mgr->IsAssetLoaded(Gem.ItemID))
+		{
+			IDsToLoad.AddUnique(Gem.ItemID);
+		}
+	}
+
+	if (IDsToLoad.Num() > 0)
+	{
+		FOnBundleLoadComplete OnLoaded;
+		OnLoaded.BindLambda([this]()
+		{
+			OnGemEquipmentChanged.Broadcast();
+		});
+		Mgr->LoadAssetsByID(IDsToLoad, {}, OnLoaded);
+	}
+	else
+	{
+		OnGemEquipmentChanged.Broadcast();
+	}
 }
 

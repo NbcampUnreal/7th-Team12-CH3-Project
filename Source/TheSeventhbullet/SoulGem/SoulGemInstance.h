@@ -8,6 +8,10 @@ struct THESEVENTHBULLET_API FSoulGemInstance
 {
 	GENERATED_BODY()
 	
+	// 이 소울젬의 DataAsset ID (저장/로드 시 아이콘 복원용)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SoulGem")
+	FPrimaryAssetId ItemID;
+
 	// GemName
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SoulGem")
 	FText GemName;
