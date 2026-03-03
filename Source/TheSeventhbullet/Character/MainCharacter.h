@@ -22,6 +22,9 @@ struct FInputActionValue;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHPChanged, float, CurrentHP, float, MaxHP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float, CurrentStamina, float, MaxStamina);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPotionChanged, int32, Count);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPotionCooldownStarted, float, CoolTime);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillCooldownStarted, float, CoolTime);
 
 UENUM(BlueprintType)
 enum class EAnimState : uint8
@@ -75,18 +78,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Stamina")
 	float StaminaRegenDelay = 1.f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Potion")
-	float HealAmount = 50.0f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Potion")
-	int32 MaxPotion = 7;
-	
-	int32 CurrentPotion =MaxPotion;
-	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-	
-	void HealHP();
-	void ResetPotion();
+
+	void UsePotion();
 
 #pragma endregion
 
@@ -189,7 +183,10 @@ public:
 	float RemainSkillCoolTime;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Skill")
 	bool bCanUseSkill = true;
-	
+
+	UPROPERTY(BlueprintAssignable, Category = "Skill")
+	FOnSkillCooldownStarted OnSkillCooldownStarted;
+
 	FTimerHandle SkillCoolTimerHandle;
 	
 	void ThrowGrenade();	// 스킬 실행
@@ -269,6 +266,18 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Status")
 	FOnStaminaChanged OnStaminaChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Potion")
+	FOnPotionChanged OnPotionChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Potion")
+	FOnPotionCooldownStarted OnPotionCooldownStarted;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
+	float PotionCoolTime = 5.f;
+
+	bool bPotionOnCooldown = false;
+	FTimerHandle PotionCoolTimerHandle;
 
 	float GetCurrentHP() const { return CurrentHP; }
 	float GetMaxHP() const { return static_cast<float>(TotalStatus.HP); }

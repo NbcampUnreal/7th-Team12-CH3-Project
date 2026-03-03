@@ -29,6 +29,8 @@ public:
 	void UpdateHP(float CurrentHP, float MaxHP);
 	UFUNCTION(BlueprintCallable, Category = "UI|HUD")
 	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
+	UFUNCTION(BlueprintCallable, Category = "UI|HUD")
+	void UpdatePotionCount(int32 Count);
 
 	// --- Wave Info ---
 	void ShowWaveInfo(int32 WaveNumber, float Countdown);
@@ -60,6 +62,17 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> MonsterCountText;
 
+	// --- Potion ---
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> PotionCountText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UProgressBar> PotionCooldownBar;
+
+	// --- Skill ---
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UProgressBar> SkillCooldownBar;
+
 	// --- 드랍 알림 ---
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UOverlay> DropNotifyBox;
@@ -78,6 +91,12 @@ private:
 	void OnHPChangedHandler(float CurrentHP, float MaxHP);
 	UFUNCTION()
 	void OnAmmoChangedHandler(int32 CurrentAmmo, int32 MaxAmmo);
+	UFUNCTION()
+	void OnPotionChangedHandler(int32 Count);
+	UFUNCTION()
+	void OnPotionCooldownStartedHandler(float CoolTime);
+	UFUNCTION()
+	void OnSkillCooldownStartedHandler(float CoolTime);
 
 	void ShowNextNotify();
 	void OnCurrentNotifyHideFinished();
@@ -94,6 +113,16 @@ private:
 	// --- Bar Lerp ---
 	float HPBarTarget = 1.f;
 	float HPBarCurrent = 1.f;
+
+	// --- Potion Cooldown ---
+	float CooldownTotal = 0.f;
+	float CooldownRemaining = 0.f;
+	bool bCooldownActive = false;
+
+	// --- Skill Cooldown ---
+	float SkillCooldownTotal = 0.f;
+	float SkillCooldownRemaining = 0.f;
+	bool bSkillCooldownActive = false;
 	UPROPERTY(EditDefaultsOnly, Category = "UI|HUD")
 	float BarLerpSpeed = 8.f;
 };

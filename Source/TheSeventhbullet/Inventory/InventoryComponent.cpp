@@ -329,6 +329,16 @@ FItemInstance UInventoryComponent::FindItemByID(FPrimaryAssetId ItemID) const
 	return FItemInstance();
 }
 
+int32 UInventoryComponent::GetCountByID(FPrimaryAssetId ItemID) const
+{
+	int32 Total = 0;
+	for (const FItemInstance& Item : Items)
+	{
+		if (Item.ItemID == ItemID) Total += Item.StackCount;
+	}
+	return Total;
+}
+
 int32 UInventoryComponent::FindStackableSlot(FPrimaryAssetId ItemID, int32 MaxStack) const
 {
 	for (int32 i = 0; i < Items.Num(); ++i)
