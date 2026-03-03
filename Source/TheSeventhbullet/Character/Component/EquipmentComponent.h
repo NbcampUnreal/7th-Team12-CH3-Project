@@ -36,8 +36,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
 	TObjectPtr<UWeaponDataAsset> PendingWeapon = nullptr;
 	
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void EquipWeaponData(UWeaponDataAsset* Weapon);
 	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	bool FindSpecialOption(ESpecialOptions Option);
