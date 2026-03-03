@@ -26,4 +26,9 @@ struct THESEVENTHBULLET_API FSoulGemInstance
 	// 참조를 하지는 않고, 어떤 재료로 조합된 것인지만 확인용.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SoulGem")
 	TArray<FName> SourceMaterialNames;
+
+	bool IsValid() const
+	{
+		return !GemName.IsEmpty();
+	}
 };

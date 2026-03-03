@@ -143,6 +143,42 @@ bool UInventoryComponent::AddItemInternal(FPrimaryAssetId ItemID, int32 Count)
 	return Remaining == 0;
 }
 
+bool UInventoryComponent::AddSoulGem(FPrimaryAssetId ItemID, const FSoulGemInstance& SoulGemData)
+{
+	UAsyncDataManager* Mgr = UAsyncDataManager::Get(this);
+	if (!Mgr) return false;
+
+	auto PlaceGem = [this, ItemID, SoulGemData]()
+	{
+		for (int32 i = 0; i < Items.Num(); ++i)
+		{
+			if (!Items[i].IsValid())
+			{
+				Items[i].ItemID = ItemID;
+				Items[i].StackCount = 1;
+				Items[i].SoulGemData = SoulGemData;
+				OnItemAdded.Broadcast(Items[i], i);
+				return;
+			}
+		}
+		UE_LOG(LogTemp, Warning, TEXT("[Inventory] SoulGem 추가 실패: 빈 슬롯 없음"));
+	};
+
+	if (!Mgr->IsAssetLoaded(ItemID))
+	{
+		TArray<FPrimaryAssetId> IDs;
+		IDs.Add(ItemID);
+
+		FOnBundleLoadComplete OnLoaded;
+		OnLoaded.BindLambda(PlaceGem);
+		Mgr->LoadAssetsByID(IDs, {}, OnLoaded);
+		return false;
+	}
+
+	PlaceGem();
+	return true;
+}
+
 bool UInventoryComponent::RemoveItemByIndex(int32 SlotIndex, int32 Count)
 {
 	if (!Items.IsValidIndex(SlotIndex) || Count <= 0) return false;
@@ -153,11 +189,11 @@ bool UInventoryComponent::RemoveItemByIndex(int32 SlotIndex, int32 Count)
 	int32 Removed = FMath::Min(Count, Slot.StackCount);
 	Slot.StackCount -= Removed;
 
-	FItemInstance RemovedItem(Slot.ItemID, Removed);
+	FItemInstance RemovedItem = Slot;
+	RemovedItem.StackCount = Removed;
 
 	if (Slot.StackCount <= 0)
 	{
-		//Items.RemoveAt(SlotIndex);
 		Items[SlotIndex] = FItemInstance();
 	}
 
@@ -179,11 +215,11 @@ bool UInventoryComponent::RemoveItemByID(FPrimaryAssetId ItemID, int32 Count)
 		Items[i].StackCount -= Removed;
 		Remaining -= Removed;
 
-		FItemInstance RemovedItem(ItemID, Removed);
+		FItemInstance RemovedItem = Items[i];
+		RemovedItem.StackCount = Removed;
 
 		if (Items[i].StackCount <= 0)
 		{
-			//Items.RemoveAt(i);
 			Items[i] = FItemInstance();
 		}
 

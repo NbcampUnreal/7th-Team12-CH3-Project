@@ -47,6 +47,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool HasEmptySlot() const { return Items.Num() < MaxSlots; }
 
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	bool AddSoulGem(FPrimaryAssetId ItemID, const FSoulGemInstance& SoulGemData);
+
 	// Drag & Drop
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool SwapSlots(int32 FromIndex, int32 ToIndex);

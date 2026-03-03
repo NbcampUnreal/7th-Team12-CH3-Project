@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SoulGem/SoulGemInstance.h"
 #include "ItemInstance.generated.h"
 
 USTRUCT(BlueprintType)
@@ -30,4 +31,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 StackCount = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FSoulGemInstance SoulGemData;
+
+	bool IsSoulGem() const
+	{
+		return SoulGemData.IsValid();
+	}
 };
