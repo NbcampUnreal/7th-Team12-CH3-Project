@@ -143,6 +143,55 @@ bool UInventoryComponent::AddItemInternal(FPrimaryAssetId ItemID, int32 Count)
 	return Remaining == 0;
 }
 
+bool UInventoryComponent::AddSoulGem(FPrimaryAssetId ItemID, const FSoulGemInstance& SoulGemData)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] 호출됨 - ItemID: %s, GemName: %s"), *ItemID.ToString(), *SoulGemData.GemName.ToString());
+
+	UAsyncDataManager* Mgr = UAsyncDataManager::Get(this);
+	if (!Mgr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[AddSoulGem] AsyncDataManager가 null"));
+		return false;
+	}
+
+	auto PlaceGem = [this, ItemID, SoulGemData]()
+	{
+		for (int32 i = 0; i < Items.Num(); ++i)
+		{
+			if (!Items[i].IsValid())
+			{
+				Items[i].ItemID = ItemID;
+				Items[i].StackCount = 1;
+				Items[i].SoulGemData = SoulGemData;
+				UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] PlaceGem 성공 - 슬롯: %d"), i);
+				OnItemAdded.Broadcast(Items[i], i);
+				return;
+			}
+		}
+		UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] PlaceGem 실패: 빈 슬롯 없음"));
+	};
+
+	if (!Mgr->IsAssetLoaded(ItemID))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] DA 미로드 → 비동기 로드 시작: %s"), *ItemID.ToString());
+		TArray<FPrimaryAssetId> IDs;
+		IDs.Add(ItemID);
+
+		FOnBundleLoadComplete OnLoaded;
+		OnLoaded.BindLambda([this, ItemID, PlaceGem]()
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] 비동기 로드 완료 콜백 - ItemID: %s"), *ItemID.ToString());
+			PlaceGem();
+		});
+		Mgr->LoadAssetsByID(IDs, {}, OnLoaded);
+		return false;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] DA 이미 로드됨 → 즉시 배치"));
+	PlaceGem();
+	return true;
+}
+
 bool UInventoryComponent::RemoveItemByIndex(int32 SlotIndex, int32 Count)
 {
 	if (!Items.IsValidIndex(SlotIndex) || Count <= 0) return false;
@@ -153,11 +202,11 @@ bool UInventoryComponent::RemoveItemByIndex(int32 SlotIndex, int32 Count)
 	int32 Removed = FMath::Min(Count, Slot.StackCount);
 	Slot.StackCount -= Removed;
 
-	FItemInstance RemovedItem(Slot.ItemID, Removed);
+	FItemInstance RemovedItem = Slot;
+	RemovedItem.StackCount = Removed;
 
 	if (Slot.StackCount <= 0)
 	{
-		//Items.RemoveAt(SlotIndex);
 		Items[SlotIndex] = FItemInstance();
 	}
 
@@ -179,11 +228,11 @@ bool UInventoryComponent::RemoveItemByID(FPrimaryAssetId ItemID, int32 Count)
 		Items[i].StackCount -= Removed;
 		Remaining -= Removed;
 
-		FItemInstance RemovedItem(ItemID, Removed);
+		FItemInstance RemovedItem = Items[i];
+		RemovedItem.StackCount = Removed;
 
 		if (Items[i].StackCount <= 0)
 		{
-			//Items.RemoveAt(i);
 			Items[i] = FItemInstance();
 		}
 

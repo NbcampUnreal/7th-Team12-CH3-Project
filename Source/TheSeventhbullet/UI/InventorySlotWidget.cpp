@@ -156,7 +156,17 @@ void UInventorySlotWidget::UpdateSlot(const FItemInstance& Item)
 		UItemTooltipWidget* TooltipWidget = CreateWidget<UItemTooltipWidget>(this, TooltipWidgetClass);
 		if (TooltipWidget)
 		{
-			TooltipWidget->SetItemInfo(ItemData->DisplayName, ItemData->Description, Item.StackCount, ItemData->Icon.Get());
+			FText DisplayName = ItemData->DisplayName;
+			FText Description = ItemData->Description;
+
+			// 소울젬이면 인스턴스 데이터에서 이름/설명 사용
+			if (Item.IsSoulGem())
+			{
+				DisplayName = Item.SoulGemData.GemName;
+				Description = FText::FromString(Item.SoulGemData.ToDescriptionString());
+			}
+
+			TooltipWidget->SetItemInfo(DisplayName, Description, Item.StackCount, ItemData->Icon.Get());
 			SetToolTip(TooltipWidget);
 		}
 	}

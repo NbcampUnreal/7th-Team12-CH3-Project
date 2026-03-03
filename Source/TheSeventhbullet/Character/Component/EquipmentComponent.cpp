@@ -16,6 +16,24 @@ void UEquipmentComponent::EquipSoulGem(const FSoulGemInstance& SoulGem, int32 Sl
 	UE_LOG(LogTemp, Warning, TEXT("OnGemEquipmentChanged : Gem"));
 }
 
+void UEquipmentComponent::UnequipSoulGem(int32 SlotIndex)
+{
+	if (!EquippedSoulGems.IsValidIndex(SlotIndex)) return;
+
+	EquippedSoulGems[SlotIndex] = FSoulGemInstance();
+	OnGemEquipmentChanged.Broadcast();
+	UE_LOG(LogTemp, Warning, TEXT("OnGemEquipmentChanged : UnequipGem SlotIndex=%d"), SlotIndex);
+}
+
+FSoulGemInstance UEquipmentComponent::GetSoulGemAt(int32 SlotIndex) const
+{
+	if (EquippedSoulGems.IsValidIndex(SlotIndex))
+	{
+		return EquippedSoulGems[SlotIndex];
+	}
+	return FSoulGemInstance();
+}
+
 void UEquipmentComponent::CollectStatusModifiers(TArray<FStatusModifier>& Mod) const
 {
 	for (const FSoulGemInstance& Gem : EquippedSoulGems)
