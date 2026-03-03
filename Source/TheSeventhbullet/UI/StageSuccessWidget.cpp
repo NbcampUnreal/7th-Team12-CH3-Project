@@ -1,10 +1,13 @@
 #include "StageSuccessWidget.h"
 #include "RewardEntryWidget.h"
+#include "Character/MainCharacter.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "System/MainGameMode.h"
 #include "Data/TableRowTypes.h"
+#include "Kismet/GameplayStatics.h"
+#include "Manager/SyncDataManager.h"
 
 void UStageSuccessWidget::NativeConstruct()
 {
@@ -49,6 +52,10 @@ void UStageSuccessWidget::OnReturnClicked()
 	AMainGameMode* GM = AMainGameMode::Get(this);
 	if (GM)
 	{
+		USyncDataManager* DataManager = USyncDataManager::Get(this);
+		FRequestRowData Data = DataManager->GetRequestData(GM->GetCurrentRequestID());
+		AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this,0));
+		Character->AddGold(Data.RequestGold);
 		GM->ReturnToTown();
 	}
 }

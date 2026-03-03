@@ -4,6 +4,7 @@
 #include "Manager/UIManager.h"
 #include "UI/StorageWidget.h"
 #include "UI/UITags.h"
+#include "UI/WeaponSelectWidget.h"
 
 AChestActor::AChestActor()
 {
@@ -34,6 +35,7 @@ void AChestActor::Interact(AActor* Interactor)
 	UStorageWidget* StorageWidget = Cast<UStorageWidget>(Widget);
 	if (StorageWidget)
 	{
-		StorageWidget->OpenStorage(InventoryComp, Player->InventoryComponent);
+		StorageWidget->OpenStorage(InventoryComp, Player->InventoryComponent,Player);
 	}
+	
 }

@@ -39,14 +39,22 @@ public:
 	void CollectStatusModifiers(TArray<FStatusModifier>& Mod) const;
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void EquipWeaponData(UWeaponDataAsset* Weapon);
+	FCharacterStat GetTotalGemStats() const;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
+	TObjectPtr<UWeaponDataAsset> PendingWeapon = nullptr;
+	
+	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	bool FindSpecialOption(ESpecialOptions Option);
 	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void SetPendingWeapon(UWeaponDataAsset* Weapon);
+	
 public:
-	FCharacterStat GetTotalGemStats() const;
-
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void ApplyWeapon();
+	
 	UFUNCTION()
 	void LoadData(TArray<FSoulGemInstance>& LoadEquippedSoulGems);
 public:
@@ -56,4 +64,7 @@ public:
 	// 장착된 무기가 변경
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnWeaponEquipmentChanged OnWeaponEquipmentChanged;
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Equipment")
+	UWeaponDataAsset* DefaultWeapon;
 };

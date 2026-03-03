@@ -95,6 +95,16 @@ void AMainGameMode::OnStageReady()
 {
 	UE_LOG(LogTemp, Log, TEXT("Stage Preparation Complete!"));
 	
+	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this,0));
+	if (Character)
+	{
+		UEquipmentComponent* EquipmentComponent = Character->GetComponentByClass<UEquipmentComponent>();
+		if (EquipmentComponent)
+		{
+			EquipmentComponent->ApplyWeapon();
+		}
+	}
+	
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
@@ -512,7 +522,6 @@ void AMainGameMode::ReturnToTown()
 	// 스테이지 데이터 초기화
 	CurrentWaveIndex = 0;
 	CurrentRequestID = INDEX_NONE;
-	
 
 	SpawnQueue.Empty();
 	SpawnTimer = 0.0f;
@@ -520,7 +529,17 @@ void AMainGameMode::ReturnToTown()
 	StageElapsedTime = 0.0f;
 	CurrentStageResult = EStageResult::None;
 	StageRewardItems.Empty();
-
+	
+	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this,0));
+	if (!Character) return;
+	
+	UEquipmentComponent* EquipmentComponent = Character->GetComponentByClass<UEquipmentComponent>();
+	if (!EquipmentComponent) return;
+	
+	EquipmentComponent->CurrentWeapon = nullptr;
+	Character->WeaponMeshComponent->SetStaticMesh(nullptr);
+	//플레이어 스탯 및 초기화
+	Character->Revive();
 	// UI 정리 + 로딩 화면 표시
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
@@ -580,14 +599,7 @@ void AMainGameMode::OnTownLevelLoaded()
 	{
 		UIMgr->Close(UITags::LoadingScreen);
 	}
-	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	if (!Character) return;
 	
-	UEquipmentComponent* EquipmentComponent = Character->GetComponentByClass<UEquipmentComponent>();
-	if (!EquipmentComponent) return;
-	
-	EquipmentComponent->CurrentWeapon = nullptr;
-
 	SetTownPhase(ETownPhase::WaitForNextDay);
 }
 
@@ -612,9 +624,29 @@ void AMainGameMode::ReturnToMainMenu()
 	AliveMonsterCount = 0;
 	SpawnTimer = 0.0f;
 	StageElapsedTime = 0.0f;
-	CurrentStageResult = EStageResult::None;
 	StageRewardItems.Empty();
-
+	
+	UMainGameInstance* GI = UMainGameInstance::Get(this);
+	if (!GI) return;
+	
+	if (CurrentStageResult == EStageResult::PlayerDead)
+	{
+		UE_LOG(LogTemp,Log,TEXT("PlayerDead"));
+		GI->ResetGameData();
+	}
+	CurrentStageResult = EStageResult::None;
+	
+	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this,0));
+	if (!Character) return;
+	Character->Revive();
+	UEquipmentComponent* EquipmentComponent = Character->GetComponentByClass<UEquipmentComponent>();
+	if (!EquipmentComponent) return;
+	
+	EquipmentComponent->CurrentWeapon = nullptr;
+	Character->WeaponMeshComponent->SetStaticMesh(nullptr);
+	//플레이어 스탯 및 초기화
+	Character->Revive();
+	
 	// L_Town을 제외한 모든 서브레벨 언로드
 	UWorld* World = GetWorld();
 	if (World)

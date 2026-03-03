@@ -290,7 +290,7 @@ public:
 	int32 GetGold();
 	UFUNCTION()
 	void AddGold(int32 Amount);
-
+	void ResetGold();
 private:
 	float CurrentHP = 0.f;
 	float CurrentStamina = 0.f;
