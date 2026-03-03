@@ -23,6 +23,8 @@ protected:
 private:
 	UPROPERTY()
 	TObjectPtr<AActor> CachedInteractor;
+	UPROPERTY()
+	int32 BettingGold = 0;
 	
 	UFUNCTION()
 	void OnInteractionResult(const FGambleResultData& GambleData);
@@ -32,6 +34,9 @@ private:
 	
 	UFUNCTION(BlueprintCallable, Category = "Gamble")
 	void OnDialogueConfirmed();
+	
+	UFUNCTION(BlueprintCallable, Category = "Gamble")
+	void OnBettingGoldChose(int32 InBettingGold);
 	
 	UFUNCTION(BlueprintCallable, Category = "Gamble")
 	void OnDialogueCancelled();
