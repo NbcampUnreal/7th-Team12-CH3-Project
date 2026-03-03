@@ -1,10 +1,11 @@
 #include "CraftingActor.h"
 #include "CraftingComponent.h"
 #include "Character/MainCharacter.h"
+#include "Character/Component/EquipmentComponent.h"
 #include "Inventory/InventoryComponent.h"
 #include "Manager/UIManager.h"
 #include "UI/UITags.h"
-#include "UI/CraftingWidget.h"
+#include "UI/CraftingMenuWidget.h"
 
 ACraftingActor::ACraftingActor()
 {
@@ -29,10 +30,10 @@ void ACraftingActor::Interact(AActor* Interactor)
 		return;
 	}
 
-	UUserWidget* Widget = UIMgr->Open(UITags::Crafting);
-	UCraftingWidget* CraftingWidget = Cast<UCraftingWidget>(Widget);
-	if (CraftingWidget)
+	UUserWidget* Widget = UIMgr->Open(UITags::CraftingMenu);
+	UCraftingMenuWidget* MenuWidget = Cast<UCraftingMenuWidget>(Widget);
+	if (MenuWidget)
 	{
-		CraftingWidget->OpenCrafting(CraftingComp, Player->InventoryComponent);
+		MenuWidget->SetCraftingContext(CraftingComp, Player->InventoryComponent, Player->EquipmentComponent);
 	}
 }

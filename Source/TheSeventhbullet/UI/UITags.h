@@ -30,4 +30,6 @@ namespace UITags
 	const FName TownHUD        = FName(TEXT("TownHUD"));
 	const FName Crafting       = FName(TEXT("Crafting"));
 	const FName CraftResult    = FName(TEXT("CraftResult"));
+	const FName CraftingMenu   = FName(TEXT("CraftingMenu"));
+	const FName GemSocket      = FName(TEXT("GemSocket"));
 }
