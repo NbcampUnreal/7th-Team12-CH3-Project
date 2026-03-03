@@ -91,7 +91,7 @@ void UWeaponSlotWidget::OnWeaponDataLoaded()
 		return;
 	}
 
-	EquippedComp->CurrentWeapon = WeaponData;
+	EquippedComp->EquipWeaponData(WeaponData);
 
 	UE_LOG(LogTemp, Log, TEXT("[WeaponSlotWidget] 무기 장착 완료: %s"), *WeaponAssetId.ToString());
 }
