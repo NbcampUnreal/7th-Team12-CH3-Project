@@ -1,5 +1,6 @@
 #include "LevelStreamTrigger.h"
 
+#include "NiagaraComponent.h"
 #include "Character/MainCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -13,9 +14,12 @@ ALevelStreamTrigger::ALevelStreamTrigger()
 
 	OverlapVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("OverlapVolume"));
 	RootComponent = OverlapVolume;
-
+	
 	OverlapVolume->SetCollisionProfileName(TEXT("Trigger"));
 	OverlapVolume->SetBoxExtent(FVector(100.f, 100.f, 100.f));
+	
+	PortalEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("PortalComp"));
+	PortalEffectComponent->SetupAttachment(RootComponent);
 }
 
 void ALevelStreamTrigger::BeginPlay()
