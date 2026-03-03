@@ -198,7 +198,7 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 	SetHealth(NowHealth - FinalDamage);
 
 	// 적 캐릭터가 처음 죽었을 경우
-	if (!bIsDead && FMath::IsNearlyZero(NowHealth)&&(!this->Tags.Find("Boss")))
+	if (!bIsDead && FMath::IsNearlyZero(NowHealth)&&(!this->Tags.Contains("Boss")))
 	{
 		//사망 처리
 		bIsDead = true;

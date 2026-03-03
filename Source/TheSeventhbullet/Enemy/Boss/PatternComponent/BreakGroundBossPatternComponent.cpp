@@ -65,6 +65,32 @@ void UBreakGroundBossPatternComponent::BossMonsterPlayPattern()
 	}
 }
 
+void UBreakGroundBossPatternComponent::BreakGround()
+{
+	if (GetWorld()==nullptr)
+	{
+		return;
+	}
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(),BP_AnchorField,AnchorFields);
+	for (auto& Anchor : AnchorFields)
+	{
+		Anchor->Destroy();
+	}
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(),BP_MasterField,MasterFields);
+	for (auto& MasterField : MasterFields)
+	{
+		UFunction* TriggerFunc = MasterField->FindFunction(FName("CE_Trigger"));
+		if (TriggerFunc!=nullptr)
+		{
+			MasterField->ProcessEvent(TriggerFunc, nullptr);
+		}
+		else
+		{
+			UE_LOG(LogTemp,Warning,TEXT("Cannot Find CE_Trigger"));
+		}
+	}
+}
+
 void UBreakGroundBossPatternComponent::OnBossSequenceFinishedDelegate()
 {
 	if (BossBrainComponent!=nullptr)

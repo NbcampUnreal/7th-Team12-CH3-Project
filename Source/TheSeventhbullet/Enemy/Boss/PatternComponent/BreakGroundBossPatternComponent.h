@@ -7,6 +7,7 @@
 #include "MovieSceneObjectBindingID.h"
 #include "BreakGroundBossPatternComponent.generated.h"
 
+class AFieldSystemActor;
 class ULevelSequence;
 struct FMovieSceneBinding;
 UCLASS(ClassGroup=(Custom),Blueprintable, meta=(BlueprintSpawnableComponent))
@@ -17,6 +18,9 @@ class THESEVENTHBULLET_API UBreakGroundBossPatternComponent : public UBossPatter
 public:
 	virtual void BossMonsterPlayPattern() override;
 	
+	UFUNCTION(BlueprintCallable)
+	void BreakGround();
+	
 protected:
 
 	FMovieSceneObjectBindingID CharacterBinding;
@@ -25,5 +29,16 @@ protected:
 	TArray<AActor*> CharacterActors;
 	TArray<AActor*> BossActors;
 	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> BP_AnchorField;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> BP_MasterField;
+	
 	virtual void OnBossSequenceFinishedDelegate() override;
+	
+	
+	
+private:
+	TArray<AActor*> AnchorFields;
+	TArray<AActor*> MasterFields;
 };
