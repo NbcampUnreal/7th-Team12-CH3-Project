@@ -94,6 +94,8 @@ void UCharacterAnimInstance::AnimNotify_EndSkill()
 {
 	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(TryGetPawnOwner()))
 	{
+		MainCharacter->bIsUsingSkill = false;
+		MainCharacter->CurrentState = EAnimState::None;
 		MainCharacter->ShowWeaponMesh();
 	}
 }
@@ -110,7 +112,6 @@ void UCharacterAnimInstance::AnimNotify_Start_Invicible()
 {
 	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(TryGetPawnOwner()))
 	{
-		MainCharacter->bIsDodge = true;
 		MainCharacter->bIsInvicible = true;
 	}
 }
