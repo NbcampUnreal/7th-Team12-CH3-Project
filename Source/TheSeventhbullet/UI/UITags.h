@@ -32,4 +32,6 @@ namespace UITags
 	const FName CraftResult    = FName(TEXT("CraftResult"));
 	const FName CraftingMenu   = FName(TEXT("CraftingMenu"));
 	const FName GemSocket      = FName(TEXT("GemSocket"));
+	const FName RandomMat      = FName(TEXT("RandomMat"));
+	const FName ConfirmDialog  = FName(TEXT("ConfirmDialog"));
 }

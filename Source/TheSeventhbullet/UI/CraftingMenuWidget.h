@@ -3,12 +3,13 @@
  * CraftingMenuWidget - 제작대 선택지 UI
  *
  * CraftingActor 상호작용 시 열리는 선택 메뉴.
- * "제작" / "장착" / "닫기" 3개 버튼.
+ * "제작" / "장착" / "재료 변환" / "닫기" 4개 버튼.
  *
  * [레이아웃]
  *   ┌─ CraftingMenuWidget ──────┐
  *   │   [제작]                   │
  *   │   [장착]                   │
+ *   │   [재료 변환]              │
  *   │   [닫기]                   │
  *   └───────────────────────────┘
  */
@@ -43,6 +44,9 @@ protected:
 	TObjectPtr<UButton> EquipButton;
 
 	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> RandomMatButton;
+
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> CloseButton;
 
 private:
@@ -51,6 +55,9 @@ private:
 
 	UFUNCTION()
 	void OnEquipClicked();
+
+	UFUNCTION()
+	void OnRandomMatClicked();
 
 	UFUNCTION()
 	void OnCloseClicked();

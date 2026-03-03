@@ -1,9 +1,12 @@
 #include "GemSocketSlotWidget.h"
+#include "ConfirmDialogWidget.h"
 #include "InventoryDragDropOperation.h"
 #include "ItemTooltipWidget.h"
+#include "UITags.h"
 #include "Components/SizeBox.h"
 #include "Components/Image.h"
 #include "Manager/AsyncDataManager.h"
+#include "Manager/UIManager.h"
 #include "DataAsset/SoulGemDataAsset.h"
 #include "Character/Component/EquipmentComponent.h"
 #include "Inventory/InventoryComponent.h"
@@ -15,6 +18,7 @@ void UGemSocketSlotWidget::InitSlot(UEquipmentComponent* InEquipComp, UInventory
 	EquipmentComp = InEquipComp;
 	PlayerInventory = InPlayerInv;
 	SlotIndex = InSlotIndex;
+	bPendingConfirm = false;
 
 	// 기존 장착 상태 표시
 	if (EquipmentComp)
@@ -23,7 +27,6 @@ void UGemSocketSlotWidget::InitSlot(UEquipmentComponent* InEquipComp, UInventory
 		if (Gem.IsValid())
 		{
 			CachedSoulGem = Gem;
-			// ItemID는 알 수 없으므로 아이콘 없이 툴팁만 표시
 			UpdateTooltip(Gem, FPrimaryAssetId());
 		}
 		else
@@ -50,6 +53,12 @@ bool UGemSocketSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDrag
 		return false;
 	}
 
+	// 확인 모달 대기 중이면 추가 드롭 거부
+	if (bPendingConfirm)
+	{
+		return false;
+	}
+
 	// 소울젬인지 체크
 	const FItemInstance& DraggedItem = DragOp->DraggedItem;
 	if (!DraggedItem.IsSoulGem())
@@ -57,20 +66,75 @@ bool UGemSocketSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDrag
 		return false;
 	}
 
-	// 소울젬 장착 (기존 소울젬이 있으면 덮어쓰기 — 기존 젬은 파괴)
-	EquipmentComp->EquipSoulGem(DraggedItem.SoulGemData, SlotIndex);
+	// 빈 슬롯이면 즉시 장착
+	if (!CachedSoulGem.IsValid())
+	{
+		ExecuteEquip(DraggedItem.SoulGemData, DraggedItem.ItemID,
+			DragOp->SourceInventory, DragOp->SourceSlotIndex);
+		return true;
+	}
+
+	// 이미 장착된 슬롯 → 확인 모달
+	bPendingConfirm = true;
+
+	// 드롭은 수락하되 인벤토리에서 아직 제거하지 않고 캐싱
+	FSoulGemInstance PendingSoulGem = DraggedItem.SoulGemData;
+	FPrimaryAssetId PendingItemID = DraggedItem.ItemID;
+	UInventoryComponent* SourceInv = DragOp->SourceInventory;
+	int32 SourceSlotIdx = DragOp->SourceSlotIndex;
+
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (!UIMgr)
+	{
+		bPendingConfirm = false;
+		return false;
+	}
+
+	UUserWidget* DialogWidget = UIMgr->Open(UITags::ConfirmDialog);
+	UConfirmDialogWidget* ConfirmDialog = Cast<UConfirmDialogWidget>(DialogWidget);
+	if (!ConfirmDialog)
+	{
+		bPendingConfirm = false;
+		return false;
+	}
+
+	ConfirmDialog->ShowDialog(
+		FText::FromString(TEXT("기존 소울젬은 파괴됩니다.\n교체하시겠습니까?")),
+		FOnConfirmDialogResult::CreateWeakLambda(this,
+			[this, PendingSoulGem, PendingItemID, SourceInv, SourceSlotIdx](bool bConfirmed)
+			{
+				bPendingConfirm = false;
+
+				if (bConfirmed)
+				{
+					ExecuteEquip(PendingSoulGem, PendingItemID, SourceInv, SourceSlotIdx);
+				}
+			})
+	);
+
+	return true;
+}
+
+void UGemSocketSlotWidget::ExecuteEquip(const FSoulGemInstance& SoulGemData, FPrimaryAssetId ItemID,
+	UInventoryComponent* SourceInv, int32 SourceSlotIndex)
+{
+	if (!EquipmentComp) return;
+
+	// 소울젬 장착 (기존 젬 덮어쓰기 = 파괴)
+	EquipmentComp->EquipSoulGem(SoulGemData, SlotIndex);
 
 	// 인벤토리에서 제거
-	DragOp->SourceInventory->RemoveItemByIndex(DragOp->SourceSlotIndex, 1);
+	if (SourceInv)
+	{
+		SourceInv->RemoveItemByIndex(SourceSlotIndex, 1);
+	}
 
 	// 캐싱
-	CachedItemID = DraggedItem.ItemID;
-	CachedSoulGem = DraggedItem.SoulGemData;
+	CachedItemID = ItemID;
+	CachedSoulGem = SoulGemData;
 
 	// 아이콘 및 툴팁 업데이트
 	UpdateSlot(CachedSoulGem, CachedItemID);
-
-	return true;
 }
 
 void UGemSocketSlotWidget::UpdateSlot(const FSoulGemInstance& SoulGem, FPrimaryAssetId InItemID)

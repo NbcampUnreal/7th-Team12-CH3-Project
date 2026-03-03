@@ -3,13 +3,13 @@
  * GemSocketSlotWidget - 소울젬 장착 슬롯 위젯
  *
  * 인벤토리에서 소울젬을 드래그하여 드롭하면 장착.
- * 이미 장착된 슬롯에 드롭하면 기존 소울젬은 파괴되고 새 소울젬으로 교체.
+ * 이미 장착된 슬롯에 드롭하면 확인 모달 표시 후 교체 (기존 젬 파괴).
  * 장착만 가능하며 탈착은 불가.
  *
  * [사용법]
  *   1. GemSocketWidget에서 7개 슬롯을 BindWidget으로 배치
  *   2. InitSlot(EquipmentComp, PlayerInv, SlotIndex)로 초기화
- *   3. 소울젬 드래그 드롭 → 장착 (덮어쓰기 가능)
+ *   3. 소울젬 드래그 드롭 → 빈 슬롯: 즉시 장착 / 점유 슬롯: 확인 모달 → 장착
  */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
@@ -54,6 +54,10 @@ private:
 	void LoadAndSetIcon(FPrimaryAssetId ItemID);
 	void UpdateTooltip(const FSoulGemInstance& SoulGem, FPrimaryAssetId ItemID);
 
+	// 실제 장착 수행
+	void ExecuteEquip(const FSoulGemInstance& SoulGemData, FPrimaryAssetId ItemID,
+		UInventoryComponent* SourceInv, int32 SourceSlotIndex);
+
 	UPROPERTY()
 	TObjectPtr<UEquipmentComponent> EquipmentComp;
 
@@ -64,4 +68,7 @@ private:
 
 	FPrimaryAssetId CachedItemID;
 	FSoulGemInstance CachedSoulGem;
+
+	// 확인 모달 대기 중 캐시
+	bool bPendingConfirm = false;
 };
