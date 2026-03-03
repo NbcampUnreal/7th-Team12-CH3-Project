@@ -13,6 +13,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WeaponSelectWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "StorageWidget.generated.h"
 
@@ -28,8 +29,8 @@ class THESEVENTHBULLET_API UStorageWidget : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "UI|Storage")
-	void OpenStorage(UInventoryComponent* ChestInv, UInventoryComponent* PlayerInv);
-
+	void OpenStorage(UInventoryComponent* ChestInv, UInventoryComponent* PlayerInv, AMainCharacter* InPlayer);
+	
 protected:
 	virtual void NativeConstruct() override;
 
@@ -41,7 +42,10 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> CloseButton;
-
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UWeaponSelectWidget> WeaponSelectPanel;
+	
 private:
 	UFUNCTION()
 	void OnCloseClicked();

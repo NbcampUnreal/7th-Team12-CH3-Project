@@ -15,7 +15,7 @@ void UStorageWidget::NativeConstruct()
 	}
 }
 
-void UStorageWidget::OpenStorage(UInventoryComponent* ChestInv, UInventoryComponent* PlayerInv)
+void UStorageWidget::OpenStorage(UInventoryComponent* ChestInv, UInventoryComponent* PlayerInv, AMainCharacter* InPlayer)
 {
 	if (ChestInventoryPanel && ChestInv)
 	{
@@ -26,13 +26,22 @@ void UStorageWidget::OpenStorage(UInventoryComponent* ChestInv, UInventoryCompon
 	{
 		PlayerInventoryPanel->SetInventoryComponent(PlayerInv);
 	}
+	if (WeaponSelectPanel && InPlayer)
+	{
+		WeaponSelectPanel->InitWeaponSelect(InPlayer);
+	}
 }
 
 void UStorageWidget::OnCloseClicked()
 {
+	UE_LOG(LogTemp,Log,TEXT("Close Button Click"));
 	UUIManager* UIMgr = UUIManager::Get(this);
-	if (UIMgr)
-	{
-		UIMgr->Close(UITags::Storage);
-	}
+	if (!UIMgr) return;
+	//
+	// if (UIMgr->IsOpen(UITags::WeaponStorage))
+	// {
+	// 	UIMgr->Close(UITags::WeaponStorage);
+	// }
+    
+	UIMgr->Close(UITags::Storage);
 }
