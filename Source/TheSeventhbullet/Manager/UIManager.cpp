@@ -301,12 +301,14 @@ void UUIManager::UpdateInputMode()
 	if (ModalStack.Num() > 0)
 	{
 		PC->SetShowMouseCursor(true);
+		PC->SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
 		SetGameplayInputEnabled(false);
 		UGameplayStatics::SetGamePaused(World, false);
 	}
 	else if (ActiveMenu)
 	{
 		PC->SetShowMouseCursor(true);
+		PC->SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
 		SetGameplayInputEnabled(false);
 		bool bShouldPause = (ActiveMenuTag == UITags::EscMenu);
 		UGameplayStatics::SetGamePaused(World, bShouldPause);
@@ -314,12 +316,14 @@ void UUIManager::UpdateInputMode()
 	else if (ActiveGameMenu)
 	{
 		PC->SetShowMouseCursor(true);
+		PC->SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
 		SetGameplayInputEnabled(false);
 		UGameplayStatics::SetGamePaused(World, false);
 	}
 	else
 	{
 		PC->SetShowMouseCursor(false);
+		PC->SetInputMode(FInputModeGameOnly());
 		SetGameplayInputEnabled(true);
 		UGameplayStatics::SetGamePaused(World, false);
 	}
