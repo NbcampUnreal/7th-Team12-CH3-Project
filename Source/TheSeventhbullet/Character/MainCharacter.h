@@ -43,14 +43,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	/*virtual float TakeDamage(
-		float DamageAmount,
-		struct FDamageEvent const& DamageEvent,
-		class AController* EventInstigator,
-		AActor* DamageCauser
-		) override;*/
-	
-	EAnimState CurrentState = EAnimState::None;	// 애니메이션 상태별 출력을 위한 Enum
 	
 	UPROPERTY(EditDefaultsOnly, Category="Animation|Montage")
 	TMap<EAnimState, TObjectPtr<UAnimMontage>> MontagesMap;	// 애니메이션 몽타주 저장 변수
@@ -62,6 +54,7 @@ protected:
 	int32 Gold = 10000;
 	
 public:	
+	EAnimState CurrentState = EAnimState::None;	// 애니메이션 상태별 출력을 위한 Enum
 	
 #pragma region Status
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
@@ -147,6 +140,11 @@ public:
 	float NormalFOV;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
 	float AimingFOV;
+
+	float SmoothedCameraZ;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
+	float CameraLerpValueZ = 10.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
 	float CameraInterpSpeed;
@@ -199,7 +197,7 @@ public:
 	void ShowWeaponMesh();
 	float GetSkillCoolTime();
 	
-	bool bIsUseSkill = false;
+	bool bIsUsingSkill = false;
 	
 #pragma endregion
 	
@@ -242,7 +240,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void HandleEquipmentChanged();
 		
+protected:
+	void PauseAnim();
+	
 #pragma region Interaction
+public:
 	void SetCurrentInteractable(IInteractableInterface* Interactable);
 	IInteractableInterface* GetCurrentInteractable() const;
 private:
@@ -278,6 +280,9 @@ public:
 	UFUNCTION()
 	void OnDeath();
 
+	UFUNCTION()
+	void Revive();
+	
 	UFUNCTION()
 	void LoadData(FCharacterStat& LoadTotalCharacterStatus, int32 CharacterGold);
 

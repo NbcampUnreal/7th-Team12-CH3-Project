@@ -9,6 +9,7 @@
 #include "Component/CombatComponent.h" // 주현 : CombatComponent
 #include "Component/EquipmentComponent.h" // 주현 : EquipmentComponent
 #include "Component/StatusComponent.h" // StatusComponent
+#include "Components/CapsuleComponent.h"
 #include "DataAsset/WeaponDataAsset.h"
 #include "Inventory/InventoryComponent.h" // Inventory
 #include "UI/UITags.h"
@@ -16,6 +17,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Misc/MapErrors.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Hearing.h"
 #include "System/MainGameMode.h"
@@ -82,7 +84,9 @@ void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	UE_LOG(LogTemp, Warning, TEXT("[MainCharacter] BeginPlay - World: %s, Name: %s"), GetWorld() ? *GetWorld()->GetName() : TEXT("NULL"), *GetName());
-
+	
+	SmoothedCameraZ = GetActorLocation().Z;
+	
 	if (AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
@@ -209,10 +213,14 @@ float AMainCharacter::GetSkillCoolTime()
 
 void AMainCharacter::Fire()
 {
-	bIsFire = true;
-	
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 	
+	if (CurrentState != EAnimState::None|| bIsReload || IsFalling())
+	{
+		return; 
+	}
+	
+	bIsFire = true;
 	UpdateRotationState();
 	
 	float ResetInterval = EquipmentComponent->CurrentWeapon->FireInterval + 0.3;
@@ -324,7 +332,7 @@ bool AMainCharacter::IsFalling()
 
 bool AMainCharacter::IsUseSkill()
 {
-	return bIsUseSkill;
+	return bIsUsingSkill;
 }
 
 void AMainCharacter::PlayAnimMotageByState(EAnimState AnimState)
@@ -349,9 +357,6 @@ void AMainCharacter::PlayAnimMotageByState(EAnimState AnimState)
 void AMainCharacter::EndedAnimMontage(UAnimMontage* Montage, bool Interrupted)
 {
 	CurrentState = EAnimState::None;
-	
-	bIsDodge = false;
-	bIsInvicible = false;
 	
 	UpdateRotationState();
 	
@@ -568,6 +573,15 @@ void AMainCharacter::Tick(float DeltaTime)
 	float TargetFOV = bIsAiming ? AimingFOV : NormalFOV;
 	FVector TargetOffset = bIsAiming ? AimingSpringArm : NormalSpringArm;
 	
+	FVector CurrentLocation = GetActorLocation();
+	
+	SmoothedCameraZ = FMath::FInterpTo(SmoothedCameraZ, CurrentLocation.Z, DeltaTime, CameraLerpValueZ);
+	float ZDifference = SmoothedCameraZ - CurrentLocation.Z;
+	
+	if (SpringArm)
+	{
+		SpringArm->TargetOffset = FVector(0.0f, 0.0f, ZDifference);
+	}
 	
 	// Length 보간
 	float NewArmLength = FMath::FInterpTo(
@@ -668,23 +682,20 @@ void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 	
 	if (!EquipmentComponent->CurrentWeapon) return;
 	
-	if (CurrentState != EAnimState::None || bIsDodge || GetCharacterMovement()->IsFalling())
+	if (bIsDodge || GetCharacterMovement()->IsFalling())
 	{
 		return;
 	}
 	
-	UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
-	if (CharacterAnimInstance && CharacterAnimInstance->IsAnyMontagePlaying())
-	{
-		return;
-	}
-
 	// 스태미나 부족 시 Dodge 불가
 	if (CurrentStamina < DodgeStaminaCost)
 	{
 		return;
 	}
 
+	bIsDodge = true; 
+	CurrentState = EAnimState::Dodge;
+	
 	// 스태미나 소모
 	CurrentStamina = FMath::Max(CurrentStamina - DodgeStaminaCost, 0.f);
 	OnStaminaChanged.Broadcast(CurrentStamina, GetMaxStamina());
@@ -705,13 +716,19 @@ void AMainCharacter::PlayerDodge(const FInputActionValue& value)
 		SetActorRotation(Direction);
 	}
 		
+	UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+	if (AnimInstance)
+	{
+		AnimInstance->Montage_Stop(0.15f);
+	}
+	
 	// AnimMontage 재생
 	PlayAnimMotageByState(EAnimState::Dodge);
 }
 
 void AMainCharacter::UpdateRotationState()
 {
-	if (bIsAiming || bIsFire || bIsUseSkill)
+	if (bIsAiming || bIsFire || bIsUsingSkill)
 	{
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		bUseControllerRotationYaw = true;
@@ -737,8 +754,7 @@ void AMainCharacter::PlayerAim(const FInputActionValue& value)
 	if (bIsDodge) return;
 	
 	bIsAiming = true;
-	// GetCharacterMovement()->bOrientRotationToMovement = false;
-	// bUseControllerRotationYaw = true;		// 카메라와 캐릭터 방향 분리 
+	
 	UpdateRotationState();
 	
 	if (GetCharacterMovement())
@@ -750,8 +766,7 @@ void AMainCharacter::PlayerAim(const FInputActionValue& value)
 void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 {
 	bIsAiming = false;
-	// GetCharacterMovement()->bOrientRotationToMovement = true;
-	// bUseControllerRotationYaw = false;		// 카메라와 캐릭터 방향 분리해제 
+	
 	UpdateRotationState();
 	
 	if (GetCharacterMovement())
@@ -761,15 +776,15 @@ void AMainCharacter::PlayerAimFinished(const FInputActionValue& value)
 }
 
 void AMainCharacter::PlayerFire(const FInputActionValue& value)
-{
-	bIsFireButtonPressed = true;
-	
+{	
 	if (CombatComponent == nullptr || EquipmentComponent->CurrentWeapon == nullptr)	return;
 	
-	if (bIsDodge || bIsReload || IsFalling())
+	if (CurrentState != EAnimState::None|| bIsReload || IsFalling())
 	{
 		return;
 	}
+	
+	bIsFireButtonPressed = true;
 	
 	// FireRate 0일 때 방어코드
 	float FireRate = EquipmentComponent->CurrentWeapon->FireInterval;
@@ -809,10 +824,22 @@ void AMainCharacter::PlayerSkill(const FInputActionValue& value)
 		bCanUseSkill = false;
 		
 		// Skill 사용시 카메라 모드 변경
-		bIsUseSkill = true;
+		bIsUsingSkill = true;
+		
+		CurrentState = EAnimState::Skill; 
+		GetWorldTimerManager().ClearTimer(FireTimerHandle);
+		
 		UpdateRotationState();
 		
 		WeaponMeshComponent->SetVisibility(false, true);
+		
+		UCharacterAnimInstance* AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Stop(0.15f);
+		}
+		
+		PlayAnimMotageByState(EAnimState::Skill);
 		
 		GetWorld()->GetTimerManager().SetTimer(
 			SkillCoolTimerHandle,
@@ -821,13 +848,6 @@ void AMainCharacter::PlayerSkill(const FInputActionValue& value)
 			SkillCoolTime,
 			false
 		);
-		
-		UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()); 
-		
-		if (CharacterAnimInstance && !CharacterAnimInstance->IsAnyMontagePlaying())
-		{
-			PlayAnimMotageByState(EAnimState::Skill);
-		}
 	}
 	else
 	{
@@ -838,7 +858,7 @@ void AMainCharacter::PlayerSkill(const FInputActionValue& value)
 
 void AMainCharacter::FinishSkill(const FInputActionValue& value)
 {
-	bIsUseSkill = false;
+	bIsUsingSkill = false;
 	UpdateRotationState();
 }
 
@@ -883,14 +903,7 @@ void AMainCharacter::PlayerStartReload(const FInputActionValue& value)
 	GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
 	
 	Reload();
-	// bIsReload = true;
-	// GetWorldTimerManager().SetTimer(
-	// ReloadTimerHandle, 
-	// this, 
-	// &AMainCharacter::Reload,
-	// EquipmentComponent->CurrentWeapon->ReloadTime, 
-	// false
-	// );
+
 	
 }
 
@@ -977,9 +990,63 @@ void AMainCharacter::OnDeath()
 	if (GM)
 	{
 		GM->OnPlayerDead();
+	}
+	
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		DisableInput(PC);	// 입력 차단
+		PC->bShowMouseCursor = true;	// 마우스 커서 보이게 하기
+		
+		FInputModeUIOnly InputModeData;	// UI에만 입력 값 넣기
+		InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);	// 커서 화면 잠금
+		PC->SetInputMode(InputModeData);
+		
+		// Death 후 캐릭터 Collision Off
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		
 		PlayAnimMotageByState(EAnimState::Death);
+		float MontageLength = MontagesMap[EAnimState::Death].Get()->GetPlayLength(); 
 		
+		if (MontageLength > 0.f)
+		{
+			FTimerHandle DeathAnimTimer;
+			
+			GetWorldTimerManager().SetTimer(
+				DeathAnimTimer,
+				this, 
+				&AMainCharacter::PauseAnim, 
+				MontageLength - 0.3f, 
+				false
+			);
+		}
+	}
+}
+
+void AMainCharacter::Revive()
+{
+	CurrentHP = TotalStatus.HP;
+	CurrentStamina = TotalStatus.Stamina;
+	
+	if (GetCapsuleComponent())
+	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+	
+	if (GetMesh())
+	{
+		GetMesh()->bPauseAnims = false;
+	}
+	
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		PC->bShowMouseCursor = false;
+		
+		EnableInput(PC);
+		
+		FInputModeGameOnly InputModeData;
+		PC->SetInputMode(InputModeData);
 	}
 }
 
@@ -1015,4 +1082,12 @@ void AMainCharacter::StartStaminaRegenCooldown()
 void AMainCharacter::OnStaminaRegenReady()
 {
 	bCanRegenStamina = true;
+}
+
+void AMainCharacter::PauseAnim()
+{
+	if (GetMesh())
+	{
+		GetMesh()->bPauseAnims = true;
+	}
 }
