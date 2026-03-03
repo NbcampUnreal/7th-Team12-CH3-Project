@@ -11,9 +11,11 @@ struct FDamageContext;
 class AMainCharacter;
 class UDamageModifier;
 class AWeaponBase;
+class ADamageNumberActor;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentDamageBroadcast, float, Damage, bool, bIsCrit);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, CurrentAmmo, int32, MaxAmmo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHitConfirm, bool, bIsHeadShot);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class THESEVENTHBULLET_API UCombatComponent : public UActorComponent
@@ -59,6 +61,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Combat")
 	FOnAmmoChanged OnAmmoChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Combat")
+	FOnHitConfirm OnHitConfirm;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -87,4 +92,7 @@ private:
 	float FireDebugDuration = 0.f; // 발사 디버그 지속 시간
 	bool bDrawDebugInfinite = false; // 발사 디버그 드로우를 영구지속할지 여부
 	AMainGameMode* GM = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|UI")
+	TSubclassOf<ADamageNumberActor> DamageNumberActorClass;
 };

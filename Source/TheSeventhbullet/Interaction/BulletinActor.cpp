@@ -2,6 +2,8 @@
 
 #include "RequestComponent.h"
 #include "Character/MainCharacter.h"
+#include "System/MainGameMode.h"
+#include "System/TownPhase.h"
 
 ABulletinActor::ABulletinActor()
 {
@@ -14,6 +16,9 @@ ABulletinActor::ABulletinActor()
 
 void ABulletinActor::Interact(AActor* Interactor)
 {
+	AMainGameMode* GM = AMainGameMode::Get(this);
+	if (GM && !GM->CanTownInteract(ETownPhase::AcceptRequest)) return;
+
 	AMainCharacter* Player = Cast<AMainCharacter>(Interactor);
 	if (!Player) return;
 

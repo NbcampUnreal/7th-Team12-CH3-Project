@@ -11,7 +11,9 @@
 #include "Damage/Modifier/DamageModifier.h"
 #include "Damage/Modifier/WeaponDamageModifier.h"
 #include "Damage/Modifier/StatusDamageModifier.h"
+#include "Enemy/EnemyBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "UI/DamageNumberActor.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Manager/SoundManager.h"
 #include "System/MainGameMode.h"
@@ -141,10 +143,16 @@ void UCombatComponent::HitScanFire()
 
 void UCombatComponent::PerformTrace(TArray<FHitResult>& OutHits)
 {
-	// 카메라를 기준으로 타겟지점을 정함.
+	// 실제 카메라 위치를 기준으로 타겟지점을 정함.
 	FVector CameraLocation;
 	FRotator CameraRotation;
-	GetOwner()->GetActorEyesViewPoint(CameraLocation, CameraRotation);
+	if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
+	{
+		if (APlayerController* PC = OwnerPawn->GetController<APlayerController>())
+		{
+			PC->GetPlayerViewPoint(CameraLocation, CameraRotation);
+		}
+	}
 	
 	FVector AimStart = CameraLocation;
 	FVector AimEnd = AimStart + (CameraRotation.Vector() * CurrentWeaponStatus.Range);
@@ -174,31 +182,14 @@ void UCombatComponent::PerformTrace(TArray<FHitResult>& OutHits)
 	const FVector AimPoint = AimHit.bBlockingHit ? AimHit.ImpactPoint : AimEnd;
 	
 	
-	// 총구에서 실제로 발사하는 트레이스
-	FVector MuzzleLoc;
-	if (AMainCharacter* MainCharacter = Cast<AMainCharacter>(GetOwner()))
-	{
-		if (MainCharacter->WeaponMeshComponent->DoesSocketExist(TEXT("WeaponMuzzle")))
-		{
-			// 소켓이 있으면 소켓 위치로
-			MuzzleLoc = MainCharacter->WeaponMeshComponent->GetSocketLocation(TEXT("WeaponMuzzle"));
-		}
-		else
-		{
-			// 없으면 일단 무기 위치로
-			MuzzleLoc = MainCharacter->WeaponMeshComponent->GetComponentLocation();
-		}
-	}
-	
-	// 펠릿 수 만큼 트레이스
+	// 펠릿 수 만큼 트레이스 (카메라 위치에서 발사)
 	for (int32 i = 0; i < CurrentWeaponStatus.AmountOfPellets; i++)
 	{
-		// Muzzle 위치에서 AimPoint까지 트레이스
-		FVector End = TraceRandShot(MuzzleLoc, AimPoint);
+		FVector End = TraceRandShot(AimStart, AimPoint);
 		FHitResult PelletHit;
 		bool bHit = UKismetSystemLibrary::LineTraceSingle(
 			GetWorld(),
-			MuzzleLoc,
+			AimStart,
 			End,
 			TraceType,
 			true,
@@ -315,7 +306,36 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 		Context.Attacker,
 		UDamageType::StaticClass()
 	);
+
+	if (DamageNumberActorClass)
+	{
+		AEnemyBase* Enemy = Cast<AEnemyBase>(Context.Target);
+		if (Enemy && Enemy->IsDead()) { /* 이미 죽은 적은 데미지 표시 안 함 */ }
+		else
+		{
+			float DisplayDamage = Context.CurrentDamage;
+			bool bIsHeadShot = (Hit.BoneName == TEXT("head"));
+
+			if (Enemy)
+			{
+				float FinalDamage = bIsHeadShot ? Context.CurrentDamage * 1.5f : Context.CurrentDamage;
+				DisplayDamage = FMath::Max(FinalDamage - Enemy->GetArmorPoint(), 0.f);
+			}
+
+			FVector SpawnLocation = Hit.ImpactPoint + FVector(0.f, 0.f, 30.f);
+			ADamageNumberActor* DamageNumber = GetWorld()->SpawnActor<ADamageNumberActor>(
+				DamageNumberActorClass, SpawnLocation, FRotator::ZeroRotator);
+			if (DamageNumber)
+			{
+				DamageNumber->Init(DisplayDamage, bIsCrit);
+			}
+		}
+	}
+
 	OnCurrentDamageBroadcast.Broadcast(Context.CurrentDamage, bIsCrit);
+
+	bool bIsHeadShot = (Hit.BoneName == TEXT("head"));
+	OnHitConfirm.Broadcast(bIsHeadShot);
 }
 
 void UCombatComponent::ExecutePipeline(FDamageContext& Context)

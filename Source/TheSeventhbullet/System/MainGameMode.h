@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Data/TableRowTypes.h"
 #include "GameFramework/GameMode.h"
+#include "TownPhase.h"
 #include "Wave/WaveStates/WaveState.h"
 #include "MainGameMode.generated.h"
 
@@ -13,6 +14,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaterialDroppedMonsterKilled, con
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStageRewardItemsChanged, const TArray<FDroppedMaterialsData>&, Rewards);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossWaveStarted);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossWaveCleared);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTownPhaseChanged, ETownPhase, NewPhase);
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* [MainGameMode Guide]
  *
@@ -146,6 +148,15 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnBossWaveCleared OnBossWaveCleared;
 	
+	// Town Phase
+	void SetTownPhase(ETownPhase NewPhase);
+	ETownPhase GetTownPhase() const;
+	bool CanTownInteract(ETownPhase RequiredPhase) const;
+	FText GetTownPhaseMessage() const;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnTownPhaseChanged OnTownPhaseChanged;
+
 	int32 RequestAttack = 0;// 한 의뢰에서 총을 맞힌 횟수
 	int32 RequestHit = 0;// 한 의뢰에서 공격을 당한 횟수
 protected:
@@ -180,6 +191,7 @@ private:
 	UFUNCTION()
 	void OnTownLevelLoaded();
 	
+	ETownPhase CurrentTownPhase = ETownPhase::None;
 	bool bBossDead = false;
 	
 public:
