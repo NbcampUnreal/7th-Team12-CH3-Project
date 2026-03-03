@@ -32,6 +32,12 @@ void UCraftingWidget::OpenCrafting(UCraftingComponent* InCraftingComp, UInventor
 	CraftingComp = InCraftingComp;
 	PlayerInventory = InPlayerInv;
 
+	// 재료 변경 델리게이트 바인딩
+	if (CraftingComp && !CraftingComp->OnCraftMaterialsChanged.IsAlreadyBound(this, &UCraftingWidget::OnMaterialsChanged))
+	{
+		CraftingComp->OnCraftMaterialsChanged.AddDynamic(this, &UCraftingWidget::OnMaterialsChanged);
+	}
+
 	// 인벤토리 패널 연결
 	if (PlayerInventoryPanel && PlayerInventory)
 	{
@@ -46,6 +52,9 @@ void UCraftingWidget::OpenCrafting(UCraftingComponent* InCraftingComp, UInventor
 			CraftingSlots[i]->InitSlot(CraftingComp, PlayerInventory, i);
 		}
 	}
+
+	// 초기 버튼 상태 설정
+	UpdateCraftButtonState();
 }
 
 void UCraftingWidget::OnCraftClicked()
@@ -125,6 +134,24 @@ void UCraftingWidget::ReturnAllMaterials()
 	}
 
 	CraftingComp->ClearMaterials();
+}
+
+void UCraftingWidget::OnMaterialsChanged(const TArray<UMaterialDataAsset*>& Materials)
+{
+	UpdateCraftButtonState();
+}
+
+void UCraftingWidget::UpdateCraftButtonState()
+{
+	if (!CraftButton) return;
+
+	bool bCanCraft = false;
+	if (CraftingComp)
+	{
+		bCanCraft = CraftingComp->GetSourceMaterials().Num() >= 3;
+	}
+
+	CraftButton->SetIsEnabled(bCanCraft);
 }
 
 FPrimaryAssetId UCraftingWidget::DetermineSoulGemID(const TArray<UMaterialDataAsset*>& Materials) const
