@@ -100,7 +100,7 @@ void AMainCharacter::BeginPlay()
 	}
 	
 	// 주현 : 테스트용 무기 장착
-	EquipmentComponent->EquipWeaponData(TestWeapon);
+	//EquipmentComponent->EquipWeaponData(TestWeapon);
 	
 	// 주현 : EquipmentComponent의 OnEquipmentChanged.Broadcast()를 호출할 때, HandleEquipmentChanged()를 실행시키기 위한 코드
 	if (EquipmentComponent && StatusComponent)

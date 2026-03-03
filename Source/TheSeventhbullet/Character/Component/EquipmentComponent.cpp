@@ -25,16 +25,6 @@ void UEquipmentComponent::CollectStatusModifiers(TArray<FStatusModifier>& Mod) c
 	}
 }
 
-void UEquipmentComponent::EquipWeaponData(UWeaponDataAsset* NewWeapon)
-{
-	AMainCharacter* WeaponOwner = Cast<AMainCharacter>(GetOwner());
-	if (!WeaponOwner || !WeaponOwner->WeaponMeshComponent || !NewWeapon) return;
-	
-	CurrentWeapon = NewWeapon;
-	WeaponOwner->WeaponMeshComponent->SetStaticMesh(NewWeapon->Mesh);
-	OnWeaponEquipmentChanged.Broadcast(CurrentWeapon);
-	UE_LOG(LogTemp, Warning, TEXT("OnWeaponEquipmentChanged : Weapon"));
-}
 
 bool UEquipmentComponent::FindSpecialOption(ESpecialOptions Option)
 {
@@ -124,6 +114,26 @@ FCharacterStat UEquipmentComponent::GetTotalGemStats() const
 		}
 	}
 	return TotalGemStat;
+}
+
+void UEquipmentComponent::SetPendingWeapon(UWeaponDataAsset* Weapon)
+{
+	PendingWeapon = Weapon;
+	UE_LOG(LogTemp, Log, TEXT("무기 장착 예약 완료"));
+}
+
+void UEquipmentComponent::ApplyWeapon()
+{
+	if (!PendingWeapon) return;
+	
+	AMainCharacter* WeaponOwner = Cast<AMainCharacter>(GetOwner());
+	if (!WeaponOwner || !WeaponOwner->WeaponMeshComponent) return;
+	
+	CurrentWeapon = PendingWeapon;
+	WeaponOwner->WeaponMeshComponent->SetStaticMesh(CurrentWeapon->Mesh);
+	OnWeaponEquipmentChanged.Broadcast(CurrentWeapon);
+	PendingWeapon = nullptr;
+	UE_LOG(LogTemp, Warning, TEXT("OnWeaponEquipmentChanged : Weapon"));
 }
 
 void UEquipmentComponent::LoadData(TArray<FSoulGemInstance>& LoadEquippedSoulGems)
