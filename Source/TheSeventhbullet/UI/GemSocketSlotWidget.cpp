@@ -1,8 +1,8 @@
 #include "GemSocketSlotWidget.h"
 #include "InventoryDragDropOperation.h"
+#include "ItemTooltipWidget.h"
 #include "Components/SizeBox.h"
 #include "Components/Image.h"
-#include "Components/TextBlock.h"
 #include "Manager/AsyncDataManager.h"
 #include "DataAsset/SoulGemDataAsset.h"
 #include "Character/Component/EquipmentComponent.h"
@@ -22,8 +22,9 @@ void UGemSocketSlotWidget::InitSlot(UEquipmentComponent* InEquipComp, UInventory
 		FSoulGemInstance Gem = EquipmentComp->GetSoulGemAt(SlotIndex);
 		if (Gem.IsValid())
 		{
-			// 이미 장착된 소울젬이 있으면 표시 (ItemID는 알 수 없으므로 이름만 표시)
 			CachedSoulGem = Gem;
+			// ItemID는 알 수 없으므로 아이콘 없이 툴팁만 표시
+			UpdateTooltip(Gem, FPrimaryAssetId());
 		}
 		else
 		{
@@ -49,12 +50,6 @@ bool UGemSocketSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDrag
 		return false;
 	}
 
-	// 이미 소울젬이 장착되어 있으면 거부
-	if (CachedSoulGem.IsValid())
-	{
-		return false;
-	}
-
 	// 소울젬인지 체크
 	const FItemInstance& DraggedItem = DragOp->DraggedItem;
 	if (!DraggedItem.IsSoulGem())
@@ -62,7 +57,7 @@ bool UGemSocketSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDrag
 		return false;
 	}
 
-	// 소울젬 장착
+	// 소울젬 장착 (기존 소울젬이 있으면 덮어쓰기 — 기존 젬은 파괴)
 	EquipmentComp->EquipSoulGem(DraggedItem.SoulGemData, SlotIndex);
 
 	// 인벤토리에서 제거
@@ -72,33 +67,10 @@ bool UGemSocketSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDrag
 	CachedItemID = DraggedItem.ItemID;
 	CachedSoulGem = DraggedItem.SoulGemData;
 
-	// 아이콘 및 라벨 업데이트
+	// 아이콘 및 툴팁 업데이트
 	UpdateSlot(CachedSoulGem, CachedItemID);
 
 	return true;
-}
-
-FReply UGemSocketSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
-{
-	// 우클릭으로 장착 해제
-	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton && CachedSoulGem.IsValid())
-	{
-		if (EquipmentComp && PlayerInventory)
-		{
-			// 장착 해제
-			EquipmentComp->UnequipSoulGem(SlotIndex);
-
-			// 인벤토리에 소울젬 복귀
-			PlayerInventory->AddSoulGem(CachedItemID, CachedSoulGem);
-
-			// 슬롯 클리어
-			ClearSlot();
-		}
-
-		return FReply::Handled();
-	}
-
-	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
 
 void UGemSocketSlotWidget::UpdateSlot(const FSoulGemInstance& SoulGem, FPrimaryAssetId InItemID)
@@ -108,6 +80,9 @@ void UGemSocketSlotWidget::UpdateSlot(const FSoulGemInstance& SoulGem, FPrimaryA
 
 	// 아이콘 로드
 	LoadAndSetIcon(InItemID);
+
+	// 툴팁 업데이트
+	UpdateTooltip(SoulGem, InItemID);
 }
 
 void UGemSocketSlotWidget::ClearSlot()
@@ -115,6 +90,42 @@ void UGemSocketSlotWidget::ClearSlot()
 	CachedSoulGem = FSoulGemInstance();
 	CachedItemID = FPrimaryAssetId();
 	SetIcon(nullptr);
+	SetToolTip(nullptr);
+}
+
+void UGemSocketSlotWidget::UpdateTooltip(const FSoulGemInstance& SoulGem, FPrimaryAssetId ItemID)
+{
+	if (!TooltipWidgetClass || !SoulGem.IsValid())
+	{
+		SetToolTip(nullptr);
+		return;
+	}
+
+	UItemTooltipWidget* TooltipWidget = CreateWidget<UItemTooltipWidget>(this, TooltipWidgetClass);
+	if (!TooltipWidget)
+	{
+		return;
+	}
+
+	FText DisplayName = SoulGem.GemName;
+	FText Description = FText::FromString(SoulGem.ToDescriptionString());
+	UTexture2D* IconTexture = nullptr;
+
+	if (ItemID.IsValid())
+	{
+		UAsyncDataManager* DataMgr = UAsyncDataManager::Get(this);
+		if (DataMgr)
+		{
+			USoulGemDataAsset* GemDA = Cast<USoulGemDataAsset>(DataMgr->GetLoadedAsset(ItemID));
+			if (GemDA)
+			{
+				IconTexture = GemDA->Icon.Get();
+			}
+		}
+	}
+
+	TooltipWidget->SetItemInfo(DisplayName, Description, 1, IconTexture);
+	SetToolTip(TooltipWidget);
 }
 
 void UGemSocketSlotWidget::LoadAndSetIcon(FPrimaryAssetId ItemID)
