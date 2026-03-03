@@ -46,7 +46,7 @@ void UEnemyProjectileAttackNotify::Notify(USkeletalMeshComponent* MeshComp, UAni
 	//기존 바라보는 방향대로 타겟
 	//FRotator SpawnRotation=EnemyCharacter->GetActorRotation();
 	//싱글 플레이 전용- 플레이어에게 타겟
-	FRotator SpawnRotation;
+	FRotator SpawnRotation=FRotator::ZeroRotator;
 	if (UGameplayStatics::GetPlayerPawn(MeshComp->GetWorld(), 0))
 	{
 		SpawnRotation = (UGameplayStatics::GetPlayerPawn(MeshComp->GetWorld(),0)->GetActorLocation() - SpawnLocation).Rotation();

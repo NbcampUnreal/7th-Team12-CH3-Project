@@ -43,13 +43,12 @@ void AEnemyAIControllerBase::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 	
-	TObjectPtr<AEnemyBase> Enemy = Cast<AEnemyBase>(InPawn);
+	Enemy = Cast<AEnemyBase>(InPawn);
 	Enemy->OnCharacterHit.AddDynamic(this, &AEnemyAIControllerBase::HitEvent);
 	Enemy->OnCharacterDead.AddDynamic(this, &AEnemyAIControllerBase::DeadEvent);
 	Enemy->OnCharacterReset.AddDynamic(this, &AEnemyAIControllerBase::ResetEvent);
 	Enemy->OnCharacterHeadHit.AddDynamic(this, &AEnemyAIControllerBase::HeadHitEvent);
 	Enemy->OnCharacterSetAI.AddDynamic(this,&AEnemyAIControllerBase::SetAI);
-	Enemy->OnBossCanceled.AddDynamic(this,&AEnemyAIControllerBase::CancelEvent);
 }
 
 void AEnemyAIControllerBase::HitEvent()
@@ -196,10 +195,4 @@ ETeamAttitude::Type AEnemyAIControllerBase::GetTeamAttitudeTowards(const AActor&
 		return ETeamAttitude::Friendly;
 	}
 	return ETeamAttitude::Neutral;
-}
-
-void AEnemyAIControllerBase::CancelEvent()
-{
-	if (BBComp==nullptr) return;
-	BBComp->SetValueAsBool(FName("bIsCanceled"), true);
 }

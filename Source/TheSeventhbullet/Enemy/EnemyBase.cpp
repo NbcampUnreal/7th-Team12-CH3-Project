@@ -22,15 +22,12 @@
 #include "Engine/DamageEvents.h"
 #include "Projectile/ProjectileStat.h"
 #include "System/MainGameMode.h"
+#include "System/GameInstance/MainGameInstance.h"
 
 
 // Sets default values
 AEnemyBase::AEnemyBase()
 {
-	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-	
-	
 	//별도로 데이터를 주입하지 않은 캐릭터의 기본 스테이터스
 	MaxHealth = 100.0f;
 	NowHealth = MaxHealth;
@@ -66,7 +63,6 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 {
 	EnemyData=LoadedData;
 	MaxHealth=EnemyData->MaxHealth;
-	NowHealth=MaxHealth;
 	ArmorPoint=EnemyData->ArmorPoint;
 	AttackPoint=EnemyData->AttackPoint;
 	AttackRadius=EnemyData->AttackRadius;
@@ -74,6 +70,14 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 	HitParticle=EnemyData->HitParticle.Get();
 	HeadShotParticle=EnemyData->HeadShotParticle.Get();
 	USkeletalMeshComponent* EnemyMeshComp=this->GetMesh();
+	
+	//일차 기반으로 공격력 상승. 상승폭은 x^2 % 
+	GI=UMainGameInstance::Get(this);
+	CurrentDay=GI->CurrentDay;
+	MaxHealth=MaxHealth*((CurrentDay*CurrentDay)/100.0f)+MaxHealth;
+	NowHealth=MaxHealth;
+	ArmorPoint=ArmorPoint*((CurrentDay*CurrentDay)/100.0f)+ArmorPoint;
+	AttackPoint=AttackPoint*((CurrentDay*CurrentDay)/100.0f)+AttackPoint;
 	
 	//Mesh관련 처리
 	if (EnemyMeshComp)
@@ -170,20 +174,6 @@ void AEnemyBase::SetMonsterType(EMonsterType InEnemyMonsterType)
 	EnemyMonsterType=InEnemyMonsterType;
 }
 
-void AEnemyBase::SetBoss()
-{
-	//별도의 콜리전 사용
-	UCapsuleComponent* EnemyCapsuleComponent=GetCapsuleComponent();
-	if (EnemyCapsuleComponent!=nullptr)
-	{
-		EnemyCapsuleComponent->SetCollisionObjectType(ECC_GameTraceChannel1);
-	}
-	//태그 Boss로 변경
-	Tags.Empty();
-	Tags.Add(FName("Boss"));
-	//카메라에 막히지 않도록 카메라 콜리전 Ignore
-	EnemyCapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-}
 
 
 void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy,
@@ -199,10 +189,16 @@ void AEnemyBase::EnemyTakePointDamage(AActor* DamagedActor, float Damage, class 
 	}
 
 	//데미지 처리- 헤드샷 1.5배 데미지
-	SetHealth(NowHealth + ArmorPoint - (bIsHeadShot ? Damage * 1.5f : Damage));
+	// 최종 데미지 : 데미지-방어력, 0보다 작아질 수는 없음.
+	FinalDamage=(bIsHeadShot ? Damage * 1.5f : Damage)-ArmorPoint;
+	if (FinalDamage<0)
+	{
+		FinalDamage=0;
+	}
+	SetHealth(NowHealth - FinalDamage);
 
 	// 적 캐릭터가 처음 죽었을 경우
-	if (!bIsDead && FMath::IsNearlyZero(NowHealth))
+	if (!bIsDead && FMath::IsNearlyZero(NowHealth)&&(!this->Tags.Find("Boss")))
 	{
 		//사망 처리
 		bIsDead = true;
@@ -261,14 +257,14 @@ void AEnemyBase::DropItem()
 float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
 	AActor* DamageCauser)
 {
-	SetHealth(NowHealth + ArmorPoint - DamageAmount);
-	//TODO: 보스 몬스터 상속을 위해 리팩토링
-	if (DamageEvent.DamageTypeClass==UPlayerSkillDamageType::StaticClass())
+	/*
+	FinalDamage=DamageAmount-ArmorPoint;
+	if (FinalDamage<0)
 	{
-		OnBossCanceled.Broadcast();
-		UE_LOG(LogTemp,Warning,TEXT("PlayerSkillHit"));
+		FinalDamage=0;
 	}
-	
+	SetHealth(NowHealth - FinalDamage);
+	*/
 	
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
@@ -277,6 +273,16 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
 void AEnemyBase::SetHealth(float NewHealth)
 {
 	NowHealth = FMath::Clamp(NewHealth, 0.0f, MaxHealth);
+}
+
+float AEnemyBase::GetHealth()
+{
+	return NowHealth;
+}
+
+float AEnemyBase::GetMaxHealth()
+{
+	return MaxHealth;
 }
 
 void AEnemyBase::DisplayParticle(FVector HitLocation, UParticleSystem* InParticle)

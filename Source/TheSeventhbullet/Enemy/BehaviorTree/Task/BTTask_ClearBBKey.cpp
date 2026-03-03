@@ -12,7 +12,7 @@ UBTTask_ClearBBKey::UBTTask_ClearBBKey()
 
 EBTNodeResult::Type UBTTask_ClearBBKey::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	UBlackboardComponent* BBComp= OwnerComp.GetBlackboardComponent();;
+	UBlackboardComponent* BBComp= OwnerComp.GetBlackboardComponent();
 	
 	if (BBComp!=nullptr)
 	{

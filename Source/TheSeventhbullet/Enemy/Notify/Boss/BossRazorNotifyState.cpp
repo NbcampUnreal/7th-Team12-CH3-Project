@@ -25,7 +25,7 @@ void UBossRazorNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimS
 	}
 	if (RazorParticleSystem != nullptr)
 	{
-		FVector EmitterSpawnLocation=OwnerEnemyBase->GetActorLocation()+FVector(0,0,100.0f)+OwnerEnemyBase->GetActorForwardVector()*1000.0f;
+		FVector EmitterSpawnLocation=OwnerEnemyBase->GetActorLocation()+FVector(0,0,100.0f)+OwnerEnemyBase->GetActorForwardVector()*500.0f;
 		RazorParticleActor = MeshComp->GetWorld()->SpawnActor<AEmitter>(AEmitter::StaticClass(),OwnerEnemyBase->GetActorLocation(), OwnerEnemyBase->GetActorRotation());
 		RazorParticleActor->SetActorScale3D(FVector(100.0f,100.0f,100.0f));
 		RazorParticleActor->SetTemplate(RazorParticleSystem);
@@ -53,7 +53,7 @@ void UBossRazorNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 	EDrawDebugTrace::Type DebugType = bShowDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
 	bool bHit = UKismetSystemLibrary::SphereTraceMulti(
 		Owner->GetWorld(),
-		OwnerEnemyBase->GetActorLocation(),
+		OwnerEnemyBase->GetActorLocation()+OwnerEnemyBase->GetActorForwardVector()*500,
 		OwnerEnemyBase->GetActorLocation()+OwnerEnemyBase->GetActorForwardVector()*RazorDistance,
 		RazorTraceRadius,
 		//Pawn만 Trace 처리

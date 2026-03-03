@@ -12,6 +12,8 @@
  * Enemy에 필요한 데이터를 외부에서 주입하는 PDA입니다.
  */
 
+class UBossPatternComponentInterface;
+
 UCLASS()
 class THESEVENTHBULLET_API UEnemyDataAsset : public UPrimaryDataAsset
 {
@@ -99,4 +101,8 @@ public:
 	//AIControllerClass
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI", meta = (AssetBundles = "Enemy"))
 	TSoftClassPtr<AAIController> AIControllerClass;
+	
+	//BossPatternComponent
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data", meta=(AssetBundles="Enemy"))
+	TMap<FString, TSubclassOf<UBossPatternComponentInterface>> PatternClasses;
 };
