@@ -116,7 +116,21 @@ void UCombatComponent::HitScanFire()
 	// LastFireTime = Now;
 	
 	SpreadBullet();
-	ConsumeAmmo();
+	if (WeaponOwner->EquipmentComponent->FindSpecialOption(ESpecialOptions::BloodBullet))
+	{
+		float HP = WeaponOwner->GetCurrentHP();
+		if (HP <= 2.0f)
+		{
+			return;
+		}
+		HP = FMath::Clamp(HP - 2.0f, 1.f, WeaponOwner->GetTotalStatus().HP);
+		WeaponOwner->SetCurrentHP(HP);
+		WeaponOwner->OnHPChanged.Broadcast(HP, static_cast<float>(WeaponOwner->GetTotalStatus().HP));
+	}
+	else
+	{
+		ConsumeAmmo();
+	}
 	SpawnFireParticles();
 	SpawnFireSound();
 	TArray<FHitResult> Hits;
@@ -290,6 +304,11 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 		UE_LOG(LogTemp, Warning, TEXT("[Critical] CritChance = %f, CritDamage = %f"), Context.CurrentCritChance, Context.CurrentCritDamage);
 		Context.CurrentDamage = Context.CurrentCritDamage;
 		bIsCrit = true;
+	}
+	if (WeaponOwner->EquipmentComponent->FindSpecialOption(ESpecialOptions::BloodBullet))
+	{
+		Context.CurrentDamage *= 1.4f;
+		Context.CurrentCritDamage += 0.5;
 	}
 	
 	UE_LOG(LogTemp, Warning, TEXT("Damage : %f"), Context.CurrentDamage);

@@ -31,7 +31,8 @@ enum class ESpecialOptions : uint8
 	None,
 	DoubleShot,
 	Lifesteal,
-	Heartsteal
+	Heartsteal,
+	BloodBullet
 };
 
 USTRUCT(BlueprintType)
