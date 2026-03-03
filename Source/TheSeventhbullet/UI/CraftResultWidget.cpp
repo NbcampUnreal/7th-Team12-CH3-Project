@@ -6,7 +6,6 @@
 #include "Manager/UIManager.h"
 #include "Manager/AsyncDataManager.h"
 #include "DataAsset/ItemDataAsset.h"
-#include "Data/StatusTypes.h"
 #include "Engine/StreamableManager.h"
 #include "Engine/AssetManager.h"
 
@@ -33,33 +32,52 @@ void UCraftResultWidget::SetResult(const FSoulGemInstance& SoulGem, FPrimaryAsse
 	}
 
 	// DA에서 아이콘 로드
+	UE_LOG(LogTemp, Warning, TEXT("[CraftResult] SetResult 아이콘 로드 시작 - GemAssetID: %s"), *GemAssetID.ToString());
+
 	if (ResultIcon)
 	{
 		UAsyncDataManager* DataMgr = UAsyncDataManager::Get(this);
-		if (DataMgr)
+		if (!DataMgr)
 		{
-			UItemDataAsset* GemData = Cast<UItemDataAsset>(DataMgr->GetLoadedAsset(GemAssetID));
-			if (GemData)
-			{
-				UTexture2D* IconTexture = GemData->Icon.Get();
-				if (IconTexture)
-				{
-					SetIcon(IconTexture);
-				}
-				else if (!GemData->Icon.IsNull())
-				{
-					TSoftObjectPtr<UTexture2D> IconPtr = GemData->Icon;
-					FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
-					Streamable.RequestAsyncLoad(
-						IconPtr.ToSoftObjectPath(),
-						FStreamableDelegate::CreateWeakLambda(this, [this, IconPtr]()
-						{
-							SetIcon(IconPtr.Get());
-						})
-					);
-				}
-			}
+			UE_LOG(LogTemp, Error, TEXT("[CraftResult] AsyncDataManager가 null"));
+			return;
 		}
+
+		// DA가 이미 로드되어 있으면 즉시 아이콘 표시
+		UItemDataAsset* GemData = Cast<UItemDataAsset>(DataMgr->GetLoadedAsset(GemAssetID));
+		if (GemData)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[CraftResult] DA 이미 로드됨 → LoadIconFromDA 호출"));
+			LoadIconFromDA(GemData);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[CraftResult] DA 미로드 → 비동기 로드 시작: %s"), *GemAssetID.ToString());
+			// DA 자체가 아직 로드 안 됨 → 비동기 로드 후 아이콘 표시
+			TArray<FPrimaryAssetId> IDs;
+			IDs.Add(GemAssetID);
+
+			FOnBundleLoadComplete OnLoaded;
+			OnLoaded.BindLambda([this, DataMgr, GemAssetID]()
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[CraftResult] 비동기 로드 콜백 도착 - GemAssetID: %s"), *GemAssetID.ToString());
+				UItemDataAsset* LoadedGemData = Cast<UItemDataAsset>(DataMgr->GetLoadedAsset(GemAssetID));
+				if (LoadedGemData)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("[CraftResult] DA 로드 성공 → LoadIconFromDA 호출"));
+					LoadIconFromDA(LoadedGemData);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("[CraftResult] DA 로드 실패 - GetLoadedAsset null"));
+				}
+			});
+			DataMgr->LoadAssetsByID(IDs, {}, OnLoaded);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[CraftResult] ResultIcon이 null"));
 	}
 }
 
@@ -74,52 +92,35 @@ void UCraftResultWidget::OnConfirmClicked()
 
 FString UCraftResultWidget::BuildResultInfoString(const FSoulGemInstance& SoulGem) const
 {
-	FString Info;
-	Info += FString::Printf(TEXT("등급: %d\n"), SoulGem.Grade);
+	return SoulGem.ToDescriptionString();
+}
 
-	for (const FStatusModifier& Mod : SoulGem.StatusModifiers)
+void UCraftResultWidget::LoadIconFromDA(UItemDataAsset* GemData)
+{
+	if (!GemData || !ResultIcon) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("[CraftResult] LoadIconFromDA - DA이름: %s, Icon null?: %d, Icon 경로: %s"),
+		*GemData->GetName(), GemData->Icon.IsNull(), *GemData->Icon.ToSoftObjectPath().ToString());
+
+	UTexture2D* IconTexture = GemData->Icon.Get();
+	if (IconTexture)
 	{
-		FString StatusName;
-		switch (Mod.Status)
-		{
-		case EStatusType::HP:               StatusName = TEXT("HP"); break;
-		case EStatusType::Stamina:          StatusName = TEXT("Stamina"); break;
-		case EStatusType::ATK:              StatusName = TEXT("ATK"); break;
-		case EStatusType::DEF:              StatusName = TEXT("DEF"); break;
-		case EStatusType::DodgeCost:        StatusName = TEXT("DodgeCost"); break;
-		case EStatusType::MaxSpeed:         StatusName = TEXT("MaxSpeed"); break;
-		case EStatusType::SprintMultiplier: StatusName = TEXT("SprintMultiplier"); break;
-		case EStatusType::CritChance:       StatusName = TEXT("CritChance"); break;
-		case EStatusType::CritDamage:       StatusName = TEXT("CritDamage"); break;
-		default:                            StatusName = TEXT("Unknown"); break;
-		}
-
-		if (Mod.CalculationMethod == EStatusCalculationMethod::AddFlat)
-		{
-			Info += FString::Printf(TEXT("%s +%.0f\n"), *StatusName, Mod.Value);
-		}
-		else
-		{
-			Info += FString::Printf(TEXT("%s x%.1f\n"), *StatusName, Mod.Value);
-		}
+		UE_LOG(LogTemp, Warning, TEXT("[CraftResult] 아이콘 즉시 로드 성공"));
+		SetIcon(IconTexture);
 	}
-
-	for (ESpecialOptions Opt : SoulGem.SpecialOptions)
+	else if (!GemData->Icon.IsNull())
 	{
-		switch (Opt)
-		{
-		case ESpecialOptions::ReloadSpeed:
-			Info += TEXT("특수: 재장전 속도 증가\n");
-			break;
-		case ESpecialOptions::DoubleShot:
-			Info += TEXT("특수: 이중 발사\n");
-			break;
-		default:
-			break;
-		}
+		UE_LOG(LogTemp, Warning, TEXT("[CraftResult] 아이콘 비동기 로드 시작"));
+		TSoftObjectPtr<UTexture2D> IconPtr = GemData->Icon;
+		FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
+		Streamable.RequestAsyncLoad(
+			IconPtr.ToSoftObjectPath(),
+			FStreamableDelegate::CreateWeakLambda(this, [this, IconPtr]()
+			{
+				SetIcon(IconPtr.Get());
+			})
+		);
 	}
-
-	return Info;
 }
 
 void UCraftResultWidget::SetIcon(UTexture2D* Texture)

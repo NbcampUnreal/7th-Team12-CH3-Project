@@ -145,8 +145,14 @@ bool UInventoryComponent::AddItemInternal(FPrimaryAssetId ItemID, int32 Count)
 
 bool UInventoryComponent::AddSoulGem(FPrimaryAssetId ItemID, const FSoulGemInstance& SoulGemData)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] 호출됨 - ItemID: %s, GemName: %s"), *ItemID.ToString(), *SoulGemData.GemName.ToString());
+
 	UAsyncDataManager* Mgr = UAsyncDataManager::Get(this);
-	if (!Mgr) return false;
+	if (!Mgr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[AddSoulGem] AsyncDataManager가 null"));
+		return false;
+	}
 
 	auto PlaceGem = [this, ItemID, SoulGemData]()
 	{
@@ -157,24 +163,31 @@ bool UInventoryComponent::AddSoulGem(FPrimaryAssetId ItemID, const FSoulGemInsta
 				Items[i].ItemID = ItemID;
 				Items[i].StackCount = 1;
 				Items[i].SoulGemData = SoulGemData;
+				UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] PlaceGem 성공 - 슬롯: %d"), i);
 				OnItemAdded.Broadcast(Items[i], i);
 				return;
 			}
 		}
-		UE_LOG(LogTemp, Warning, TEXT("[Inventory] SoulGem 추가 실패: 빈 슬롯 없음"));
+		UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] PlaceGem 실패: 빈 슬롯 없음"));
 	};
 
 	if (!Mgr->IsAssetLoaded(ItemID))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] DA 미로드 → 비동기 로드 시작: %s"), *ItemID.ToString());
 		TArray<FPrimaryAssetId> IDs;
 		IDs.Add(ItemID);
 
 		FOnBundleLoadComplete OnLoaded;
-		OnLoaded.BindLambda(PlaceGem);
+		OnLoaded.BindLambda([this, ItemID, PlaceGem]()
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] 비동기 로드 완료 콜백 - ItemID: %s"), *ItemID.ToString());
+			PlaceGem();
+		});
 		Mgr->LoadAssetsByID(IDs, {}, OnLoaded);
 		return false;
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] DA 이미 로드됨 → 즉시 배치"));
 	PlaceGem();
 	return true;
 }

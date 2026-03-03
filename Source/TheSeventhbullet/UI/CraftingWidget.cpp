@@ -57,16 +57,21 @@ void UCraftingWidget::OnCraftClicked()
 
 	// CraftSoulGem 내부에서 ClearMaterials() 호출하므로 제작 전에 재료 복사
 	TArray<UMaterialDataAsset*> MaterialsCopy = CraftingComp->GetSourceMaterials();
+	UE_LOG(LogTemp, Warning, TEXT("[CraftingWidget] OnCraftClicked - 재료 수: %d"), MaterialsCopy.Num());
 
 	FSoulGemInstance Result;
 	if (!CraftingComp->CraftSoulGem(Result))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[CraftingWidget] CraftSoulGem failed - not enough materials"));
+		UE_LOG(LogTemp, Warning, TEXT("[CraftingWidget] CraftSoulGem 실패 - 재료 부족"));
 		return;
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("[CraftingWidget] CraftSoulGem 성공 - GemName: %s, Grade: %d"), *Result.GemName.ToString(), Result.Grade);
+
 	// 재료 타입별로 소울젬 DA 결정
 	FPrimaryAssetId GemID = DetermineSoulGemID(MaterialsCopy);
+	UE_LOG(LogTemp, Warning, TEXT("[CraftingWidget] DetermineSoulGemID → %s"), *GemID.ToString());
+
 	PlayerInventory->AddSoulGem(GemID, Result);
 
 	// 모든 슬롯 클리어 (CraftSoulGem 내부에서 ClearMaterials 호출됨)

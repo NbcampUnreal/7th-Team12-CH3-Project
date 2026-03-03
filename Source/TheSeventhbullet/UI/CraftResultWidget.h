@@ -46,5 +46,6 @@ private:
 	void OnConfirmClicked();
 
 	FString BuildResultInfoString(const FSoulGemInstance& SoulGem) const;
+	void LoadIconFromDA(class UItemDataAsset* GemData);
 	void SetIcon(UTexture2D* Texture);
 };
