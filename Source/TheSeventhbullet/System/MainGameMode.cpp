@@ -1,6 +1,5 @@
 #include "MainGameMode.h"
 
-#include "IPropertyTable.h"
 #include "MonsterManagerSubSystem.h"
 #include "Character/Component/EquipmentComponent.h"
 #include "DataAsset/MaterialDataAsset.h"
@@ -13,8 +12,8 @@
 #include "TheSeventhbullet/Wave/WaveStateMachine.h"
 #include "TheSeventhbullet/Manager/UIManager.h"
 #include "TheSeventhbullet/UI/UITags.h"
-#include "Engine/AssetManager.h"
 #include "Inventory/InventoryComponent.h"
+#include "Manager/SoundManager.h"
 #include "Windows/WindowsApplication.h"
 
 AMainGameMode::AMainGameMode()
@@ -488,6 +487,11 @@ void AMainGameMode::BeginPlay()
 	{
 		UIMgr->Open(UITags::MainMenu);
 	}
+	USoundManager* SoundMgr = USoundManager::Get(GetWorld());
+	if (SoundMgr)
+	{
+		SoundMgr->PlayBGM(TEXT("MainMenuBGM"), 0.5f, 0.5f);
+	}
 }
 
 void AMainGameMode::StartGamePlay()
@@ -496,6 +500,11 @@ void AMainGameMode::StartGamePlay()
 	if (UIMgr)
 	{
 		UIMgr->Close(UITags::MainMenu);
+	}
+	USoundManager* SoundMgr = USoundManager::Get(this);
+	if (SoundMgr)
+	{
+		SoundMgr->PlayBGM(TEXT("TownBGM"), 0.7f, 0.7f);
 	}
 
 	SetTownPhase(ETownPhase::AcceptRequest);
@@ -579,6 +588,11 @@ void AMainGameMode::ReturnToTown()
 	LatentInfo.UUID = GetUniqueID();
 
 	UGameplayStatics::LoadStreamLevel(this, TownLevelName, true, false, LatentInfo);
+	USoundManager* SoundMgr = USoundManager::Get(this);
+	if (SoundMgr)
+	{
+		SoundMgr->PlayBGM(TEXT("TownBGM"), 0.7f, 0.7f);
+	}
 }
 
 void AMainGameMode::OnTownLevelLoaded()
@@ -678,6 +692,11 @@ void AMainGameMode::ReturnToMainMenu()
 		UIMgr->Close(UITags::HUD);
 		UIMgr->Close(UITags::Crosshair);
 		UIMgr->Open(UITags::MainMenu);
+	}
+	USoundManager* SoundMgr = USoundManager::Get(this);
+	if (SoundMgr)
+	{
+		SoundMgr->PlayBGM(TEXT("MainMenuBGM"), 0.7f, 0.7f);
 	}
 }
 

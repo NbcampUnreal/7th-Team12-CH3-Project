@@ -30,6 +30,10 @@
  *
  * // [Case 3] 총소리 (3D 사운드, 움직이는 액터/컴포넌트를 따라다님)
  * SoundMgr->PlaySoundAttached(TEXT("Weapon_Fire"), WeaponMeshComp);
+ * 
+ * // [Case 4] BGM (기존에 재생되던 BGM을 StopBGM으로 정리하고 재생함)
+ * SoundMgr->PlayBGM(TEXT("TownBGM"), 0.7f, 0.7f);
+ * 
  * }
  * @endcode
  */
@@ -54,9 +58,23 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "SoundManager")
 	void SetCategoryVolume(USoundClass* SoundClass, float Volume);
+	
+	// BGM 재생용
+	UFUNCTION(BlueprintCallable, Category="SoundManager|BGM")
+	void PlayBGM(FName SoundID, float FadeInTime = 0.5f, float FadeOutTime = 0.5f, bool bRestartIfSame = false);
+	// BGM 재생용
+	UFUNCTION(BlueprintCallable, Category="SoundManager|BGM")
+	void StopBGM(float FadeOutTime = 0.5f);
 private:
 	FSoundData* GetSoundData(FName SoundID);
 	
 	UPROPERTY()
 	TMap<FName, FSoundData> SoundCache;
+	
+	// BGM 재생용
+	UPROPERTY(Transient)
+	TObjectPtr<UAudioComponent> CurrentBGMComp = nullptr;
+	// BGM 재생용
+	UPROPERTY(Transient)
+	FName CurrentBGMID = NAME_None;
 };

@@ -27,6 +27,7 @@ namespace UITags
 	const FName Gamble		   = FName(TEXT("Gamble"));
 	const FName StatEnhancer   = FName(TEXT("StatEnhancer"));
 	const FName GambleDialogue = FName(TEXT("GambleDialogue"));
+	const FName GambleBettingDialogue = FName(TEXT("GambleBettingDialogue"));
 	const FName TownHUD        = FName(TEXT("TownHUD"));
 	const FName WeaponStorage  = FName(TEXT("WeaponStorage"));
 	const FName Crafting       = FName(TEXT("Crafting"));

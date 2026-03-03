@@ -16,6 +16,7 @@ class THESEVENTHBULLET_API ADungeonStreamTrigger : public ALevelStreamTrigger
 	GENERATED_BODY()
 
 protected:
+	virtual void ActivateTrigger() override;
 	virtual bool CanActivate() const override;
 	virtual void HandleLevelLoaded() override;
 };

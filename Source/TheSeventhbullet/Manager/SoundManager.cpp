@@ -3,6 +3,7 @@
 
 #include "SoundManager.h"
 #include "SyncDataManager.h"
+#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundClass.h"
 #include "TheSeventhbullet/System/GameInstance/MainGameInstance.h"
@@ -67,6 +68,59 @@ void USoundManager::SetCategoryVolume(USoundClass* SoundClass, float Volume)
 	{
 		SoundClass->Properties.Volume = Volume;
 	}
+}
+
+void USoundManager::PlayBGM(FName SoundID, float FadeInTime, float FadeOutTime, bool bRestartIfSame)
+{
+	if (!bRestartIfSame && CurrentBGMComp && CurrentBGMID == SoundID && CurrentBGMComp->IsPlaying())
+	{
+		return;
+	}
+
+	// 기존 BGM 정리
+	StopBGM(FadeOutTime);
+
+	FSoundData* Data = GetSoundData(SoundID);
+	if (!Data || !Data->SoundAsset) return;
+
+	// SpawnSound2D는 UAudioComponent* 리턴 -> 이걸 저장해야 Stop 가능
+	UAudioComponent* NewComp = UGameplayStatics::SpawnSound2D(
+		GetWorld(),
+		Data->SoundAsset,
+		Data->VolumeMultiplier,
+		1.0f,        // Pitch
+		0.0f,        // StartTime
+		nullptr,     // Concurrency
+		true         // bPersistAcrossLevelTransition (레벨 이동해도 유지)
+	);
+
+	if (!NewComp) return;
+
+	NewComp->bIsUISound = true;
+	NewComp->bAutoDestroy = false;
+	NewComp->SetVolumeMultiplier(1.f);
+	NewComp->FadeIn(FadeInTime, Data->VolumeMultiplier);
+
+	CurrentBGMComp = NewComp;
+	CurrentBGMID = SoundID;
+}
+
+void USoundManager::StopBGM(float FadeOutTime)
+{
+	if (!CurrentBGMComp) return;
+
+	if (FadeOutTime > 0.f)
+	{
+		CurrentBGMComp->FadeOut(FadeOutTime, 0.f);
+	}
+	else
+	{
+		CurrentBGMComp->Stop();
+		CurrentBGMComp->DestroyComponent();
+	}
+
+	CurrentBGMComp = nullptr;
+	CurrentBGMID = NAME_None;
 }
 
 FSoundData* USoundManager::GetSoundData(FName SoundID)

@@ -2,6 +2,7 @@
 
 #include "Character/MainCharacter.h"
 #include "Manager/UIManager.h"
+#include "UI/GambleBettingDialogueWidget.h"
 #include "UI/GambleDialogueWidget.h"
 #include "UI/GambleWidget.h"
 
@@ -75,7 +76,26 @@ void AGambleActor::OnGambleFinished(bool bIsWin)
 void AGambleActor::OnDialogueConfirmed()
 {
 	UUIManager* UI = UUIManager::Get(this);
-	if (UI) UI->Close(UITags::GambleDialogue);
+	if (UI)
+	{
+		UI->Close(UITags::GambleDialogue);
+		UUserWidget* BettingUI = UI->Open(UITags::GambleBettingDialogue);
+		UGambleBettingDialogueWidget* Betting = Cast<UGambleBettingDialogueWidget>(BettingUI);
+		if (Betting)
+		{
+			Betting->OnBettingChose.AddDynamic(this, &AGambleActor::OnBettingGoldChose);
+		}
+	}
+}
+
+void AGambleActor::OnBettingGoldChose(int32 InBettingGold)
+{
+	BettingGold = InBettingGold;
+	if (UUIManager* UI = UUIManager::Get(this))
+	{
+		UI->Close(UITags::GambleBettingDialogue);
+	}
+	
 	if (GambleComponent && CachedInteractor)
 		GambleComponent->ProgressInteract(CachedInteractor);
 }
@@ -92,12 +112,20 @@ void AGambleActor::OnDialogueCancelled()
 
 void AGambleActor::GiveReward()
 {
-	//TODO : 골드 획득
+	AMainCharacter* Player = Cast<AMainCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	if (Player)
+	{
+		Player->AddGold(BettingGold*2);
+	}
 }
 
 void AGambleActor::ApplyPenalty()
 {
-	//TODO : 골드 차감
+	AMainCharacter* Player = Cast<AMainCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	if (Player)
+	{
+		Player->AddGold(BettingGold*2*(-1));
+	}
 }
 
 void AGambleActor::BeginPlay()
