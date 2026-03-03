@@ -4,6 +4,7 @@
 #include "Character/MainCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Manager/SoundManager.h"
 #include "Manager/UIManager.h"
 #include "UI/UITags.h"
 #include "UI/LoadingScreenWidget.h"
