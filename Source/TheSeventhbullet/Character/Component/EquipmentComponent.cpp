@@ -142,7 +142,19 @@ void UEquipmentComponent::SetPendingWeapon(UWeaponDataAsset* Weapon)
 
 void UEquipmentComponent::ApplyWeapon()
 {
-	if (!PendingWeapon) return;
+	if (!PendingWeapon)
+	{
+		if (DefaultWeapon)
+		{
+			PendingWeapon = DefaultWeapon;
+			UE_LOG(LogTemp, Log, TEXT("PendingWeapon이 없어 DefaultWeapon으로 대체합니다."));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("장착할 무기가 전혀 없습니다! (DefaultWeapon도 Null)"));
+			return; 
+		}
+	}
 	
 	AMainCharacter* WeaponOwner = Cast<AMainCharacter>(GetOwner());
 	if (!WeaponOwner || !WeaponOwner->WeaponMeshComponent) return;

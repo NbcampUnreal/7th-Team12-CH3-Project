@@ -66,4 +66,7 @@ public:
 	// 장착된 무기가 변경
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnWeaponEquipmentChanged OnWeaponEquipmentChanged;
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Equipment")
+	UWeaponDataAsset* DefaultWeapon;
 };

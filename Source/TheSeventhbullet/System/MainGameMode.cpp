@@ -529,7 +529,16 @@ void AMainGameMode::ReturnToTown()
 	StageElapsedTime = 0.0f;
 	CurrentStageResult = EStageResult::None;
 	StageRewardItems.Empty();
-
+	
+	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this,0));
+	if (!Character) return;
+	
+	//TODO 남태 : 여기에 플레이어 초기화 로직 들어가야함
+	//예시)
+	//Character->CurrentPotion
+	//Character->CurrentHp
+	//Character->CurrentStamina
+	
 	// UI 정리 + 로딩 화면 표시
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
