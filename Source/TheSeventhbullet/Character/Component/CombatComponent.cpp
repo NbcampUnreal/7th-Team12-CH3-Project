@@ -82,14 +82,11 @@ void UCombatComponent::StartFire()
 	
 	UE_LOG(LogTemp, Warning, TEXT("Start Fire"));
 	HitScanFire();
-	// GetWorld()->GetTimerManager().SetTimer(
-	// 	FireTimerHandle,
-	// 	this,
-	// 	&UCombatComponent::HitScanFire,
-	// 	CurrentWeaponStatus.FireInterval,
-	// 	true,
-	// 	0.02
-	// );
+	if (WeaponOwner->EquipmentComponent->FindSpecialOption(ESpecialOptions::DoubleShot))
+	{
+		HitScanFire();
+	}
+	
 }
 
 void UCombatComponent::StopFire()
@@ -330,6 +327,21 @@ void UCombatComponent::ApplyDamageByHit(const FHitResult& Hit)
 				DamageNumber->Init(DisplayDamage, bIsCrit);
 			}
 		}
+	}
+	
+	if (WeaponOwner->EquipmentComponent->FindSpecialOption(ESpecialOptions::Lifesteal))
+	{
+		float HP = WeaponOwner->GetCurrentHP();
+		HP = FMath::Clamp(HP + Context.CurrentDamage*0.1, 0.f, WeaponOwner->GetTotalStatus().HP);
+		WeaponOwner->SetCurrentHP(HP);
+		WeaponOwner->OnHPChanged.Broadcast(HP, static_cast<float>(WeaponOwner->GetTotalStatus().HP));
+	}
+	if (WeaponOwner->EquipmentComponent->FindSpecialOption(ESpecialOptions::Heartsteal))
+	{
+		float HP = WeaponOwner->GetCurrentHP();
+		HP = FMath::Clamp(HP + Context.CurrentDamage*0.2, 0.f, WeaponOwner->GetTotalStatus().HP);
+		WeaponOwner->SetCurrentHP(HP);
+		WeaponOwner->OnHPChanged.Broadcast(HP, static_cast<float>(WeaponOwner->GetTotalStatus().HP));
 	}
 
 	OnCurrentDamageBroadcast.Broadcast(Context.CurrentDamage, bIsCrit);

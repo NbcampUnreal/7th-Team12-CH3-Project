@@ -549,6 +549,7 @@ float AMainCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& 
 void AMainCharacter::HealHP()
 {
 	CurrentHP = FMath::Clamp(CurrentHP + HealAmount, 0.f, TotalStatus.HP);
+	OnHPChanged.Broadcast(CurrentHP, static_cast<float>(TotalStatus.HP));
 	UE_LOG(LogTemp, Error, TEXT("Healing HP: %f/ Current HP : %f"), HealAmount, CurrentHP);
 	UE_LOG(LogTemp, Error, TEXT("Potion %d / %d"), CurrentPotion, MaxPotion );
 }

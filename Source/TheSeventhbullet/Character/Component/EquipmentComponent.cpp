@@ -36,6 +36,21 @@ void UEquipmentComponent::EquipWeaponData(UWeaponDataAsset* NewWeapon)
 	UE_LOG(LogTemp, Warning, TEXT("OnWeaponEquipmentChanged : Weapon"));
 }
 
+bool UEquipmentComponent::FindSpecialOption(ESpecialOptions Option)
+{
+	for (const FSoulGemInstance& Gem : EquippedSoulGems)
+	{
+		for (const ESpecialOptions SpecialOption : Gem.SpecialOptions )
+		{
+			if (SpecialOption == Option)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 FCharacterStat UEquipmentComponent::GetTotalGemStats() const
 {
 	FCharacterStat TotalGemStat;

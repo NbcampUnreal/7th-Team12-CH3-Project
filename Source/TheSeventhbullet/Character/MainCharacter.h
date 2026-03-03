@@ -272,6 +272,8 @@ public:
 	float GetMaxHP() const { return static_cast<float>(TotalStatus.HP); }
 	float GetCurrentStamina() const { return CurrentStamina; }
 	float GetMaxStamina() const { return static_cast<float>(TotalStatus.Stamina); }
+	
+	void SetCurrentHP(const float NewHP) { CurrentHP = NewHP; };
 
 	UFUNCTION()
 	void OnDeath();
