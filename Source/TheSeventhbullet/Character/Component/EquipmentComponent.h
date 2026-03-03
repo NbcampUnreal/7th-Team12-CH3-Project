@@ -17,7 +17,7 @@ class THESEVENTHBULLET_API UEquipmentComponent : public UActorComponent
 
 public:
 	// 장착된 소울젬 배열
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Equipment")
 	TArray<FSoulGemInstance> EquippedSoulGems;
 	// 장착된 무기 데이터
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
@@ -33,7 +33,10 @@ public:
 public:
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void EquipWeaponData(UWeaponDataAsset* Weapon);
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	bool FindSpecialOption(ESpecialOptions Option);
 	
+public:
 	FCharacterStat GetTotalGemStats() const;
 	
 	UFUNCTION()

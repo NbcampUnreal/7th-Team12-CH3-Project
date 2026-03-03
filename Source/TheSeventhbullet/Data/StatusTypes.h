@@ -25,6 +25,15 @@ enum class EStatusCalculationMethod : uint8
 	Multiply // 증폭 타입 * 1.5 (50%)
 };
 
+UENUM(BlueprintType)
+enum class ESpecialOptions : uint8
+{
+	None,
+	DoubleShot,
+	Lifesteal,
+	Heartsteal
+};
+
 USTRUCT(BlueprintType)
 struct THESEVENTHBULLET_API FStatusModifier
 {

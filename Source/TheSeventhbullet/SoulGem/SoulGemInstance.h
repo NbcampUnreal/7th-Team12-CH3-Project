@@ -3,14 +3,6 @@
 #include "Data/StatusTypes.h"
 #include "SoulGemInstance.generated.h"
 
-UENUM(BlueprintType)
-enum class ESpecialOptions : uint8
-{
-	None,
-	ReloadSpeed,
-	DoubleShot
-};
-
 USTRUCT(BlueprintType)
 struct THESEVENTHBULLET_API FSoulGemInstance
 {
