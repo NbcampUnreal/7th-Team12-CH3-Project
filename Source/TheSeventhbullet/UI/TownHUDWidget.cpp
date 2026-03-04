@@ -75,6 +75,14 @@ FText UTownHUDWidget::BuildPhaseMessage() const
 	if (PendingPhase == ETownPhase::RequestAccepted && GM)
 	{
 		int32 RequestID = GM->GetCurrentRequestID();
+
+		// 보스 의뢰(ID 100)일 때는 보스 트리거로 유도
+		constexpr int32 BossRequestID = 100;
+		if (RequestID == BossRequestID)
+		{
+			return NSLOCTEXT("TownHUD", "BossRequest", "당신의 사냥을 마무리하세요");
+		}
+
 		USyncDataManager* DataManager = USyncDataManager::Get(this);
 		if (DataManager && RequestID != INDEX_NONE)
 		{

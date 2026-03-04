@@ -37,4 +37,5 @@ namespace UITags
 	const FName RandomMat      = FName(TEXT("RandomMat"));
 	const FName ConfirmDialog  = FName(TEXT("ConfirmDialog"));
 	const FName Option         = FName(TEXT("Option"));
+	const FName BossHUD        = FName(TEXT("BossHUD"));
 }

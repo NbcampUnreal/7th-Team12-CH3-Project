@@ -7,6 +7,7 @@
 #include "Enemy/EnemyBase.h"
 #include "BossEnemyActorComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBossHealthChanged, float, CurrentHP, float, MaxHP);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class THESEVENTHBULLET_API UBossEnemyActorComponent : public UActorComponent
@@ -14,7 +15,10 @@ class THESEVENTHBULLET_API UBossEnemyActorComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	
+
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnBossHealthChanged OnBossHealthChanged;
+
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCharacterEventSignnature OnBossPatternEnd;
     

@@ -310,6 +310,14 @@ void UMainGameInstance::ResetGameData()
 void UMainGameInstance::RequestBossStage(int32 InRequestID)
 {
 	PendingBossRequestID = InRequestID;
+
+	// 보스 맵 전환 전 TownHUD 정리
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->Close(UITags::TownHUD);
+	}
+
 	ShowLoadingScreen();
 	
 	FLatentActionInfo LatentInfo;
@@ -380,6 +388,14 @@ void UMainGameInstance::PlayBossSequence()
 		BossSequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), BossMeetSequence, Settings, OutActor);
 		if (BossSequencePlayer)
 		{
+			//시퀀스 재생 전 UI 정리 (보스 입장 시퀀스는 보스전 시작 전이므로 일반 HUD 정리)
+			UUIManager* UIMgr = UUIManager::Get(this);
+			if (UIMgr)
+			{
+				UIMgr->Close(UITags::HUD);
+				UIMgr->Close(UITags::Crosshair);
+			}
+
 			//현석 : 시퀀스 재생 종료를 위한 콜백함수 바인딩
 			BossSequencePlayer->OnFinished.AddDynamic(this,&UMainGameInstance::OnBossSequenceFinishedDelegate);
 			BossSequencePlayer->Play();

@@ -64,9 +64,10 @@ void UBreakGroundBossPatternComponent::BossMonsterPlayPattern()
 			UUIManager* UIMgr = UUIManager::Get(this);
 			if (UIMgr)
 			{
-				UIMgr->Close(UITags::HUD);
+				UIMgr->Close(UITags::BossHUD);
+				UIMgr->Close(UITags::Crosshair);
 			}
-			
+
 			//레벨 시퀀스 재생
 			BossSequencePlayer->Play();
 		}
@@ -111,7 +112,8 @@ void UBreakGroundBossPatternComponent::OnBossSequenceFinishedDelegate()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->Open(UITags::HUD);
+		UIMgr->Open(UITags::BossHUD);
+		UIMgr->Open(UITags::Crosshair);
 	}
 			
 	

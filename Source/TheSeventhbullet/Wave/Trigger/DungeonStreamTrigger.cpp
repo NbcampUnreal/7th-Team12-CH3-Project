@@ -12,7 +12,11 @@ void ADungeonStreamTrigger::ActivateTrigger()
 bool ADungeonStreamTrigger::CanActivate() const
 {
 	AMainGameMode* GM = AMainGameMode::Get(this);
-	return GM && GM->HasActiveRequest();
+	if (!GM || !GM->HasActiveRequest()) return false;
+
+	// 보스 의뢰(ID 100)일 때는 일반 던전 입장 불가
+	constexpr int32 BossRequestID = 100;
+	return GM->GetCurrentRequestID() != BossRequestID;
 }
 
 void ADungeonStreamTrigger::HandleLevelLoaded()
