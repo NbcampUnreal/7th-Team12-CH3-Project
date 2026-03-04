@@ -633,22 +633,6 @@ void AMainCharacter::Tick(float DeltaTime)
 		OnStaminaChanged.Broadcast(CurrentStamina, GetMaxStamina());
 	}
 	
-#if !UE_BUILD_SHIPPING
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
-	{
-		if (PC->WasInputKeyJustPressed(EKeys::F1))
-		{
-			if (CurrentHP > 0.f)   // 이미 사망 상태면 중복 호출 방지
-			{
-				CurrentHP = 0.f;
-				OnHPChanged.Broadcast(CurrentHP, static_cast<float>(TotalStatus.HP));
-				OnDeath();
-			}
-		}
-	}
-#endif
-	
-
 }
 
 void AMainCharacter::PlayerMove(const FInputActionValue& value)

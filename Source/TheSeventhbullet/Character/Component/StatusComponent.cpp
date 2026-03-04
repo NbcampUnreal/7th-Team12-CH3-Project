@@ -10,7 +10,7 @@ UStatusComponent::UStatusComponent()
 	CharacterStatus.HP = 100;
 	CharacterStatus.Stamina = 100;
 	CharacterStatus.Attack = 10;
-	CharacterStatus.Defence = 10;
+	CharacterStatus.Defence = 0;
 	CharacterStatus.CriticalChance = 0.15f;
 	CharacterStatus.CriticalDamage = 1.5f;
 }
