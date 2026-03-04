@@ -5,6 +5,8 @@
 #include "GameFramework/PlayerController.h"
 #include "System/MainGameMode.h"
 #include "System/TownPhase.h"
+#include "Character/MainCharacter.h"
+#include "Inventory/InventoryComponent.h"
 
 USaveComponent::USaveComponent()
 {
@@ -58,6 +60,19 @@ void USaveComponent::OnWakeAnimComplete()
 void USaveComponent::HandleNextDay()
 {
 	GI->CurrentDay++;
+
+	// 일차별 물약 지급: 1일차→1개, 2일차→2개, 3일차 이후→3개
+	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+	if (Character)
+	{
+		UInventoryComponent* Inventory = Character->GetComponentByClass<UInventoryComponent>();
+		if (Inventory)
+		{
+			int32 PotionCount = FMath::Min(GI->CurrentDay, 3);
+			FPrimaryAssetId PotionID(FPrimaryAssetType("Item"), FName("DA_HealthPotion"));
+			Inventory->AddItem(PotionID, PotionCount);
+		}
+	}
 
 	AMainGameMode* GM = AMainGameMode::Get(this);
 	if (GM)

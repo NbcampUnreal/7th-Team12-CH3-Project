@@ -178,6 +178,7 @@ bool UInventoryComponent::AddSoulGem(FPrimaryAssetId ItemID, const FSoulGemInsta
 				Items[i].ItemID = ItemID;
 				Items[i].StackCount = 1;
 				Items[i].SoulGemData = SoulGemData;
+				Items[i].SoulGemData.ItemID = ItemID;
 				UE_LOG(LogTemp, Warning, TEXT("[AddSoulGem] PlaceGem 성공 - 슬롯: %d"), i);
 				OnItemAdded.Broadcast(Items[i], i);
 				return;
@@ -326,6 +327,16 @@ FItemInstance UInventoryComponent::FindItemByID(FPrimaryAssetId ItemID) const
 		}
 	}
 	return FItemInstance();
+}
+
+int32 UInventoryComponent::GetCountByID(FPrimaryAssetId ItemID) const
+{
+	int32 Total = 0;
+	for (const FItemInstance& Item : Items)
+	{
+		if (Item.ItemID == ItemID) Total += Item.StackCount;
+	}
+	return Total;
 }
 
 int32 UInventoryComponent::FindStackableSlot(FPrimaryAssetId ItemID, int32 MaxStack) const

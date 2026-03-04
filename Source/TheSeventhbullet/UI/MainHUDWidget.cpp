@@ -6,6 +6,7 @@
 #include "System/MainGameMode.h"
 #include "Character/MainCharacter.h"
 #include "Character/Component/CombatComponent.h"
+#include "Inventory/InventoryComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 void UMainHUDWidget::NativeConstruct()
@@ -33,6 +34,26 @@ void UMainHUDWidget::NativeConstruct()
 		// 초기값 반영
 		UpdateHP(Character->GetCurrentHP(), Character->GetMaxHP());
 
+		Character->OnPotionChanged.AddDynamic(this, &UMainHUDWidget::OnPotionChangedHandler);
+		Character->OnPotionCooldownStarted.AddDynamic(this, &UMainHUDWidget::OnPotionCooldownStartedHandler);
+
+		// 초기 물약 수량 표시
+		if (Character->InventoryComponent)
+		{
+			FPrimaryAssetId PotionID(FPrimaryAssetType("Item"), FName("DA_HealthPotion"));
+			UpdatePotionCount(Character->InventoryComponent->GetCountByID(PotionID));
+		}
+		if (PotionCooldownBar)
+		{
+			PotionCooldownBar->SetPercent(0.f);
+		}
+
+		Character->OnSkillCooldownStarted.AddDynamic(this, &UMainHUDWidget::OnSkillCooldownStartedHandler);
+		if (SkillCooldownBar)
+		{
+			SkillCooldownBar->SetPercent(0.f);
+		}
+
 		if (UCombatComponent* Combat = Character->CombatComponent)
 		{
 			Combat->OnAmmoChanged.AddDynamic(this, &UMainHUDWidget::OnAmmoChangedHandler);
@@ -51,6 +72,9 @@ void UMainHUDWidget::NativeDestruct()
 	if (AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
 	{
 		Character->OnHPChanged.RemoveDynamic(this, &UMainHUDWidget::OnHPChangedHandler);
+		Character->OnPotionChanged.RemoveDynamic(this, &UMainHUDWidget::OnPotionChangedHandler);
+		Character->OnPotionCooldownStarted.RemoveDynamic(this, &UMainHUDWidget::OnPotionCooldownStartedHandler);
+		Character->OnSkillCooldownStarted.RemoveDynamic(this, &UMainHUDWidget::OnSkillCooldownStartedHandler);
 
 		if (UCombatComponent* Combat = Character->CombatComponent)
 		{
@@ -249,6 +273,43 @@ void UMainHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		}
 	}
 
+	// Potion Cooldown Bar
+	if (bCooldownActive)
+	{
+		CooldownRemaining -= InDeltaTime;
+		float Percent = FMath::Clamp(CooldownRemaining / CooldownTotal, 0.f, 1.f);
+		if (PotionCooldownBar)
+		{
+			PotionCooldownBar->SetPercent(Percent);
+		}
+		if (CooldownRemaining <= 0.f)
+		{
+			bCooldownActive = false;
+			if (PotionCooldownBar)
+			{
+				PotionCooldownBar->SetPercent(0.f);
+			}
+		}
+	}
+
+	// Skill Cooldown Bar
+	if (bSkillCooldownActive)
+	{
+		SkillCooldownRemaining -= InDeltaTime;
+		float Percent = FMath::Clamp(SkillCooldownRemaining / SkillCooldownTotal, 0.f, 1.f);
+		if (SkillCooldownBar)
+		{
+			SkillCooldownBar->SetPercent(Percent);
+		}
+		if (SkillCooldownRemaining <= 0.f)
+		{
+			bSkillCooldownActive = false;
+			if (SkillCooldownBar)
+			{
+				SkillCooldownBar->SetPercent(0.f);
+			}
+		}
+	}
 }
 
 void UMainHUDWidget::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
@@ -256,5 +317,40 @@ void UMainHUDWidget::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
 	if (AmmoText)
 	{
 		AmmoText->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"), CurrentAmmo, MaxAmmo)));
+	}
+}
+
+void UMainHUDWidget::UpdatePotionCount(int32 Count)
+{
+	if (PotionCountText)
+	{
+		PotionCountText->SetText(FText::FromString(FString::Printf(TEXT("x%d"), Count)));
+	}
+}
+
+void UMainHUDWidget::OnPotionChangedHandler(int32 Count)
+{
+	UpdatePotionCount(Count);
+}
+
+void UMainHUDWidget::OnPotionCooldownStartedHandler(float CoolTime)
+{
+	CooldownTotal = CoolTime;
+	CooldownRemaining = CoolTime;
+	bCooldownActive = true;
+	if (PotionCooldownBar)
+	{
+		PotionCooldownBar->SetPercent(1.f);
+	}
+}
+
+void UMainHUDWidget::OnSkillCooldownStartedHandler(float CoolTime)
+{
+	SkillCooldownTotal = CoolTime;
+	SkillCooldownRemaining = CoolTime;
+	bSkillCooldownActive = true;
+	if (SkillCooldownBar)
+	{
+		SkillCooldownBar->SetPercent(1.f);
 	}
 }

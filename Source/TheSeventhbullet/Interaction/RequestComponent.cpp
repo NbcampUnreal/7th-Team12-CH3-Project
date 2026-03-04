@@ -28,81 +28,101 @@ void URequestComponent::SelectRequest(int32 SelectedRequestID)
 
 void URequestComponent::BeginInteract(AActor* Interactor)
 {
-	ProgressInteract(Interactor);
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (!UIMgr) return;
+
+	// 열려있으면 닫기
+	if (UIMgr->IsOpen(UITags::Request))
+	{
+		UIMgr->Close(UITags::Request);
+		return;
+	}
+
+	// 일차가 바뀌었으면 의뢰 갱신
+	UMainGameInstance* GI = UMainGameInstance::Get(this);
+	if (!GI) return;
+
+	if (LastRefreshedDay != GI->CurrentDay)
+	{
+		RefreshRequests();
+		LastRefreshedDay = GI->CurrentDay;
+	}
+
+	if (CachedRequestIDs.Num() == 0) return;
+
+	// 열기 + 캐시된 의뢰 세팅
+	UUserWidget* Widget = UIMgr->Open(UITags::Request);
+	URequestWidget* RequestWidget = Cast<URequestWidget>(Widget);
+	if (RequestWidget)
+	{
+		RequestWidget->SetRequests(this, CachedRequestIDs, CachedRequests);
+	}
 }
 
 void URequestComponent::ProgressInteract(AActor* Interactor)
 {
 	Super::ProgressInteract(Interactor);
-    USyncDataManager* DataManager = USyncDataManager::Get(this);
-    if (!DataManager) return;
+}
 
-    UMainGameInstance* GI = UMainGameInstance::Get(this);
-    if (!GI) return;
+void URequestComponent::RefreshRequests()
+{
+	CachedRequestIDs.Empty();
+	CachedRequests.Empty();
 
-    int32 CurrentDay = GI->CurrentDay;
+	USyncDataManager* DataManager = USyncDataManager::Get(this);
+	if (!DataManager) return;
 
-    constexpr int32 BossRequestID = 100;
-    constexpr int32 BossDay = 7;
+	UMainGameInstance* GI = UMainGameInstance::Get(this);
+	if (!GI) return;
 
-    TArray<int32> AllRequestIDs = DataManager->GetAllRequestIDs();
-    TArray<int32> PickedIDs;
-    TArray<FRequestRowData> SelectedRequests;
-	
-    if (CurrentDay == BossDay)
-    {
-        FRequestRowData BossData = DataManager->GetRequestData(BossRequestID);
-        PickedIDs.Add(BossRequestID);
-        SelectedRequests.Add(BossData);
-    }
-    else
-    {
-        int32 DayIndex = CurrentDay - 1;
-        if (!DayAvailableLevel.IsValidIndex(DayIndex)) return;
-        int32 MaxLevel = DayAvailableLevel[DayIndex];
+	int32 CurrentDay = GI->CurrentDay;
 
-        TArray<int32> ValidRequestIDs;
-        for (int32 RequestID : AllRequestIDs)
-        {
-            if (RequestID == BossRequestID) continue;
+	constexpr int32 BossRequestID = 100;
+	constexpr int32 BossDay = 7;
 
-            FRequestRowData Data = DataManager->GetRequestData(RequestID);
-            if (Data.RequestLevel <= MaxLevel)
-            {
-                ValidRequestIDs.Add(RequestID);
-            }
-        }
+	TArray<int32> AllRequestIDs = DataManager->GetAllRequestIDs();
 
-        if (ValidRequestIDs.Num() == 0) return;
+	if (CurrentDay == BossDay)
+	{
+		FRequestRowData BossData = DataManager->GetRequestData(BossRequestID);
+		CachedRequestIDs.Add(BossRequestID);
+		CachedRequests.Add(BossData);
+	}
+	else
+	{
+		int32 DayIndex = CurrentDay - 1;
+		if (!DayAvailableLevel.IsValidIndex(DayIndex)) return;
+		int32 MaxLevel = DayAvailableLevel[DayIndex];
 
-        // 셔플
-        for (int32 i = ValidRequestIDs.Num() - 1; i > 0; --i)
-        {
-            int32 RandomIndex = FMath::RandRange(0, i);
-            ValidRequestIDs.Swap(i, RandomIndex);
-        }
+		TArray<int32> ValidRequestIDs;
+		for (int32 RequestID : AllRequestIDs)
+		{
+			if (RequestID == BossRequestID) continue;
 
-        int32 PickCount = FMath::Min(3, ValidRequestIDs.Num());
-        for (int32 i = 0; i < PickCount; ++i)
-        {
-            int32 PickedID = ValidRequestIDs[i];
-            PickedIDs.Add(PickedID);
-            SelectedRequests.Add(DataManager->GetRequestData(PickedID));
-        }
-    }
+			FRequestRowData Data = DataManager->GetRequestData(RequestID);
+			if (Data.RequestLevel <= MaxLevel)
+			{
+				ValidRequestIDs.Add(RequestID);
+			}
+		}
 
-    if (PickedIDs.Num() == 0) return;
+		if (ValidRequestIDs.Num() == 0) return;
 
-    // UI 표시
-    UUIManager* UIMgr = UUIManager::Get(this);
-    if (!UIMgr) return;
+		// 셔플
+		for (int32 i = ValidRequestIDs.Num() - 1; i > 0; --i)
+		{
+			int32 RandomIndex = FMath::RandRange(0, i);
+			ValidRequestIDs.Swap(i, RandomIndex);
+		}
 
-    UUserWidget* Widget = UIMgr->Open(UITags::Request);
-    URequestWidget* RequestWidget = Cast<URequestWidget>(Widget);
-    if (RequestWidget)
-    {
-        RequestWidget->SetRequests(this, PickedIDs, SelectedRequests);
-    }
+		int32 PickCount = FMath::Min(3, ValidRequestIDs.Num());
+		for (int32 i = 0; i < PickCount; ++i)
+		{
+			int32 PickedID = ValidRequestIDs[i];
+			CachedRequestIDs.Add(PickedID);
+			CachedRequests.Add(DataManager->GetRequestData(PickedID));
+		}
+	}
 }
 
 void URequestComponent::EndInteract(AActor* Interactor)

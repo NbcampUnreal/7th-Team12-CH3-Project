@@ -73,6 +73,10 @@ private:
 	UFUNCTION()
 	void OnCloseClicked();
 
+	UFUNCTION()
+	void OnMaterialsChanged(const TArray<UMaterialDataAsset*>& Materials);
+
+	void UpdateCraftButtonState();
 	void ReturnAllMaterials();
 	FPrimaryAssetId DetermineSoulGemID(const TArray<UMaterialDataAsset*>& Materials) const;
 

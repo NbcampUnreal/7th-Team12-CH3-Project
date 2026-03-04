@@ -109,11 +109,11 @@ void AMainCharacter::BeginPlay()
 		HandleEquipmentChanged();
 	}
 
-	// TODO: 테스트용 - 나중에 제거
+	// 1일차 물약 1개 지급
 	if (InventoryComponent)
 	{
 		FPrimaryAssetId PotionID(FPrimaryAssetType("Item"), FName("DA_HealthPotion"));
-		InventoryComponent->AddItem(PotionID, 3);
+		InventoryComponent->AddItem(PotionID, 1);
 	}
 
 	// CurrentHP / CurrentStamina 초기화
@@ -552,17 +552,30 @@ float AMainCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& 
 	return FinalDamage;
 }
 
-void AMainCharacter::HealHP()
+void AMainCharacter::UsePotion()
 {
-	CurrentHP = FMath::Clamp(CurrentHP + HealAmount, 0.f, TotalStatus.HP);
-	OnHPChanged.Broadcast(CurrentHP, static_cast<float>(TotalStatus.HP));
-	UE_LOG(LogTemp, Error, TEXT("Healing HP: %f/ Current HP : %f"), HealAmount, CurrentHP);
-	UE_LOG(LogTemp, Error, TEXT("Potion %d / %d"), CurrentPotion, MaxPotion );
-}
+	if (!InventoryComponent) return;
 
-void AMainCharacter::ResetPotion()
-{
-	CurrentPotion = MaxPotion;
+	FPrimaryAssetId PotionID(FPrimaryAssetType("Item"), FName("DA_HealthPotion"));
+	if (!InventoryComponent->RemoveItemByID(PotionID, 1)) return;
+
+	float HealAmount = TotalStatus.HP * 0.25f;
+	CurrentHP = FMath::Clamp(CurrentHP + HealAmount, 0.f, static_cast<float>(TotalStatus.HP));
+	OnHPChanged.Broadcast(CurrentHP, static_cast<float>(TotalStatus.HP));
+
+	// 남은 수량 알림
+	int32 Remaining = InventoryComponent->GetCountByID(PotionID);
+	OnPotionChanged.Broadcast(Remaining);
+
+	// 쿨타임 시작
+	bPotionOnCooldown = true;
+	OnPotionCooldownStarted.Broadcast(PotionCoolTime);
+	GetWorldTimerManager().SetTimer(
+		PotionCoolTimerHandle,
+		[this]() { bPotionOnCooldown = false; },
+		PotionCoolTime,
+		false
+	);
 }
 
 void AMainCharacter::Tick(float DeltaTime)
@@ -859,6 +872,8 @@ void AMainCharacter::PlayerSkill(const FInputActionValue& value)
 		
 		PlayAnimMotageByState(EAnimState::Skill);
 		
+		OnSkillCooldownStarted.Broadcast(SkillCoolTime);
+
 		GetWorld()->GetTimerManager().SetTimer(
 			SkillCoolTimerHandle,
 			this,
@@ -932,16 +947,11 @@ void AMainCharacter::PlayerFinishReload(const FInputActionValue& value)
 
 void AMainCharacter::PlayerPotion(const FInputActionValue& value)
 {
+	if (bPotionOnCooldown) return;
 	if (bIsDodge || bIsReload || bIsFire) return;
+	if (CurrentHP >= TotalStatus.HP) return;
 
-	if (CurrentPotion <= 0 || CurrentHP == TotalStatus.HP)
-	{
-		UE_LOG(LogTemp, Error, TEXT("MaxHP"));
-		return;
-	}
-	
-	CurrentPotion -= 1;
-	HealHP();
+	UsePotion();
 }
 
 void AMainCharacter::ToggleEscMenu(const FInputActionValue& value)

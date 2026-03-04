@@ -43,6 +43,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	FItemInstance FindItemByID(FPrimaryAssetId ItemID) const;
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetCountByID(FPrimaryAssetId ItemID) const;
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	TArray<FItemInstance> GetAllItems() const { return Items; }
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool HasEmptySlot() const { return Items.Num() < MaxSlots; }
