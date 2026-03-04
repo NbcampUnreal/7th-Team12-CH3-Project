@@ -538,8 +538,10 @@ float AMainCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& 
 
 	if (bIsInvicible) return 0.f;
 
-	// 적 데미지 계산이랑 동일하게 유지
-	float FinalDamage = FMath::Max(ActualDamage - static_cast<float>(TotalStatus.Defence), 0.f);
+	// 방어력에 따른 데미지 감소율을 적용
+	float DamageDecreaseValue = 1 - (FMath::Log2(static_cast<float>(TotalStatus.Defence)/40.f + 1.f)*0.3f);
+	float FinalDamage = FMath::Max(ActualDamage*DamageDecreaseValue, 1.f);
+	UE_LOG(LogTemp, Warning, TEXT("TakeDamage: %f / DamageDecrease : %f"), FinalDamage, DamageDecreaseValue);
 
 	CurrentHP = FMath::Clamp(CurrentHP - FinalDamage, 0.f, static_cast<float>(TotalStatus.HP));
 	OnHPChanged.Broadcast(CurrentHP, static_cast<float>(TotalStatus.HP));
