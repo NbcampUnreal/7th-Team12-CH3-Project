@@ -355,8 +355,13 @@ void AMainCharacter::PlayAnimMotageByState(EAnimState AnimState)
 
 void AMainCharacter::EndedAnimMontage(UAnimMontage* Montage, bool Interrupted)
 {
-	CurrentState = EAnimState::None;
+	if (MontagesMap.Contains(EAnimState::Dodge) && Montage == MontagesMap[EAnimState::Dodge])
+	{
+		bIsDodge = false;
+		bIsInvicible = false;
+	}
 	
+	CurrentState = EAnimState::None;
 	UpdateRotationState();
 	
 	if (!EquipmentComponent || !EquipmentComponent->CurrentWeapon) return;
