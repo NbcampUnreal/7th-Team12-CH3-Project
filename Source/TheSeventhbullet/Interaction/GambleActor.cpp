@@ -20,8 +20,9 @@ void AGambleActor::Interact(AActor* Interactor)
 	Super::Interact(Interactor);
 	AMainCharacter* Player = Cast<AMainCharacter>(Interactor);
 	if (!Player) return;
-	
+
 	CachedInteractor = Interactor;
+	bInteractionActive = true;
 	UUIManager* UI = UUIManager::Get(this);
 	if (!UI) return;
 	
@@ -67,8 +68,9 @@ void AGambleActor::OnGambleFinished(bool bIsWin)
 		GiveReward();
 	else
 		ApplyPenalty();
-	if (GambleComponent && CachedInteractor)
+	if (GambleComponent && CachedInteractor && bInteractionActive)
 	{
+		bInteractionActive = false;
 		GambleComponent->EndInteract(CachedInteractor);
 	}
 }
@@ -104,8 +106,9 @@ void AGambleActor::OnDialogueCancelled()
 {
 	UUIManager* UI = UUIManager::Get(this);
 	if (UI) UI->Close(UITags::GambleDialogue);
-	if (GambleComponent && CachedInteractor)
+	if (GambleComponent && CachedInteractor && bInteractionActive)
 	{
+		bInteractionActive = false;
 		GambleComponent->EndInteract(CachedInteractor);
 	}
 }
@@ -133,5 +136,22 @@ void AGambleActor::BeginPlay()
 	Super::BeginPlay();
 	if (GambleComponent)
 		GambleComponent->OnInteractionResult.AddDynamic(this, &AGambleActor::OnInteractionResult);
+
+	if (UUIManager* UI = UUIManager::Get(this))
+	{
+		UI->OnWidgetClosed.AddDynamic(this, &AGambleActor::OnUIWidgetClosed);
+	}
+}
+
+void AGambleActor::OnUIWidgetClosed(FName Tag)
+{
+	if (!bInteractionActive) return;
+	if (Tag != UITags::GambleDialogue && Tag != UITags::GambleBettingDialogue && Tag != UITags::Gamble) return;
+
+	bInteractionActive = false;
+	if (GambleComponent && CachedInteractor)
+	{
+		GambleComponent->EndInteract(CachedInteractor);
+	}
 }
 

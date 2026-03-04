@@ -107,7 +107,10 @@ void UEscMenuWidget::OnResumeClicked()
 
 void UEscMenuWidget::OnSettingsClicked()
 {
-	// TODO: Settings UI Push
+	if (UUIManager* UIMgr = UUIManager::Get(this))
+	{
+		UIMgr->Open(UITags::Option);
+	}
 }
 
 void UEscMenuWidget::OnBackToMenuClicked()

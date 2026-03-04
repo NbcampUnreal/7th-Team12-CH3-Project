@@ -43,4 +43,9 @@ private:
 	
 	void GiveReward();
 	void ApplyPenalty();
+
+	UFUNCTION()
+	void OnUIWidgetClosed(FName Tag);
+
+	bool bInteractionActive = false;
 };

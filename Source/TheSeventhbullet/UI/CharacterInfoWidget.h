@@ -45,4 +45,7 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> DayText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> WeaponText;
 };

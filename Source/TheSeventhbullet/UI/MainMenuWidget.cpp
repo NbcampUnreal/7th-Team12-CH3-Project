@@ -1,7 +1,9 @@
 #include "MainMenuWidget.h"
+#include "UITags.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/PanelWidget.h"
+#include "Manager/UIManager.h"
 #include "System/GameInstance/MainGameInstance.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -124,7 +126,10 @@ void UMainMenuWidget::OnNewGameClicked()
 
 void UMainMenuWidget::OnSettingsClicked()
 {
-
+	if (UUIManager* UIMgr = UUIManager::Get(this))
+	{
+		UIMgr->Open(UITags::Option);
+	}
 }
 
 void UMainMenuWidget::OnQuitClicked()
