@@ -92,6 +92,21 @@ void UWeaponSlotWidget::OnWeaponDataLoaded()
 	}
 
 	EquippedComp->SetPendingWeapon(WeaponData);
+	OnSlotSelected.Broadcast(this);
 
 	UE_LOG(LogTemp, Log, TEXT("[WeaponSlotWidget] 무기 장착 완료: %s"), *WeaponAssetId.ToString());
+}
+
+void UWeaponSlotWidget::SetSelected(bool bSelected)
+{
+	if (!SlotButton) return;
+
+	if (bSelected)
+	{
+		SlotButton->SetBackgroundColor(FLinearColor(1.0f, 0.8f, 0.0f, 1.0f)); // 금색 강조
+	}
+	else
+	{
+		SlotButton->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f)); // 기본 흰색
+	}
 }
