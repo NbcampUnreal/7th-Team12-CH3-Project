@@ -38,4 +38,5 @@ namespace UITags
 	const FName ConfirmDialog  = FName(TEXT("ConfirmDialog"));
 	const FName Option         = FName(TEXT("Option"));
 	const FName BossHUD        = FName(TEXT("BossHUD"));
+	const FName Prologue	   = FName(TEXT("Prologue"));
 }

@@ -211,4 +211,10 @@ private:
 	static void StackItem(TArray<FDroppedMaterialsData>& ItemArray,
 	                            const TSoftObjectPtr<UMaterialDataAsset> Material,
 	                            int32 Count);
+	// 주현 : 프롤로그 영상이 끝남.
+	UFUNCTION()
+	void HandlePrologueFinished();
+	// 주현 : 프롤로그 사운드를 재생하기 위한 액터
+	UPROPERTY(EditDefaultsOnly, Category="Prologue")
+	TSubclassOf<AActor> PrologueAudioActorClass;
 };
