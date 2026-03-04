@@ -54,7 +54,7 @@ protected:
 	FCharacterStat TotalStatus;
 	
 	UPROPERTY()
-	int32 Gold = 10000;
+	int32 Gold = 100000000;
 	
 public:	
 	EAnimState CurrentState = EAnimState::None;	// 애니메이션 상태별 출력을 위한 Enum
