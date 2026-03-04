@@ -180,6 +180,7 @@ private:
 	UPROPERTY()
 	int32 CurrentDay;
 	
-	
+	UFUNCTION()
+	void OnPlayerDeath();
 	
 };

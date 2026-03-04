@@ -11,6 +11,7 @@
 #include "Enemy/Boss/BossEnemyActorComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Manager/UIManager.h"
+#include "System/MainGameMode.h"
 
 
 void UDeadBossPatternComponent::BossMonsterPlayPattern()
@@ -75,9 +76,7 @@ void UDeadBossPatternComponent::BossMonsterPlayPattern()
 
 void UDeadBossPatternComponent::OnBossSequenceFinishedDelegate()
 {
-
-	UBossEnemyActorComponent* BossEnemyActorComponent=BossEnemy->FindComponentByClass<UBossEnemyActorComponent>();
-	BossEnemyActorComponent->DestroyComponent();
+	
 	BossEnemy->ReturnToPool();
 	
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(),BreakBossMapClass,BreakBossMap);
@@ -107,10 +106,11 @@ void UDeadBossPatternComponent::OnBossSequenceFinishedDelegate()
 	}
 	FLatentActionInfo UnLoadInfo;
 	UGameplayStatics::UnloadStreamLevel(this,FName("L_Boss"), UnLoadInfo, false);
-	UUIManager* UIMgr = UUIManager::Get(this);
-	if (UIMgr)
+	AMainGameMode* GM = AMainGameMode::Get(this);
+	if (GM)
 	{
-		UIMgr->Open(UITags::MainMenu);
+		GM->OnPlayerDead();
 	}
-
+	//패턴은 일회용
+	DestroyComponent();
 }
