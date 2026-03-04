@@ -63,10 +63,11 @@ void URazorBossPatternComponent::BossMonsterPlayPattern()
 			UUIManager* UIMgr = UUIManager::Get(this);
 			if (UIMgr)
 			{
-				UIMgr->Open(UITags::HUD);
+				UIMgr->Close(UITags::BossHUD);
+				UIMgr->Close(UITags::Crosshair);
 			}
-			
-			
+
+
 			//레벨 시퀀스 재생
 			BossSequencePlayer->Play();
 		}
@@ -87,9 +88,10 @@ void URazorBossPatternComponent::OnBossSequenceFinishedDelegate()
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->Open(UITags::HUD);
+		UIMgr->Open(UITags::BossHUD);
+		UIMgr->Open(UITags::Crosshair);
 	}
-	
+
 	//패턴은 일회용
 	DestroyComponent();
 }

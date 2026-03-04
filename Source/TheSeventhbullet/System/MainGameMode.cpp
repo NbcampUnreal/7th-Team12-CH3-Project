@@ -691,6 +691,7 @@ void AMainGameMode::ReturnToMainMenu()
 		UIMgr->Close(UITags::StageSuccess);
 		UIMgr->Close(UITags::StageFail);
 		UIMgr->Close(UITags::HUD);
+		UIMgr->Close(UITags::BossHUD);
 		UIMgr->Close(UITags::Crosshair);
 		UIMgr->Open(UITags::MainMenu);
 	}

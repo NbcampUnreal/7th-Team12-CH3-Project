@@ -21,12 +21,21 @@ void UBeginWaveState::Enter()
 	if (UIMgr)
 	{
 		UIMgr->Close(UITags::TownHUD);
-		UIMgr->Open(UITags::HUD);
-		UIMgr->Open(UITags::Crosshair);
 
-		if (UMainHUDWidget* HUD = Cast<UMainHUDWidget>(UIMgr->GetWidget(UITags::HUD)))
+		if (GM->IsBossWave())
 		{
-			HUD->ShowWaveInfo(GM->GetCurrentWaveIndex() + 1, DelayTimer);
+			UIMgr->Open(UITags::BossHUD);
+			UIMgr->Open(UITags::Crosshair);
+		}
+		else
+		{
+			UIMgr->Open(UITags::HUD);
+			UIMgr->Open(UITags::Crosshair);
+
+			if (UMainHUDWidget* HUD = Cast<UMainHUDWidget>(UIMgr->GetWidget(UITags::HUD)))
+			{
+				HUD->ShowWaveInfo(GM->GetCurrentWaveIndex() + 1, DelayTimer);
+			}
 		}
 	}
 }

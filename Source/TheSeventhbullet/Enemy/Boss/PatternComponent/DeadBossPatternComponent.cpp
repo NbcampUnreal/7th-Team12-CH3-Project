@@ -64,10 +64,11 @@ void UDeadBossPatternComponent::BossMonsterPlayPattern()
 			UUIManager* UIMgr = UUIManager::Get(this);
 			if (UIMgr)
 			{
-				UIMgr->Close(UITags::HUD);
+				UIMgr->Close(UITags::BossHUD);
+				UIMgr->Close(UITags::Crosshair);
 			}
-			
-			
+
+
 			//레벨 시퀀스 재생
 			BossSequencePlayer->Play();
 		}

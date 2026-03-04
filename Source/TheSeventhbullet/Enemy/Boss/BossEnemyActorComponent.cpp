@@ -46,7 +46,13 @@ void UBossEnemyActorComponent::SetHealth(float NewHealth)
 {
 	NewHealth = FMath::Clamp(NewHealth, 0.0f, 9999999.0f);
 	UE_LOG(LogTemp,Warning,TEXT("%f"),NewHealth);
-	
+
+	// BossHUD 업데이트용 델리게이트
+	if (OwnerEnemy)
+	{
+		OnBossHealthChanged.Broadcast(NewHealth, OwnerEnemy->GetMaxHealth());
+	}
+
 	if (FMath::IsNearlyZero(NewHealth))
 	{
 		if (!bIsFirstFinalPhase)
@@ -56,8 +62,8 @@ void UBossEnemyActorComponent::SetHealth(float NewHealth)
 			OnBossFinalPhase.Broadcast();
 		}
 	}
-	
-	
+
+
 	UE_LOG(LogTemp,Warning,TEXT("HP : %f"),NewHealth);
 	if (!bIsFirstHalfHealth&&NewHealth<=OwnerEnemy->GetMaxHealth()/2.0f)
 	{
