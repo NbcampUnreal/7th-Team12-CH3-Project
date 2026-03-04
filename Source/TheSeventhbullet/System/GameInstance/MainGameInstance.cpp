@@ -9,6 +9,7 @@
 #include "Interaction/ChestActor.h"
 #include "Inventory/InventoryComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Manager/SoundManager.h"
 #include "Manager/UIManager.h"
 #include "System/MonsterManagerSubSystem.h"
 #include "UI/UITags.h"
@@ -327,6 +328,12 @@ void UMainGameInstance::RequestBossStage(int32 InRequestID)
 	UnloadLatentInfo.UUID = GetUniqueID() + 1;
     
 	UGameplayStatics::UnloadStreamLevel(this, TownMapLevelName, UnloadLatentInfo, false);
+	
+	USoundManager* SoundMgr = USoundManager::Get(this);
+	if (SoundMgr)
+	{
+		SoundMgr->PlayBGM(TEXT("BossBGM"), 2.0f, 0.7f);
+	}
 }
 
 void UMainGameInstance::OnBossSequenceLevelLoaded()
