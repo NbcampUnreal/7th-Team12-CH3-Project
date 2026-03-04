@@ -103,6 +103,8 @@ public:
 	virtual void SetHealth(float NewHealth);
 	float GetHealth();
 	float GetMaxHealth();
+	
+	void ReturnToPool();
 
 protected:
 #pragma region EnemyStatus
@@ -159,7 +161,7 @@ protected:
 	
 	
 	void DisplayParticle(FVector HitLocation, UParticleSystem* InParticle);
-	void ReturnToPool();
+
 	
 	virtual void SetPattern(UBossPatternDataAsset* PatternData) PURE_VIRTUAL (AEnemyBase::SetBossPattern,);
 	virtual void PlayPattern(FString PatternName)PURE_VIRTUAL (AEnemyBase::PlayPattern,);
