@@ -36,4 +36,5 @@ namespace UITags
 	const FName GemSocket      = FName(TEXT("GemSocket"));
 	const FName RandomMat      = FName(TEXT("RandomMat"));
 	const FName ConfirmDialog  = FName(TEXT("ConfirmDialog"));
+	const FName Option         = FName(TEXT("Option"));
 }

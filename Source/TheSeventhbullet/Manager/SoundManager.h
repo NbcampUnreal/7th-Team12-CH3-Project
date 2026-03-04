@@ -65,6 +65,22 @@ public:
 	// BGM 재생용
 	UFUNCTION(BlueprintCallable, Category="SoundManager|BGM")
 	void StopBGM(float FadeOutTime = 0.5f);
+
+	// 볼륨 조절
+	UFUNCTION(BlueprintCallable, Category="SoundManager|Volume")
+	void SetMasterVolume(float Volume);
+	UFUNCTION(BlueprintCallable, Category="SoundManager|Volume")
+	void SetBGMVolume(float Volume);
+	UFUNCTION(BlueprintCallable, Category="SoundManager|Volume")
+	void SetSFXVolume(float Volume);
+
+	float GetMasterVolume() const { return MasterVolume; }
+	float GetBGMVolume() const { return BGMVolume; }
+	float GetSFXVolume() const { return SFXVolume; }
+
+	void SaveAudioSettings();
+	void LoadAudioSettings();
+
 private:
 	FSoundData* GetSoundData(FName SoundID);
 	
@@ -77,4 +93,10 @@ private:
 	// BGM 재생용
 	UPROPERTY(Transient)
 	FName CurrentBGMID = NAME_None;
+
+	float MasterVolume = 1.0f;
+	float BGMVolume = 1.0f;
+	float SFXVolume = 1.0f;
+
+	void UpdateBGMVolume();
 };
