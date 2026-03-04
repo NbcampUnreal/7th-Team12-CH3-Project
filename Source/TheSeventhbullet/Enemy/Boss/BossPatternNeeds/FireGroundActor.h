@@ -18,6 +18,7 @@ public:
 	AFireGroundActor();
 
 protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Collision")
 	TObjectPtr<UBoxComponent> CollisionComponent;
 	
 	UFUNCTION()

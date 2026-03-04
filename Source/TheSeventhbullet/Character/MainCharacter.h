@@ -286,6 +286,9 @@ public:
 	
 	void SetCurrentHP(const float NewHP) { CurrentHP = NewHP; };
 
+	// 낙사 처리: KillZ 아래로 떨어졌을 때 호출
+	virtual void FellOutOfWorld(const UDamageType& DmgType) override;
+
 	UFUNCTION()
 	void OnDeath();
 

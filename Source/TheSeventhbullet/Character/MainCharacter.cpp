@@ -355,6 +355,12 @@ void AMainCharacter::PlayAnimMotageByState(EAnimState AnimState)
 
 void AMainCharacter::EndedAnimMontage(UAnimMontage* Montage, bool Interrupted)
 {
+	if (MontagesMap.Contains(EAnimState::Dodge) && Montage == MontagesMap[EAnimState::Dodge])
+	{
+		bIsDodge = false;
+		bIsInvicible = false;
+	}
+
 	CurrentState = EAnimState::None;
 	
 	UpdateRotationState();
@@ -634,7 +640,7 @@ void AMainCharacter::Tick(float DeltaTime)
 		CurrentStamina = FMath::Min(CurrentStamina + StaminaRegenRate * DeltaTime, GetMaxStamina());
 		OnStaminaChanged.Broadcast(CurrentStamina, GetMaxStamina());
 	}
-	
+
 }
 
 void AMainCharacter::PlayerMove(const FInputActionValue& value)
@@ -996,6 +1002,16 @@ void AMainCharacter::SetTotalStatus(const FCharacterStat& NewStatus)
 		CurrentStamina = NewMaxStamina;
 	}
 	OnStaminaChanged.Broadcast(CurrentStamina, NewMaxStamina);
+}
+
+void AMainCharacter::FellOutOfWorld(const UDamageType& DmgType)
+{
+	// KillZ 아래로 떨어지면 즉시 사망 처리 (Super 호출 안 함 - Destroy 방지)
+	if (CurrentHP > 0.f)
+	{
+		CurrentHP = 0.f;
+		OnDeath();
+	}
 }
 
 void AMainCharacter::OnDeath()
