@@ -26,7 +26,10 @@ public:
 	
 	//Character EquippedComponent에 있는 데이터
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FSoulGemInstance> EquippedSoulGems;//장착 중인 소울잼 
+	TArray<FSoulGemInstance> EquippedSoulGems;//장착 중인 소울잼
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FPrimaryAssetId EquippedWeaponID;//장착 중인 무기 ID
 	
 	//StatusComponent에 있는 데이터
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

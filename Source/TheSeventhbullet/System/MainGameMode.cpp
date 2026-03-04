@@ -546,6 +546,11 @@ void AMainGameMode::ReturnToTown()
 	UEquipmentComponent* EquipmentComponent = Character->GetComponentByClass<UEquipmentComponent>();
 	if (!EquipmentComponent) return;
 	
+	// 무기 선택 유지: 다음 스테이지에서 같은 무기를 사용하도록 PendingWeapon에 보존
+	if (EquipmentComponent->CurrentWeapon)
+	{
+		EquipmentComponent->PendingWeapon = EquipmentComponent->CurrentWeapon;
+	}
 	EquipmentComponent->CurrentWeapon = nullptr;
 	Character->WeaponMeshComponent->SetStaticMesh(nullptr);
 	//플레이어 스탯 및 초기화
@@ -657,11 +662,16 @@ void AMainGameMode::ReturnToMainMenu()
 	UEquipmentComponent* EquipmentComponent = Character->GetComponentByClass<UEquipmentComponent>();
 	if (!EquipmentComponent) return;
 	
+	// 무기 선택 유지
+	if (EquipmentComponent->CurrentWeapon)
+	{
+		EquipmentComponent->PendingWeapon = EquipmentComponent->CurrentWeapon;
+	}
 	EquipmentComponent->CurrentWeapon = nullptr;
 	Character->WeaponMeshComponent->SetStaticMesh(nullptr);
 	//플레이어 스탯 및 초기화
 	Character->Revive();
-	
+
 	// L_Town을 제외한 모든 서브레벨 언로드
 	UWorld* World = GetWorld();
 	if (World)
