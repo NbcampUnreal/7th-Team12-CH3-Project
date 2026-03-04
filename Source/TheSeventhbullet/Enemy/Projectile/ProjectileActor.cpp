@@ -12,7 +12,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Manager/ProjectilePoolManager.h"
 #include "System/MainGameMode.h"
-#include "Tests/AutomationEditorCommon.h"
 
 
 // Sets default values

@@ -21,7 +21,7 @@ void UBreakGroundBossPatternComponent::BossMonsterPlayPattern()
 		ALevelSequenceActor* OutActor;
 		FMovieSceneSequencePlaybackSettings Settings;
 		//각각 바인딩된 더미들이 이동한 위치가 최종 위치에 반영
-		Settings.bRestoreState_DEPRECATED=false;
+		Settings.FinishCompletionStateOverride = EMovieSceneCompletionModeOverride::ForceKeepState;
 
 		BossSequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), BossLevelSequence, Settings, OutActor);
 		if (BossSequencePlayer)

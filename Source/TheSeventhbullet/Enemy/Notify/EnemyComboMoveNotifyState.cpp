@@ -7,9 +7,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 
 void UEnemyComboMoveNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
-                                             float TotalDuration)
+                                             float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
-	Super::NotifyBegin(MeshComp, Animation, TotalDuration);
+	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 	
 	Owner = MeshComp->GetOwner();
 	if (Owner == nullptr)
@@ -25,9 +25,9 @@ void UEnemyComboMoveNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, U
 }
 
 void UEnemyComboMoveNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
-	float FrameDeltaTime)
+	float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
-	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime);
+	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 	
 	FHitResult Hit;
 	if (OwnerEnemyBase==nullptr)
@@ -52,7 +52,7 @@ void UEnemyComboMoveNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UA
 	OwnerEnemyBase->AddActorWorldOffset(MoveVector, true, &Hit,ETeleportType::None);
 }	
 
-void UEnemyComboMoveNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
+void UEnemyComboMoveNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	Super::NotifyEnd(MeshComp, Animation);
+	Super::NotifyEnd(MeshComp, Animation, EventReference);
 }

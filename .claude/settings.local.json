@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"C:\\\\Users\\\\rhkrd\\\\OneDrive\\\\바탕 화면\\\\DevelopmentPackage\\\\Windows\\\\TheSeventhbullet\\\\Content\\\\TheSeventhBullet\\\\Maps\"\" 2>/dev/null || echo \"Directory not found \")"
+    ]
+  }
+}

@@ -1,6 +1,5 @@
 ﻿#include "MaterialRecyclingComponent.h"
 
-#include "CookerSettings.h"
 #include "Inventory/ItemInstance.h"
 #include "Manager/SyncDataManager.h"
 

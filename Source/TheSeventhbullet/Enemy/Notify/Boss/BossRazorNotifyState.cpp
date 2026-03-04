@@ -10,9 +10,9 @@
 #include "Particles/Emitter.h"
 
 void UBossRazorNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
-                                        float TotalDuration)
+                                        float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
-	Super::NotifyBegin(MeshComp, Animation, TotalDuration);
+	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 	Owner = MeshComp->GetOwner();
 	if (Owner == nullptr)
 	{
@@ -33,7 +33,7 @@ void UBossRazorNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimS
 }
 
 void UBossRazorNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
-	float FrameDeltaTime)
+	float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
 	if (!IsValid(OwnerEnemyBase) || !IsValid(OwnerEnemyBase->GetMesh()))
 	{
@@ -102,9 +102,9 @@ void UBossRazorNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 	}
 }
 
-void UBossRazorNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
+void UBossRazorNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	Super::NotifyEnd(MeshComp, Animation);
+	Super::NotifyEnd(MeshComp, Animation, EventReference);
 	if (RazorParticleActor != nullptr)
 	{
 		RazorParticleActor->Destroy();
