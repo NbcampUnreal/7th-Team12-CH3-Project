@@ -119,11 +119,7 @@ void UCombatComponent::HitScanFire()
 	if (WeaponOwner->EquipmentComponent->FindSpecialOption(ESpecialOptions::BloodBullet))
 	{
 		float HP = WeaponOwner->GetCurrentHP();
-		if (HP <= 2.0f)
-		{
-			return;
-		}
-		HP = FMath::Clamp(HP - 2.0f, 1.f, WeaponOwner->GetTotalStatus().HP);
+		HP = FMath::Clamp(HP - WeaponOwner->GetTotalStatus().HP*0.05, 1.f, WeaponOwner->GetTotalStatus().HP);
 		WeaponOwner->SetCurrentHP(HP);
 		WeaponOwner->OnHPChanged.Broadcast(HP, static_cast<float>(WeaponOwner->GetTotalStatus().HP));
 	}
