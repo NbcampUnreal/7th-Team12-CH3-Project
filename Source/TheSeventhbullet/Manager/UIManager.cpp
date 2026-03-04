@@ -272,12 +272,15 @@ void UUIManager::HandleEscapeAction()
 	{
 		FName TopTag = ModalTagStack.Last();
 		Close(TopTag);
+		OnWidgetClosed.Broadcast(TopTag);
 		return;
 	}
 
 	if (ActiveGameMenu)
 	{
-		Close(ActiveGameMenuTag);
+		FName ClosingTag = ActiveGameMenuTag;
+		Close(ClosingTag);
+		OnWidgetClosed.Broadcast(ClosingTag);
 		return;
 	}
 

@@ -9,6 +9,8 @@
 class UUIDataAsset;
 struct FUIWidgetEntry;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUIWidgetClosed, FName, Tag);
+
 UCLASS()
 class THESEVENTHBULLET_API UUIManager : public UGameInstanceSubsystem
 {
@@ -37,6 +39,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void HandleEscapeAction();
+
+	UPROPERTY(BlueprintAssignable, Category = "UI")
+	FOnUIWidgetClosed OnWidgetClosed;
 
 private:
 	const FUIWidgetEntry* FindEntry(FName Tag) const;
