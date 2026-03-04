@@ -3,6 +3,7 @@
 
 #include "EnemyAIControllerBase.h"
 
+#include "EnemyBase.h"
 #include "NavigationSystem.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackBoardComponent.h"
@@ -12,7 +13,6 @@
 #include "Perception/AISense_Hearing.h"
 #include "Perception/AISense_Prediction.h"
 #include "Perception/AISense_Sight.h"
-#include "WereWolf/WereWolfCharacter.h"
 
 
 // Sets default values

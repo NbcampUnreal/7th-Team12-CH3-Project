@@ -1,21 +1,20 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BreakGroundBossPatternComponent.h"
+#include "DeadBossPatternComponent.h"
 
 #include "BrainComponent.h"
+#include "BreakGroundBossPatternComponent.h"
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
 #include "Enemy/EnemyBase.h"
+#include "Enemy/Boss/BossEnemyActorComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Manager/UIManager.h"
-#include "System/MainGameMode.h"
-#include "System/GameInstance/MainGameInstance.h"
 
 
-void UBreakGroundBossPatternComponent::BossMonsterPlayPattern()
+void UDeadBossPatternComponent::BossMonsterPlayPattern()
 {
-	//2번째 페이즈 구현
 	if (BossLevelSequence!=nullptr)
 	{
 		ALevelSequenceActor* OutActor;
@@ -34,7 +33,7 @@ void UBreakGroundBossPatternComponent::BossMonsterPlayPattern()
 			}
 			BossBrainComponent=BossEnemy->GetController()->FindComponentByClass<UBrainComponent>();
 			BossBrainComponent->StopLogic(FString("PlayingBossLevelSequence"));
-			BossSequencePlayer->OnFinished.AddDynamic(this,&UBreakGroundBossPatternComponent::OnBossSequenceFinishedDelegate);
+			BossSequencePlayer->OnFinished.AddDynamic(this,&UDeadBossPatternComponent::OnBossSequenceFinishedDelegate);
 			
 			//애니메이션도 정지
 			BossEnemy->StopAnimMontage();
@@ -67,56 +66,51 @@ void UBreakGroundBossPatternComponent::BossMonsterPlayPattern()
 				UIMgr->Close(UITags::HUD);
 			}
 			
+			
 			//레벨 시퀀스 재생
 			BossSequencePlayer->Play();
 		}
 	}
 }
 
-void UBreakGroundBossPatternComponent::BreakGround()
+void UDeadBossPatternComponent::OnBossSequenceFinishedDelegate()
 {
-	if (GetWorld()==nullptr)
+
+	UBossEnemyActorComponent* BossEnemyActorComponent=BossEnemy->FindComponentByClass<UBossEnemyActorComponent>();
+	BossEnemyActorComponent->DestroyComponent();
+	BossEnemy->ReturnToPool();
+	
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(),BreakBossMapClass,BreakBossMap);
+	for (auto& Actor : BreakBossMap)
 	{
-		return;
+		Actor->Destroy();
 	}
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(),BP_AnchorField,AnchorFields);
-	for (auto& Anchor : AnchorFields)
+	BreakBossMap.Empty();
+	if (BreakBossMapClass!=nullptr)
 	{
-		Anchor->Destroy();
-	}
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(),BP_MasterField,MasterFields);
-	for (auto& MasterField : MasterFields)
-	{
-		UFunction* TriggerFunc = MasterField->FindFunction(FName("CE_Trigger"));
-		if (TriggerFunc!=nullptr)
+		AActor* BreakGround1=GetWorld()->SpawnActor<AActor>(BreakBossMapClass,FVector(-5.461139f,3263.802785f,-11959.829517f),FRotator(0,90.0,0));
+		BreakGround1->SetActorScale3D(FVector(1,1.7f,1));
+		AActor* BreakGround2=GetWorld()->SpawnActor<AActor>(BreakBossMapClass,FVector(-3211.517476f,-0.000013f,-11959.829517f),FRotator(0,0,0));
+		BreakGround2->SetActorScale3D(FVector(1,1,1));
+		AActor* BreakGround3=GetWorld()->SpawnActor<AActor>(BreakBossMapClass,FVector(-4.498048,-3234.76249,-11959.829517),FRotator(0,90.0,0));
+		BreakGround3->SetActorScale3D(FVector(1,1.7f,1));
+		AActor* BreakGround4=GetWorld()->SpawnActor<AActor>(BreakBossMapClass,FVector(3187.631406,0.000031,-11959.829517),FRotator(0,0,0));
+		BreakGround4->SetActorScale3D(FVector(1,1,1));
+		if (BreakGround1&&BreakGround2&&BreakGround3&&BreakGround4)
 		{
-			MasterField->ProcessEvent(TriggerFunc, nullptr);
+			UE_LOG(LogTemp,Warning,TEXT("SpawnBreakGroundSucceess"));
 		}
 		else
 		{
-			UE_LOG(LogTemp,Warning,TEXT("Cannot Find CE_Trigger"));
+			UE_LOG(LogTemp,Warning,TEXT("SpawnBreakGroundFailed"));
 		}
 	}
-}
-
-void UBreakGroundBossPatternComponent::OnBossSequenceFinishedDelegate()
-{
-	if (BossBrainComponent!=nullptr)
-	{
-		BossBrainComponent->StartLogic();
-	}
-	//BossCharacter에게 패턴이 끝났음을 콜백
-	OnBossPatternEndSignature.Broadcast();
-	//재생 후에 HUD 오픈
+	FLatentActionInfo UnLoadInfo;
+	UGameplayStatics::UnloadStreamLevel(this,FName("L_Boss"), UnLoadInfo, false);
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->Open(UITags::HUD);
+		UIMgr->Open(UITags::MainMenu);
 	}
-			
-	
-	//패턴은 일회용
-	DestroyComponent();
+
 }
-
-

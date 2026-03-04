@@ -9,6 +9,7 @@
 #include "LevelSequencePlayer.h"
 #include "Enemy/EnemyBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "Manager/UIManager.h"
 
 
 void URazorBossPatternComponent::BossMonsterPlayPattern()
@@ -58,6 +59,14 @@ void URazorBossPatternComponent::BossMonsterPlayPattern()
 				OutActor->SetBinding(BossBinding,BossActors);
 			}
 			
+			//재생 전에 HUD 제거
+			UUIManager* UIMgr = UUIManager::Get(this);
+			if (UIMgr)
+			{
+				UIMgr->Open(UITags::HUD);
+			}
+			
+			
 			//레벨 시퀀스 재생
 			BossSequencePlayer->Play();
 		}
@@ -74,9 +83,12 @@ void URazorBossPatternComponent::OnBossSequenceFinishedDelegate()
 	//BossCharacter에게 패턴이 끝났음을 콜백
 	OnBossPatternEndSignature.Broadcast();
 	
-	//TODO: 잡몹소환 호출
-	
-	
+	//재생 후에 HUD 오픈
+	UUIManager* UIMgr = UUIManager::Get(this);
+	if (UIMgr)
+	{
+		UIMgr->Open(UITags::HUD);
+	}
 	
 	//패턴은 일회용
 	DestroyComponent();
