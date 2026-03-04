@@ -4,6 +4,8 @@
 
 #include "LevelSequencePlayer.h"
 #include "Character/Component/EquipmentComponent.h"
+#include "DataAsset/WeaponDataAsset.h"
+#include "Engine/AssetManager.h"
 #include "Character/Component/StatusComponent.h"
 #include "Data/SaveAndLoadGame.h"
 #include "Interaction/ChestActor.h"
@@ -47,6 +49,17 @@ void UMainGameInstance::SaveGameData()
 		return;
 	}
 	SaveObj->EquippedSoulGems = EquipmentComponent->EquippedSoulGems;
+
+	// 장착 무기 저장 (CurrentWeapon 우선, 없으면 PendingWeapon)
+	UWeaponDataAsset* WeaponToSave = EquipmentComponent->CurrentWeapon;
+	if (!WeaponToSave)
+	{
+		WeaponToSave = EquipmentComponent->PendingWeapon;
+	}
+	if (WeaponToSave)
+	{
+		SaveObj->EquippedWeaponID = WeaponToSave->GetPrimaryAssetId();
+	}
 			
 	UStatusComponent* StatusComponent = MainCharacter->GetComponentByClass<UStatusComponent>();
 	if (!StatusComponent)
@@ -185,6 +198,21 @@ void UMainGameInstance::CheckAndStartGame()
 			return;
 		}
 		EquipmentComponent->LoadData(CurrentSaveData->EquippedSoulGems);
+
+		// 장착 무기 복원
+		if (CurrentSaveData->EquippedWeaponID.IsValid())
+		{
+			UAssetManager& AssetManager = UAssetManager::Get();
+			FSoftObjectPath WeaponPath = AssetManager.GetPrimaryAssetPath(CurrentSaveData->EquippedWeaponID);
+			if (WeaponPath.IsValid())
+			{
+				UWeaponDataAsset* LoadedWeapon = Cast<UWeaponDataAsset>(WeaponPath.TryLoad());
+				if (LoadedWeapon)
+				{
+					EquipmentComponent->PendingWeapon = LoadedWeapon;
+				}
+			}
+		}
 			
 		UStatusComponent* StatusComponent = MainCharacter->GetComponentByClass<UStatusComponent>();
 		if (!StatusComponent)
@@ -281,6 +309,7 @@ void UMainGameInstance::ResetGameData()
 	if (!Character) return;
     
 	Character->ResetGold();
+	Character->AddGold(10000);
     
 	UInventoryComponent* CharacterInventory = Character->GetComponentByClass<UInventoryComponent>();
 	if (!CharacterInventory) return;
@@ -289,7 +318,22 @@ void UMainGameInstance::ResetGameData()
 	UEquipmentComponent* Equipment = Character->GetComponentByClass<UEquipmentComponent>();
 	if (!Equipment) return;
 	Equipment->EquippedSoulGems.Empty();
+	Equipment->PendingWeapon = nullptr;
+	Equipment->CurrentWeapon = nullptr;
 	Equipment->OnGemEquipmentChanged.Broadcast();
+
+	// 강화 스탯 초기화
+	UStatusComponent* StatusComponent = Character->GetComponentByClass<UStatusComponent>();
+	if (StatusComponent)
+	{
+		FEnhancerStatus ResetEnhance;
+		StatusComponent->SetCharacterEnhanceStatus(ResetEnhance);
+		StatusComponent->UpdateTotalStat();
+	}
+
+	// 1일차 물약 1개 지급
+	FPrimaryAssetId PotionID(FPrimaryAssetType("Item"), FName("DA_HealthPotion"));
+	CharacterInventory->AddItem(PotionID, 1);
 
 	if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, 0))
 	{

@@ -64,7 +64,7 @@ void UCharacterInfoWidget::RefreshInfo()
 	}
 	if (WeaponText)
 	{
-		FString WeaponStr = TEXT("무기 : 없음");
+		FString WeaponStr = TEXT("무기 : 리볼버");
 		if (UEquipmentComponent* EquipComp = Character->FindComponentByClass<UEquipmentComponent>())
 		{
 			UWeaponDataAsset* Weapon = EquipComp->CurrentWeapon;
@@ -76,8 +76,8 @@ void UCharacterInfoWidget::RefreshInfo()
 			{
 				switch (Weapon->WeaponType)
 				{
-				case EWeaponTypes::HandGun:       WeaponStr = TEXT("무기 : 핸드건"); break;
-				case EWeaponTypes::AssaultRifle:   WeaponStr = TEXT("무기 : 어썰트 라이플"); break;
+				case EWeaponTypes::HandGun:       WeaponStr = TEXT("무기 : 리볼버"); break;
+				case EWeaponTypes::AssaultRifle:   WeaponStr = TEXT("무기 : 라이플"); break;
 				case EWeaponTypes::ShotGun:        WeaponStr = TEXT("무기 : 샷건"); break;
 				default:                           WeaponStr = TEXT("무기 : 알 수 없음"); break;
 				}

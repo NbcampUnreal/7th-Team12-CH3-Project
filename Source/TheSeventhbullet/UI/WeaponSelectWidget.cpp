@@ -29,6 +29,10 @@ void UWeaponSelectWidget::InitWeaponSelect(AMainCharacter* InCharacter)
 			{
 				Weapon = EquipComp->PendingWeapon;
 			}
+			if (!Weapon)
+			{
+				Weapon = EquipComp->GetDefaultWeapon();
+			}
 			if (Weapon)
 			{
 				FPrimaryAssetId EquippedID = Weapon->GetPrimaryAssetId();
