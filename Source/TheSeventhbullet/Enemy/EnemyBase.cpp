@@ -37,7 +37,7 @@ AEnemyBase::AEnemyBase()
 	AttackPoint = 10.0f;
 	KnockbackStrengh = 200.0f;
 	bIsDead = false;
-	
+	GetCharacterMovement()->MaxStepHeight=60.0f;
 }
 
 // Called when the game starts or when spawned
@@ -73,13 +73,15 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 	HeadShotParticle=EnemyData->HeadShotParticle.Get();
 	USkeletalMeshComponent* EnemyMeshComp=this->GetMesh();
 	
-	//일차 기반으로 공격력 상승. 상승폭은 x^2 % 
+	
+	
+	//일차 기반으로 공격력 상승. 계산식은  체력 : x^2, 공격력, 방어력 : x^2*0.1f
 	GI=UMainGameInstance::Get(this);
 	CurrentDay=GI->CurrentDay;
-	MaxHealth=MaxHealth*((CurrentDay*CurrentDay)/100.0f)+MaxHealth;
+	MaxHealth=CurrentDay*CurrentDay*MaxHealth;
 	NowHealth=MaxHealth;
-	ArmorPoint=ArmorPoint*((CurrentDay*CurrentDay)/100.0f)+ArmorPoint;
-	AttackPoint=AttackPoint*((CurrentDay*CurrentDay)/100.0f)+AttackPoint;
+	ArmorPoint=ArmorPoint*(CurrentDay*CurrentDay*0.1f);
+	AttackPoint=AttackPoint*(CurrentDay*CurrentDay*0.1f);
 	
 	//Mesh관련 처리
 	if (EnemyMeshComp)

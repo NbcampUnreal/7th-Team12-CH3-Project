@@ -78,9 +78,6 @@ public:
 	//적의 ABP
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data", meta=(AssetBundles="Enemy"))
 	TSoftClassPtr<UAnimInstance> EnemyAnimationBlueprint;
-	//사운드
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data", meta=(AssetBundles="Enemy"))
-	TMap<FName,TSoftObjectPtr<USoundCue>> SoundCues;
 	//발사체의 스켈레탈 메시
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Projectile", meta=(AssetBundles="Enemy"))
 	TSoftObjectPtr<UStaticMesh> ProjectileStaticMesh;
