@@ -95,25 +95,25 @@ bool UCraftingComponent::CraftSoulGemFromMaterial(const TArray<UMaterialDataAsse
 FText UCraftingComponent::CraftSoulGemName(const TArray<UMaterialDataAsset*>& Materials)
 {
 	// 이름 규칙
-	// 1번 Material : 이름에 영향없음
-	// 2번 Material : Prefix
-	// 3번 Material : Suffix
-	// 4번 Material : GemBaseName
+	// 1번 Material : Prefix
+	// 2번 Material : Suffix
+	// 3번 Material : GemBaseName
+	// 4번 Material : 이름에 영향없음
 	FText Prefix = FText::GetEmpty();
 	FText Suffix = FText::GetEmpty();
 	FText GemBaseName = FText::GetEmpty();
 	
+	if (Materials.Num() >= 1 && Materials[0])
+	{
+		Prefix = Materials[0] -> NamingParts.Prefix;
+	}
 	if (Materials.Num() >= 2 && Materials[1])
 	{
-		Prefix = Materials[1] -> NamingParts.Prefix;
+		Suffix = Materials[1] -> NamingParts.Suffix;
 	}
 	if (Materials.Num() >= 3 && Materials[2])
 	{
-		Suffix = Materials[2] -> NamingParts.Suffix;
-	}
-	if (Materials.Num() >= 4 && Materials[3])
-	{
-		GemBaseName = Materials[3] -> NamingParts.GemBaseName;
+		GemBaseName = Materials[2] -> NamingParts.GemBaseName;
 	}
 	
 	FText CombineName = FText::Format(NSLOCTEXT("SoulGem", "NameFormat", "{0} {1} {2}"), Prefix, Suffix, GemBaseName);
