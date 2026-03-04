@@ -14,6 +14,7 @@
 #include "TheSeventhbullet/UI/UITags.h"
 #include "Inventory/InventoryComponent.h"
 #include "Manager/SoundManager.h"
+#include "UI/PrologueWidget.h"
 #include "Windows/WindowsApplication.h"
 
 AMainGameMode::AMainGameMode()
@@ -482,16 +483,35 @@ void AMainGameMode::BeginPlay()
 			SubSystem->OnMonsterKilled.AddDynamic(this, &AMainGameMode::OnMonsterKilled);
 		}
 	}
+	
+	if (PrologueAudioActorClass)
+	{
+		GetWorld()->SpawnActor<AActor>(PrologueAudioActorClass);
+	}
 
 	UUIManager* UIMgr = UUIManager::Get(this);
 	if (UIMgr)
 	{
-		UIMgr->Open(UITags::MainMenu);
-	}
-	USoundManager* SoundMgr = USoundManager::Get(GetWorld());
-	if (SoundMgr)
-	{
-		SoundMgr->PlayBGM(TEXT("MainMenuBGM"), 0.5f, 0.5f);
+		UUserWidget* Raw = UIMgr->Open(UITags::Prologue);
+
+		if (UPrologueWidget* Prologue = Cast<UPrologueWidget>(Raw))
+		{
+			if (Prologue)
+			{
+				// 프롤로그가 끝나면 프롤로그가 끝났다고 알려주고 -> HandlePrologueFinished에서 메인메뉴 UI Open
+				Prologue->OnPrologueFinished.AddDynamic(this, &AMainGameMode::HandlePrologueFinished);
+				Prologue->Start();
+				return;
+			}
+
+			// 실패 시 바로 메인메뉴로 감
+			UIMgr->Open(UITags::MainMenu);
+			USoundManager* SoundMgr = USoundManager::Get(GetWorld());
+			if (SoundMgr)
+			{
+				SoundMgr->PlayBGM(TEXT("MainMenuBGM"), 0.5f, 0.5f);
+			}
+		}
 	}
 }
 
@@ -756,6 +776,27 @@ void AMainGameMode::StackItem(TArray<FDroppedMaterialsData>& ItemArray,
 	NewStack.Material = Material;
 	NewStack.Count = Count;
 	ItemArray.Add(NewStack);
+}
+
+void AMainGameMode::HandlePrologueFinished()
+{
+	TArray<AActor*> Found;
+	UGameplayStatics::GetAllActorsWithTag(this, FName("PrologueAudio"), Found);
+	for (AActor* A : Found)
+	{
+		A->Destroy();
+	}
+	
+	if (UUIManager* UI = UUIManager::Get(this))
+	{
+		UI->Close(UITags::Prologue);
+		UI->Open(UITags::MainMenu);
+		USoundManager* SoundMgr = USoundManager::Get(GetWorld());
+		if (SoundMgr)
+		{
+			SoundMgr->PlayBGM(TEXT("MainMenuBGM"), 0.5f, 0.5f);
+		}
+	}
 }
 
 void AMainGameMode::RewardsChangeBroadCasting()
