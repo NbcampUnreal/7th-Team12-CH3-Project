@@ -11,6 +11,8 @@
 #include "AnimInstance/EnemyAnimInstance.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Boss/BossEnemyActorComponent.h"
+#include "Boss/PatternComponent/BossPatternComponentInterface.h"
 #include "Character/DamageType/PlayerSkillDamageType.h"
 #include "Components/CapsuleComponent.h"
 #include "DataAsset/EnemyDataAsset.h"
@@ -116,6 +118,12 @@ void AEnemyBase::SetupEnemy(UEnemyDataAsset* LoadedData)
 	PStatus->Speed=EnemyData->ProjectileSpeed;
 	PStatus->bIsHoming=EnemyData->bIsHoming;
 	PStatus->Material=EnemyData->EnemyMaterial.Get();
+	
+	AMainGameMode* GM = AMainGameMode::Get(this);
+	if (GM)
+	{
+		GM->OnPlayerDeadEvent.AddDynamic(this,&AEnemyBase::OnPlayerDeath);
+	}
 	
 }
 
@@ -315,6 +323,11 @@ void AEnemyBase::DisplayParticle(FVector HitLocation, UParticleSystem* InParticl
 	}
 }
 
+void AEnemyBase::OnPlayerDeath()
+{
+	this->ReturnToPool();
+}
+
 void AEnemyBase::ReturnToPool()
 {
 
@@ -327,6 +340,25 @@ void AEnemyBase::ReturnToPool()
 			if (!GM) return;
 			
 			GM->NotifyBossDead();
+			
+			UBossEnemyActorComponent* BossEnemyActorComponent=FindComponentByClass<UBossEnemyActorComponent>();
+			if (BossEnemyActorComponent)
+			{
+				BossEnemyActorComponent->DestroyComponent();
+			}
+			
+			TArray<UBossPatternComponentInterface*> BossPatternComponents;
+			GetComponents<UBossPatternComponentInterface>(BossPatternComponents);
+
+			for (UBossPatternComponentInterface* BossPatternComponent : BossPatternComponents)
+			{
+				if (BossPatternComponent)
+				{
+					BossPatternComponent->DestroyComponent();
+				}
+			}
+			
+			
 		}
 		SubSystem->ReturnToPool(this);
 	}

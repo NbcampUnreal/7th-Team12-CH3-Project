@@ -15,6 +15,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStageRewardItemsChanged, const TA
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossWaveStarted);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossWaveCleared);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTownPhaseChanged, ETownPhase, NewPhase);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerEvent);
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* [MainGameMode Guide]
  *
@@ -147,6 +148,9 @@ public:
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnBossWaveCleared OnBossWaveCleared;
+	
+	//현석 : 플레이어가 죽었을때, 몬스터는 풀로 돌아감.
+	FOnPlayerEvent OnPlayerDeadEvent;
 	
 	// Town Phase
 	void SetTownPhase(ETownPhase NewPhase);

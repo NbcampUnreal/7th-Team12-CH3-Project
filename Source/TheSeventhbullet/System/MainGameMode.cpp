@@ -242,6 +242,7 @@ void AMainGameMode::OnPlayerDead()
 	{
 		WaveStateMachine->ChangeState(EWaveState::StageResult);
 	}
+	OnPlayerDeadEvent.Broadcast();
 }
 
 void AMainGameMode::IncreaseCurrentWaveIndex()

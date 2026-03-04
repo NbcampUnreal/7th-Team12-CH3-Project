@@ -117,7 +117,6 @@ void UBossEnemyActorComponent::SetBoss()
 		}
 	}
 	
-	
 }
 
 void UBossEnemyActorComponent::PlayPattern(FString PatternName)
