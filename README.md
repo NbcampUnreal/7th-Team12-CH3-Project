@@ -46,7 +46,7 @@
 | 구분 | 기술 |
 |------|------|
 | 엔진 | Unreal Engine 5.5 |
-| 언어 | C++ (264 소스 파일) |
+| 언어 | C++  |
 | AI | Behavior Tree, EQS, AI Perception |
 | 데이터 | DataAsset (7종), DataTable (5종) |
 | 레벨 | Level Streaming (Persistent + Sub-Level) |
@@ -85,21 +85,13 @@ Source/TheSeventhbullet/
 
 ## 맵 구성
 
-| 맵 | 용도 |
-|----|------|
-| `L_Town` | 마을 (상점, 제작, 의뢰) |
-| `L_Dungeon` | 던전 (웨이브 전투) |
-| `L_Boss` | 보스 스테이지 |
+| 맵                | 용도              |
+|------------------|-----------------|
+| `L_Town`         | 마을 (상점, 제작, 의뢰) |
+| `L_Dungeon`      | 던전 (웨이브 전투)     |
+| `L_Boss`         | 보스 스테이지         |
+| `L_BossSequence` | 보스 레벨 시퀀스       |
 
-## 팀원
-
-| 이름 | 브랜치 |
-|------|--------|
-| Eunseo | `feature/eunseo` |
-| Yeongseop | `feature/yeongseop` |
-| Namtae | `feature/namtae` |
-| Juhyeon | `feature/Juhyeon` |
-| Hyunseok | `feature/hyunseok` |
 
 ## 빌드
 
