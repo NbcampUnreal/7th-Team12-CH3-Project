@@ -15,7 +15,12 @@ AFireGroundActor::AFireGroundActor()
 	SetRootComponent(SceneComponent);
 	CollisionComponent=CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
 	CollisionComponent->SetupAttachment(SceneComponent);
-	
+
+	// Overlap 이벤트가 발생하려면 콜리전 프로파일을 OverlapAllDynamic으로 설정해야 함
+	// 기본값(BlockAll)이면 Block+Block = Hit만 발생하고 Overlap은 절대 발생하지 않음
+	CollisionComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	CollisionComponent->SetGenerateOverlapEvents(true);
+
 	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this,&AFireGroundActor::OnOverlapBegin);
 }
 

@@ -54,7 +54,7 @@ protected:
 	FCharacterStat TotalStatus;
 	
 	UPROPERTY()
-	int32 Gold = 10000;
+	int32 Gold = 100000000;
 	
 public:	
 	EAnimState CurrentState = EAnimState::None;	// 애니메이션 상태별 출력을 위한 Enum
@@ -285,6 +285,9 @@ public:
 	float GetMaxStamina() const { return static_cast<float>(TotalStatus.Stamina); }
 	
 	void SetCurrentHP(const float NewHP) { CurrentHP = NewHP; };
+
+	// 낙사 처리: KillZ 아래로 떨어졌을 때 호출
+	virtual void FellOutOfWorld(const UDamageType& DmgType) override;
 
 	UFUNCTION()
 	void OnDeath();

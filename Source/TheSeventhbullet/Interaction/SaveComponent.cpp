@@ -71,6 +71,9 @@ void USaveComponent::HandleNextDay()
 			int32 PotionCount = FMath::Min(GI->CurrentDay, 3);
 			FPrimaryAssetId PotionID(FPrimaryAssetType("Item"), FName("DA_HealthPotion"));
 			Inventory->AddItem(PotionID, PotionCount);
+
+			int32 TotalPotionCount = Inventory->GetCountByID(PotionID);
+			Character->OnPotionChanged.Broadcast(TotalPotionCount);
 		}
 	}
 
