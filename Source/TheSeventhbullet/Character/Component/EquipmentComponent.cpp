@@ -163,6 +163,7 @@ void UEquipmentComponent::ApplyWeapon()
 	
 	CurrentWeapon = PendingWeapon;
 	WeaponOwner->WeaponMeshComponent->SetStaticMesh(CurrentWeapon->Mesh);
+	WeaponOwner->WeaponMeshComponent->SetVisibility(true, true);
 	OnWeaponEquipmentChanged.Broadcast(CurrentWeapon);
 	PendingWeapon = nullptr;
 	UE_LOG(LogTemp, Warning, TEXT("OnWeaponEquipmentChanged : Weapon"));

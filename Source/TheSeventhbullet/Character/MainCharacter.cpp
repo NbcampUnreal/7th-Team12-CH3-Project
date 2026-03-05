@@ -1057,10 +1057,15 @@ void AMainCharacter::Revive()
 {
 	bIsInvicible = false;
 	bIsDodge = false;
-	
+	bIsUsingSkill = false;
+	CurrentState = EAnimState::None;
+
 	CurrentHP = TotalStatus.HP;
 	CurrentStamina = TotalStatus.Stamina;
-	
+
+	OnHPChanged.Broadcast(CurrentHP, static_cast<float>(TotalStatus.HP));
+	OnStaminaChanged.Broadcast(CurrentStamina, static_cast<float>(TotalStatus.Stamina));
+
 	if (GetCapsuleComponent())
 	{
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
